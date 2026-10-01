@@ -23,7 +23,7 @@ TIMED_EFFECTS = {"damage", "finisher", "execute", "heal"}
 
 COMBAT_HELP = [
     "Números (1–9): habilidades da barra de ações. Acrescente o alvo: '1 2' usa a habilidade 1 no inimigo 2.",
-    "a: atacar com a arma   d: defender (metade do dano até o próximo turno)   i: usar um item",
+    "a: atacar com a arma   d: defender (metade do dano até o próximo turno)   i: usar um item (poções e frascos)",
     "x: analisar um inimigo (revela fraquezas e resistências, e o bestiário lembra para sempre)",
     "f: fugir (impossível contra chefes)",
     "Selos: quando uma criatura concentra um golpe especial, acerte-a com os elementos indicados para "
@@ -159,6 +159,8 @@ def _effects_text(unit) -> str:
             color = "bright_red" if effect.kind in CC_KINDS or effect.kind in ("dot", "debuff") else "bright_green"
             turns = "" if effect.turns >= 50 else f" ({effect.turns})"
             parts.append(ui.style(f"{effect.name}{turns}", color))
+    if unit.is_hero:      # comidas, elixires e venenos de arma valem a luta inteira
+        parts.extend(ui.style(buff["name"], "cyan") for buff in unit.player.buffs)
     return " ".join(parts)
 
 
@@ -256,8 +258,8 @@ def _handle(battle: Battle, session: GameSession, raw: str, timing: bool) -> Non
             battle.attack(target, _strike_timing(session, "Ataque", timing))
     elif head in ("d", "defender", "defesa", "bloquear"):
         battle.defend()
-    elif head in ("i", "item", "itens", "usar", "pocao", "beber"):
-        _use_item(battle, args)
+    elif head in ("i", "item", "itens", "usar", "pocao", "beber", "arremessar", "jogar"):
+        _use_item(battle, session, args, timing)
     elif head in ("x", "analisar", "examinar"):
         target = _pick_target(battle, args)
         if target is not None:
@@ -312,22 +314,34 @@ def _use_ability(battle: Battle, session: GameSession, ability: dict, args: List
     battle.use_ability(ability["id"], target, quality)
 
 
-def _use_item(battle: Battle, args: List[str]) -> None:
+def _use_item(battle: Battle, session: GameSession, args: List[str], timing: bool) -> None:
     inventory = battle.hero.player.inventory
     usable = [stack for stack in inventory if stack.data.get("use") and stack.data["use"].get("combat", True)]
     if not usable:
         battle.log.append(ui.style("Você não tem nenhum item que sirva em combate.", "gray"))
         return
+    chosen = None
     if args:
         typed = " ".join(args)
         matches = [stack for stack in usable if typed in normalize(stack.data["name"])]
         if len(matches) == 1:
-            battle.use_item(matches[0].item_id)
+            chosen = matches[0]
+    if chosen is None:
+        labels = [f"{stack.name()} x{stack.quantity}" + ui.style(f"  {stack.data['description']}", "gray")
+                  for stack in usable]
+        choice = ui.choose([ui.truncate(label, screens.screen_width() - 8) for label in labels],
+                           prompt="Usar", cancel="Cancelar")
+        if choice is None:
             return
-    labels = [f"{stack.name()} x{stack.quantity}" for stack in usable]
-    choice = ui.choose(labels, prompt="Usar", cancel="Cancelar")
-    if choice is not None:
-        battle.use_item(usable[choice].item_id)
+        chosen = usable[choice]
+    if chosen.data["use"].get("damage"):          # frasco de arremesso: escolhe o alvo e mira
+        target = _pick_target(battle, [])
+        if target is None:
+            return
+        quality = _strike_timing(session, f"Arremesso de {chosen.data['name']}", timing)
+        battle.use_item(chosen.item_id, target, quality)
+        return
+    battle.use_item(chosen.item_id)
 
 
 # --------------------------------------------------------------------------- resultados

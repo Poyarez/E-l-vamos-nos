@@ -1,8 +1,9 @@
 """Sessão de jogo: as regras da exploração.
 
 Movimento, visão (névoa de guerra), descobertas com experiência, passagem do tempo,
-passagens entre mapas, segredos, descanso, viagem rápida e a ponte com o combate:
-encontros aleatórios por região, encontros fixos, caçadas, recompensas e derrota.
+passagens entre mapas, segredos, descanso, viagem rápida, a ponte com o combate
+(encontros aleatórios por região, encontros fixos, caçadas, recompensas e derrota) e com
+os ofícios (coleta, produção, bônus temporários e níveis de perícia).
 
 Os comandos (``rpg.commands``) chamam estes métodos; as telas (``rpg.screens`` e
 ``rpg.battle_ui``) desenham o resultado. Quando uma luta deve começar, a sessão apenas
@@ -17,9 +18,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from . import monsters, save_system, ui, world
+from . import crafting, monsters, save_system, ui, world
 from .combat import OUTCOME_DEFEAT, OUTCOME_VICTORY, Battle
 from .config import Settings
+from .data.gathering import GATHER_VERBS
+from .data.recipes import STATIONS
 from .items import ItemStack, apply_consumable, item_name
 from .npcs import NPC, npcs_at
 from .player import LevelUp
@@ -72,6 +75,8 @@ class LocationView:
     passages: List[str] = field(default_factory=list)
     can_rest: bool = False
     danger: Optional[Tuple[int, int]] = None
+    stations: List[str] = field(default_factory=list)
+    actions: List[str] = field(default_factory=list)   # comandos de ofício úteis aqui (minerar, forjar...)
 
 
 @dataclass
@@ -163,6 +168,8 @@ class GameSession:
     def advance_time(self, minutes: int) -> None:
         change = self.clock.advance(minutes)
         self.player.regenerate(minutes)
+        for buff in self.player.expire_buffs(self.clock.minutes):
+            self.notify(ui.style(f"O efeito de {buff['name']} terminou.", "gray"))
         if change.dawns:
             self.notify(ui.style(f"{ui.sym('sun')} Amanhece o Dia {self.clock.day}. "
                                  f"Clima: {self.clock.weather['name']}.", "bright_yellow"))
@@ -249,14 +256,86 @@ class GameSession:
         self.dirty = True
 
     def use_item(self, stack: ItemStack) -> bool:
-        """Usa um consumível fora de combate (comer, beber, poções)."""
+        """Usa um consumível fora de combate (comer, beber, poções, elixires, venenos de arma)."""
         use = stack.data.get("use")
         if not use:
             self.notify(f"Não há como usar {stack.name()}.")
             return False
-        self.notify(apply_consumable(self.player, stack.item_id, self.rng))
+        if use.get("combat_only"):
+            self.notify(f"{stack.name()} só serve no meio de uma luta: arremesse-o num inimigo.")
+            return False
+        self.notify(apply_consumable(self.player, stack.item_id, self.rng, now=self.clock.minutes))
         self.advance_time(use.get("minutes", 1))
         return True
+
+    # ------------------------------------------------------------------ ofícios
+
+    def gather(self, spot: crafting.Spot, quantity: int) -> Optional[crafting.GatherReport]:
+        """Coleta num ponto do local atual (minerar, pescar, colher)."""
+        problem = crafting.gather_problem(self.player, self.state, spot)
+        if problem:
+            self.notify(problem)
+            return None
+        report = crafting.gather(self.player, self.state, spot, quantity, self.rng)
+        self.advance_time(report.minutes)
+        refill = crafting.minutes_to_refill(self.state, spot)
+        lines = [ui.style(spot.data.get("verb", ""), "italic")] if spot.data.get("verb") else []
+        if report.items:
+            got = ", ".join(f"{item_name(item_id)} x{quantity}" for item_id, quantity in report.items.items())
+            lines.append(f"Em {report.minutes} min, você consegue: {got} "
+                         + ui.style(f"(+{report.xp} XP de {crafting.skill_name(report.skill)})", "bright_magenta"))
+        else:
+            lines.append(f"Você passa {report.minutes} min tentando, mas não consegue nada desta vez.")
+        for rare_id in report.rare:
+            lines.append(ui.style(f"{ui.sym('star')} Achado raro: {item_name(rare_id, colored=False)}!",
+                                  "bright_yellow bold"))
+        stops = {
+            "esgotado": f"{spot.name} se esgotou. Volta a render aos poucos (cerca de {refill} min para o próximo).",
+            "isca": "Suas iscas acabaram.",
+            "mochila": "Sua mochila está cheia.",
+            "cansaco": "Depois de horas de trabalho, seus braços pedem uma pausa.",
+        }
+        if report.stopped in stops:
+            lines.append(ui.style(stops[report.stopped], "gray"))
+        for line in lines:
+            self.notify(line)
+        self._skill_level_ups(report.level_ups)
+        self.dirty = True
+        return report
+
+    def craft(self, recipe_id: str, quantity: int) -> Optional[crafting.CraftReport]:
+        """Produz itens de uma receita no local atual (forjar, cozinhar, costurar, preparar)."""
+        landmark = self.map.landmark_at(*self.state.pos)
+        problem = crafting.craft_problem(self.player, self.state, landmark, recipe_id)
+        if problem:
+            self.notify(problem)
+            return None
+        report = crafting.craft(self.player, self.state, landmark, recipe_id, quantity, self.rng)
+        self.advance_time(report.minutes)
+        output_id, output_qty = crafting.recipe_output(recipe_id)
+        skill = crafting.RECIPES[recipe_id]["skill"]
+        if report.fuel:
+            self.notify(ui.style(f"Você acende o fogo com {item_name(report.fuel, colored=False).lower()}.", "italic"))
+        if report.made:
+            self.notify(f"Você faz {item_name(output_id)} x{report.made * output_qty} em {report.minutes} min "
+                        + ui.style(f"(+{report.xp} XP de {crafting.skill_name(skill)})", "bright_magenta"))
+        if report.burnt:
+            self.notify(ui.style(f"Você deixou queimar {report.burnt}: virou {item_name('comida_queimada', colored=False)}.",
+                                 "red"))
+        if report.failed:
+            self.notify(ui.style(f"{report.failed} se perdeu: o material impuro se esfarelou na fornalha.", "red"))
+        if report.stopped == "mochila":
+            self.notify(ui.style("Sua mochila está cheia: não há onde guardar o que você fez.", "red"))
+        self._skill_level_ups(report.level_ups)
+        self.dirty = True
+        return report
+
+    def _skill_level_ups(self, level_ups: List[Tuple[str, int]]) -> None:
+        for skill_id, level in level_ups:
+            unlocked = crafting.unlocks(skill_id, level)
+            extra = f" Novo: {', '.join(unlocked)}." if unlocked else ""
+            self.notify(ui.style(f"{ui.sym('up')} {crafting.skill_name(skill_id)} subiu para o nível {level}!{extra}",
+                                 "bright_yellow bold"))
 
     # ------------------------------------------------------------------ visão
 
@@ -272,7 +351,7 @@ class GameSession:
             radius += self.clock.weather["vision"]
         else:
             radius = game_map.light
-        radius += game_map.terrain_at(*self.state.pos).vision
+        radius += game_map.terrain_at(*self.state.pos).vision + self.player.vision_bonus
         return max(1, radius)
 
     def update_vision(self) -> None:
@@ -581,7 +660,9 @@ class GameSession:
             return [f"Você examina os arredores ({terrain.name.lower()}) com atenção, mas não encontra nada "
                     "fora do comum."]
         secret = landmark.secret
-        if secret and not state.has_flag(secret["flag"]):
+        skilled = bool(secret) and all(self.player.skills.level(skill_id) >= level
+                                       for skill_id, level in secret.get("skill", {}).items())
+        if secret and skilled and not state.has_flag(secret["flag"]):
             state.flags[secret["flag"]] = True
             self.notify(ui.style(f"{ui.sym('star')} Segredo descoberto! (+{secret.get('xp', 0)} XP)",
                                  "bright_magenta bold"))
@@ -601,7 +682,11 @@ class GameSession:
                 self.give_copper(loot["copper"])
             self.gain_xp(loot.get("xp", 0), "tesouro")
             return [loot["text"]]
-        return [landmark.examine or landmark.description]
+        texts = [landmark.examine or landmark.description]
+        if secret and not skilled and not state.has_flag(secret["flag"]) and secret.get("hint"):
+            needs = ", ".join(f"{crafting.skill_name(skill_id)} {level}" for skill_id, level in secret["skill"].items())
+            texts.append(ui.style(f"{secret['hint']} ({needs})", "gray"))
+        return texts
 
     def npcs_here(self) -> List[NPC]:
         return npcs_at(self.state, self.state.map_id, *self.state.pos)
@@ -658,12 +743,24 @@ class GameSession:
             passages.append(f"{portal.label} {ui.sym('arrow')} {how}{lock}")
             if portal.direction and portal.direction.upper() not in exits:
                 exits.append(portal.direction.upper())
-        resources = []
-        if landmark:
-            for node in landmark.resources:
-                resources.append(f"{node['name']} ({SKILLS[node['skill']]['name']} {node['level']})")
+        resources, stations, actions = [], [], []
+        for spot in crafting.spots_at(landmark, state):
+            data = spot.data
+            actions.append(GATHER_VERBS[data["skill"]])
+            label = f"{data['name']} ({SKILLS[data['skill']]['name']} {data['level']})"
+            if not crafting.node_open(spot, state):
+                label += " " + ui.style("[fechado agora]", "gray")
+            elif crafting.node_left(state, spot) <= 0:
+                label += " " + ui.style("[esgotado]", "gray")
+            resources.append(label)
+        for station in landmark.stations if landmark else ():
+            actions.append(STATIONS[station["id"]]["verb"])
+            name = station.get("name", crafting.station_name(station["id"]))
+            open_now = crafting.station_at(landmark, station["id"], state)[0] is not None
+            stations.append(name if open_now else name + " " + ui.style("[fechada]", "gray"))
         return LocationView(title, subtitle, paragraphs, self.npcs_here(), resources, exits, passages,
-                            bool(landmark and landmark.rest), self.danger())
+                            bool(landmark and landmark.rest), self.danger(), stations,
+                            list(dict.fromkeys(actions)))
 
     def _senses(self) -> List[str]:
         """Dicas sobre locais próximos: pistas dos não descobertos e direções dos conhecidos."""

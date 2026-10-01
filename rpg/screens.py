@@ -5,14 +5,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from . import mapview, ui, world
+from . import crafting, mapview, ui, world
 from .combat import Hero, armor_mitigation, describe_knowledge, element_label
+from .conditions import conditions_met
 from .config import GAME_SUBTITLE, GAME_VERSION
 from .data.appearance import ALIGNMENTS
 from .data.classes import CLASSES, RESOURCES, STATS, TALENT_START_LEVEL
+from .data.gathering import GATHER_VERBS, NODES
 from .data.items import ITEM_TYPES, ITEMS, SLOTS
 from .data.monsters import FAMILIES, MONSTERS
-from .items import item_name, item_summary
+from .data.recipes import RECIPES, STATIONS
+from .items import buff_summary, item_name, item_summary
 from .monsters import con_color, create_monster
 from .player import LevelUp, Player
 from .skills import SKILLS, level_progress
@@ -107,7 +110,12 @@ def hud(session: "GameSession", width: int) -> List[str]:
             when += f" {ui.sym('dot')} {clock.moon_phase}"
     where = ui.style(f"{session.map.name} ({state.x}, {state.y})", "gray")
     line3 = _two_sided(when, where, inner)
-    return ui.box([line1, line2, line3], width, double=True, color="yellow")
+    lines = [line1, line2, line3]
+    if player.buffs:
+        effects = f" {ui.sym('dot')} ".join(f"{buff['name']} {format_duration((buff['expires'] - clock.minutes) * 60)}"
+                                           for buff in player.buffs)
+        lines.append(ui.truncate(ui.style("Efeitos: ", "bright_cyan") + effects, inner))
+    return ui.box(lines, width, double=True, color="yellow")
 
 
 # --------------------------------------------------------------------------- exploração
@@ -125,6 +133,11 @@ def location_panel(view: "LocationView", width: int, player_level: int = 1) -> L
         rows.append(ui.style("  (use 'falar' para conversar)", "gray"))
     if view.resources:
         rows.extend(ui.wrap(ui.style("Coleta: ", "bright_green") + f" {ui.sym('dot')} ".join(view.resources), width))
+    if view.stations:
+        rows.extend(ui.wrap(ui.style("Oficina: ", "bright_magenta") + f" {ui.sym('dot')} ".join(view.stations), width))
+    if view.actions:
+        verbs = " ou ".join(f"'{verb}'" for verb in view.actions)
+        rows.append(ui.style(f"  (use {verbs})", "gray"))
     for passage in view.passages:
         rows.extend(ui.wrap(ui.style("Passagem: ", "bright_cyan") + passage, width))
     if view.can_rest:
@@ -234,7 +247,11 @@ def character_sheet(session: "GameSession") -> None:
     points = (f"{player.talent_points} disponível(is)" if player.level >= TALENT_START_LEVEL
               else f"a partir do nível {TALENT_START_LEVEL}")
     ui.echo(f"  {ui.style('Talentos:', 'bold')} {trees}  " + ui.style(f"({points})", "gray"))
-    ui.echo(f"  {ui.style('Bolsa:', 'bold')} {ui.style(format_money(player.copper), 'bright_yellow')}")
+    ui.echo(f"  {ui.style('Dinheiro:', 'bold')} {ui.style(format_money(player.copper), 'bright_yellow')}")
+    for buff in player.buffs:
+        left = format_duration((buff["expires"] - state.clock.minutes) * 60)
+        ui.echo_lines(ui.wrap(f"{ui.style('Efeito:', 'bold')} {ui.style(buff['name'], 'bright_cyan')} "
+                              f"({buff_summary(buff)}, mais {left})", width, "  "))
     total_landmarks = sum(len(world.get_map(map_id).landmarks) for map_id in world.map_ids())
     session.sync_play_time()
     ui.echo(f"  {ui.style('Jornada:', 'bold')} Dia {state.clock.day}, "
@@ -260,7 +277,7 @@ def inventory_screen(session: "GameSession") -> None:
             ui.echo_lines(ui.wrap(ui.style(item_summary(stack.item_id), "bright_white") + note, width, "      "))
         ui.echo_lines(ui.wrap(ui.style(stack.data["description"], "yellow italic"), width, "      "))
     ui.echo()
-    ui.echo(f"  {ui.style('Bolsa:', 'bold')} {ui.style(format_money(player.copper), 'bright_yellow')}"
+    ui.echo(f"  {ui.style('Dinheiro:', 'bold')} {ui.style(format_money(player.copper), 'bright_yellow')}"
             + ui.style("   (o = ouro, p = prata, c = cobre)", "gray"))
     ui.echo()
 
@@ -310,11 +327,72 @@ def skills_screen(session: "GameSession") -> None:
         ui.echo(f"  {name} {kind} {ui.style(f'{level:>2}', 'bold')}/99  "
                 f"{ui.bar(into, needed, bar_width, data['color'])}  {thousands(xp)} XP  {remaining}")
         ui.echo_lines(ui.wrap(ui.style(data["description"], "gray"), width - 8, "      "))
+        upcoming = crafting.next_unlock(skill_id, level)
+        if upcoming:
+            next_level, names = upcoming
+            ui.echo_lines(ui.wrap(ui.style(f"Próximo, no nível {next_level}: ", "gray") + ", ".join(names),
+                                  width - 8, "      "))
     ui.echo()
     ui.echo_lines(ui.wrap(ui.style(
         "As perícias evoluem de forma independente do nível de combate, de 1 a 99, com a curva clássica de "
         "experiência: 83 XP para o nível 2... e 13.034.431 XP para o 99.", "italic"), width - 4, "  "))
+    ui.echo_lines(ui.wrap(ui.style(
+        "Coleta: 'minerar', 'pescar' e 'colher'. Produção: 'forjar', 'cozinhar', 'costurar' e 'preparar'. "
+        "Use 'receitas <perícia>' para ver onde coletar e o que dá para fazer.", "gray"), width - 4, "  "))
     ui.echo()
+
+
+def _aligned(text: str, width: int, indent: str) -> None:
+    """Mostra a linha como está (preservando o alinhamento) se couber; senão, quebra."""
+    if ui.visible_len(text) <= width:
+        ui.echo(indent + text)
+    else:
+        ui.echo_lines(ui.wrap(text, width, indent))
+
+
+def recipes_screen(session: "GameSession", skill_id: str) -> None:
+    """Livro de ofício de uma perícia: pontos de coleta (onde e com quê) e receitas."""
+    player, state = session.player, session.state
+    data = SKILLS[skill_id]
+    level = player.skills.level(skill_id)
+    section(f"{data['name'].upper()}  {ui.sym('dot')}  nível {level}")
+    width = screen_width() - 4
+    nodes = sorted((node for node in NODES.items() if node[1]["skill"] == skill_id), key=lambda n: n[1]["level"])
+    if nodes:
+        ui.echo("  " + ui.style(f"COLETA ('{GATHER_VERBS[skill_id]}')", "bold"))
+        for node_id, node in nodes:
+            places = [landmark.name for landmark, entry in crafting.node_landmarks(node_id)
+                      if landmark.id in state.discovered and conditions_met(entry.get("if"), state)]
+            needs = [crafting.TOOL_NAMES[node["tool"]]] if node.get("tool") else []
+            if node.get("bait"):
+                needs.append(f"isca: {ITEMS[node['bait']]['name'].lower()}")
+            extra = f" {ui.sym('dot')} " + ", ".join(needs) if needs else ""
+            line = (f"nv {node['level']:>2}  {node['name']} {ui.sym('arrow')} {ITEMS[node['item']]['name']}"
+                    + ui.style(extra, "gray"))
+            _aligned(line if level >= node["level"] else ui.style(ui.strip_ansi(line), "gray"), width, "  ")
+            where = ", ".join(places) if places else "um lugar que você ainda não conhece"
+            ui.echo_lines(ui.wrap(ui.style(f"Onde: {where}", "gray"), width, "         "))
+        ui.echo()
+    recipes = crafting.recipes_for(skill_id)
+    if recipes:
+        ui.echo("  " + ui.style("RECEITAS", "bold"))
+        for recipe_id in recipes:
+            recipe = RECIPES[recipe_id]
+            output_id, quantity = recipe["output"]
+            where = [STATIONS[recipe["station"]]["name"]] if recipe.get("station") else []
+            if recipe.get("tool"):
+                where.append(crafting.TOOL_NAMES[recipe["tool"]])
+            name = item_name(output_id) + (f" x{quantity}" if quantity > 1 else "")
+            unlocked = level >= recipe["level"]
+            if not unlocked:
+                name = ui.style(ui.strip_ansi(name), "gray")
+            _aligned(f"nv {recipe['level']:>2}  {name}" + ui.style(f"  ({', '.join(where)})", "gray"), width, "  ")
+            ingredients = crafting.ingredients_text(recipe_id)
+            can = crafting.max_craftable(player, recipe_id) if unlocked else 0
+            if can:
+                ingredients += ui.style(f"  {ui.sym('check')} dá para fazer {can}", "bright_green")
+            ui.echo_lines(ui.wrap(ui.style(ingredients, "gray") if not can else ingredients, width, "         "))
+        ui.echo()
 
 
 def abilities_screen(session: "GameSession") -> None:

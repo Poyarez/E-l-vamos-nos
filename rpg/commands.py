@@ -13,10 +13,12 @@ import difflib
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import screens, shop, ui, world
+from . import crafting, screens, shop, ui, world
 from .config import Settings
 from .data.items import SLOTS
-from .items import ItemStack
+from .data.recipes import RECIPES, STATIONS
+from .data.skills import SKILLS
+from .items import ItemStack, item_name
 from .npcs import choose_npc, run_dialogue
 from .save_system import SaveError
 from .session import GameSession
@@ -39,7 +41,7 @@ class Command:
 
 COMMANDS: Dict[str, Command] = {}
 _LOOKUP: Dict[str, Command] = {}
-CATEGORIES = ("Exploração", "Combate e itens", "Personagem", "Sistema")
+CATEGORIES = ("Exploração", "Combate e itens", "Ofícios", "Personagem", "Sistema")
 
 
 def command(name: str, *aliases: str, help: str, usage: str = "", category: str = "Exploração"):
@@ -223,7 +225,7 @@ def cmd_equip(session: GameSession, args: List[str]) -> None:
     stack = _choose_stack(gear, " ".join(args), "equipar", "Você não tem nada para equipar na mochila.")
     if stack is None:
         return
-    before = (player.armor, player.max_hp, player.max_resource)
+    before = (player.armor, player.max_hp, player.max_resource, player.inventory.capacity)
     name = stack.name()
     try:
         removed = player.equip(stack)
@@ -256,7 +258,7 @@ def cmd_unequip(session: GameSession, args: List[str]) -> None:
             return
         matches = [candidates[choice]]
     slot, stack = matches[0]
-    before = (player.armor, player.max_hp, player.max_resource)
+    before = (player.armor, player.max_hp, player.max_resource, player.inventory.capacity)
     try:
         player.unequip(slot)
     except ValueError as error:
@@ -273,7 +275,11 @@ def cmd_unequip(session: GameSession, args: List[str]) -> None:
 def cmd_use(session: GameSession, args: List[str]) -> None:
     usable = [stack for stack in session.player.inventory if stack.data.get("use")]
     stack = _choose_stack(usable, " ".join(args), "usar", "Você não tem nada para usar.")
-    if stack is not None and session.use_item(stack):
+    if stack is None:
+        return
+    if session.use_item(stack):
+        session.needs_redraw = True        # a tela volta com a vida e os bônus atualizados, e a mensagem embaixo
+    else:
         _print_messages(session)
 
 
@@ -338,10 +344,10 @@ def _choose_stack(stacks: List[ItemStack], query: str, verb: str, empty: str) ->
     return None if choice is None else stacks[choice]
 
 
-def _show_changes(session: GameSession, before: Tuple[float, int, int]) -> None:
+def _show_changes(session: GameSession, before: Tuple[float, int, int, int]) -> None:
     player = session.player
-    after = (player.armor, player.max_hp, player.max_resource)
-    labels = ("Armadura", "Vida máxima", player.resource_data["name"] + " máxima")
+    after = (player.armor, player.max_hp, player.max_resource, player.inventory.capacity)
+    labels = ("Armadura", "Vida máxima", player.resource_data["name"] + " máxima", "Espaços na mochila")
     changes = []
     for label, old, new in zip(labels, before, after):
         if new != old:
@@ -349,6 +355,231 @@ def _show_changes(session: GameSession, before: Tuple[float, int, int]) -> None:
             changes.append(f"{label} {int(old)} {ui.sym('arrow')} " + ui.style(str(int(new)), color))
     if changes:
         ui.echo("  " + "   ".join(changes))
+
+
+# --------------------------------------------------------------------------- ofícios
+
+@command("minerar", "minera", "mine", usage="minerar [veio] [quantidade|tudo]",
+         help="Minera no local (precisa de picareta). Sem quantidade, tenta tirar 5 minérios.", category="Ofícios")
+def cmd_mine(session: GameSession, args: List[str]) -> None:
+    _gather(session, args, ["mineracao"], "minerar")
+
+
+@command("pescar", "pesca", "fish", usage="pescar [cardume] [quantidade|tudo]",
+         help="Pesca no local (rede ou vara, e iscas para alguns peixes).", category="Ofícios")
+def cmd_fish(session: GameSession, args: List[str]) -> None:
+    _gather(session, args, ["pesca"], "pescar")
+
+
+@command("colher", "colheita", "tosquiar", usage="colher [planta] [quantidade|tudo]",
+         help="Colhe ervas (Alquimia), linho e lã (Alfaiataria) no local.", category="Ofícios")
+def cmd_harvest(session: GameSession, args: List[str]) -> None:
+    _gather(session, args, ["alquimia", "alfaiataria"], "colher")
+
+
+@command("coletar", "extrair", "recolher", usage="coletar [recurso] [quantidade|tudo]",
+         help="Coleta qualquer recurso do local (o mesmo que minerar, pescar ou colher).", category="Ofícios")
+def cmd_gather(session: GameSession, args: List[str]) -> None:
+    _gather(session, args, list(SKILLS), "coletar")
+
+
+@command("forjar", "fundir", "ferraria", usage="forjar [item] [quantidade|tudo]",
+         help="Metalurgia: funde barras na fornalha e forja armas e armaduras na bigorna.", category="Ofícios")
+def cmd_smith(session: GameSession, args: List[str]) -> None:
+    _craft(session, args, "metalurgia", "forjar")
+
+
+@command("cozinhar", "assar", usage="cozinhar [prato] [quantidade|tudo]",
+         help="Culinária: cozinha num fogo (estalagem ou fogueiras). Pratos especiais dão bônus.",
+         category="Ofícios")
+def cmd_cook(session: GameSession, args: List[str]) -> None:
+    _craft(session, args, "culinaria", "cozinhar")
+
+
+@command("costurar", "fiar", "tecer", usage="costurar [peça] [quantidade|tudo]",
+         help="Alfaiataria: fia na roca e costura roupas, couro e bolsas (com agulha e linha).",
+         category="Ofícios")
+def cmd_sew(session: GameSession, args: List[str]) -> None:
+    _craft(session, args, "alfaiataria", "costurar")
+
+
+@command("preparar", "destilar", "misturar", usage="preparar [poção] [quantidade|tudo]",
+         help="Alquimia: poções com o almofariz; elixires, óleos e frascos no caldeirão.", category="Ofícios")
+def cmd_brew(session: GameSession, args: List[str]) -> None:
+    _craft(session, args, "alquimia", "preparar")
+
+
+@command("fabricar", "criar", "produzir", "fazer", usage="fabricar [item] [quantidade|tudo]",
+         help="Produz qualquer receita disponível aqui (de qualquer perícia).", category="Ofícios")
+def cmd_craft(session: GameSession, args: List[str]) -> None:
+    _craft(session, args, None, "fabricar")
+
+
+@command("receitas", "receita", "livro", usage="receitas [perícia]",
+         help="Livro de ofício: onde coletar e tudo o que cada perícia sabe fazer.", category="Ofícios")
+def cmd_recipes(session: GameSession, args: List[str]) -> None:
+    key = normalize(" ".join(args))
+    skills = list(SKILLS)
+    matches = [skill_id for skill_id in skills if key and normalize(SKILLS[skill_id]["name"]).startswith(key)]
+    if len(matches) == 1:
+        skill_id = matches[0]
+    else:
+        labels = [f"{SKILLS[skill_id]['name']} " + ui.style(f"(nível {session.player.skills.level(skill_id)})", "gray")
+                  for skill_id in skills]
+        choice = ui.choose(labels, prompt="Perícia", cancel="Voltar")
+        if choice is None:
+            return
+        skill_id = skills[choice]
+    _full_screen(session, lambda current: screens.recipes_screen(current, skill_id))
+
+
+def _split_quantity(args: List[str]) -> Tuple[List[str], Optional[int]]:
+    """Separa a quantidade ("5", "tudo") do resto dos argumentos."""
+    if args and (args[-1].isdigit() or args[-1] in ("tudo", "todos", "todas", "max")):
+        last = args[-1]
+        return args[:-1], int(last) if last.isdigit() else crafting.ALL
+    return args, None
+
+
+def _known_places(session: GameSession, wanted: Callable[[world.Landmark], bool]) -> List[str]:
+    """Locais já descobertos (em qualquer mapa) que atendem ao critério."""
+    return [landmark.name for map_id in world.map_ids() for landmark in world.get_map(map_id).landmarks.values()
+            if landmark.id in session.state.discovered and wanted(landmark)]
+
+
+def _gather(session: GameSession, args: List[str], skills: List[str], verb: str) -> None:
+    args, quantity = _split_quantity(args)
+    if quantity == 0:
+        ui.echo(ui.style("  Quantidade inválida.", "gray"))
+        return
+    state = session.state
+    landmark = session.map.landmark_at(*state.pos)
+    spots = crafting.spots_at(landmark, state, skills)
+    if not spots:
+        places = _known_places(session, lambda lm: bool(crafting.spots_at(lm, state, skills)))
+        hint = (f" Lugares que você conhece: {', '.join(places)}." if places else
+                " Os locais com pontos de coleta mostram 'Coleta:' na descrição.")
+        ui.echo_lines(ui.wrap(ui.style(f"Não há nada para {verb} aqui.{hint}", "gray"), screens.screen_width() - 4, "  "))
+        return
+    key = normalize(" ".join(args))
+    if key:
+        spots = [spot for spot in spots if key in normalize(spot.name)]
+        if not spots:
+            ui.echo(ui.style(f"  Não há '{' '.join(args)}' para {verb} aqui.", "gray"))
+            return
+    spot = spots[0]
+    if len(spots) > 1:
+        labels = []
+        for candidate in spots:
+            data = candidate.data
+            label = f"{data['name']} " + ui.style(f"({SKILLS[data['skill']]['name']} {data['level']})", "gray")
+            problem = crafting.gather_problem(session.player, state, candidate)
+            labels.append(ui.truncate(label + (ui.style(f" — {problem}", "gray") if problem else ""),
+                                      screens.screen_width() - 8))
+        choice = ui.choose(labels, prompt=capitalize_first(verb), cancel="Cancelar")
+        if choice is None:
+            return
+        spot = spots[choice]
+    if session.gather(spot, quantity or crafting.DEFAULT_GATHER) is None:
+        _print_messages(session)
+    else:
+        session.needs_redraw = True
+
+
+def _craft(session: GameSession, args: List[str], skill: Optional[str], verb: str) -> None:
+    args, quantity = _split_quantity(args)
+    if quantity == 0:
+        ui.echo(ui.style("  Quantidade inválida.", "gray"))
+        return
+    player, state = session.player, session.state
+    landmark = session.map.landmark_at(*state.pos)
+    here_stations = {station["id"] for station in landmark.stations} if landmark else set()
+    known = [recipe_id for recipe_id in crafting.recipes_for(skill)
+             if player.skills.level(RECIPES[recipe_id]["skill"]) >= RECIPES[recipe_id]["level"]]
+    here = [recipe_id for recipe_id in known
+            if not RECIPES[recipe_id].get("station") or RECIPES[recipe_id]["station"] in here_stations]
+    key = normalize(" ".join(args))
+    if key:
+        named = [recipe_id for recipe_id in crafting.recipes_for(skill) if key in normalize(crafting.recipe_name(recipe_id))]
+        exact = [recipe_id for recipe_id in named if normalize(crafting.recipe_name(recipe_id)) == key]
+        named = exact or named
+        if not named:
+            ui.echo(ui.style(f"  Você não conhece nenhuma receita chamada '{' '.join(args)}'.", "gray"))
+            return
+        candidates = [recipe_id for recipe_id in named if recipe_id in here] or named[:1]
+    else:
+        candidates = here
+    if not candidates:
+        _explain_no_station(session, skill, verb, known)
+        return
+    recipe_id = candidates[0]
+    if len(candidates) > 1:
+        # o que dá para fazer agora vem primeiro (cada grupo continua em ordem de nível)
+        candidates.sort(key=lambda candidate: crafting.max_craftable(player, candidate) == 0)
+        recipe_id = _choose_recipe(session, candidates, skill, verb)
+        if recipe_id is None:
+            return
+    problem = crafting.craft_problem(player, state, landmark, recipe_id)
+    if problem:
+        ui.echo_lines(ui.wrap(ui.style(problem, "gray"), screens.screen_width() - 4, "  "))
+        return
+    if quantity is None:
+        most = crafting.max_craftable(player, recipe_id)
+        quantity = 1 if most == 1 else _ask_count(most)
+        if quantity is None:
+            return
+    if session.craft(recipe_id, quantity) is None:
+        _print_messages(session)
+    else:
+        session.needs_redraw = True
+
+
+def _choose_recipe(session: GameSession, candidates: List[str], skill: Optional[str], verb: str) -> Optional[str]:
+    player = session.player
+    labels = []
+    for recipe_id in candidates:
+        output_id, quantity = crafting.recipe_output(recipe_id)
+        name = item_name(output_id) + (f" x{quantity}" if quantity > 1 else "")
+        can = crafting.max_craftable(player, recipe_id)
+        status = (ui.style(f"pode fazer {can}", "bright_green") if can else
+                  ui.style(f"faltam: {crafting.missing_text(player, recipe_id)}", "gray"))
+        labels.append(ui.truncate(f"{name} {ui.sym('arrow')} " + ui.style(crafting.ingredients_text(recipe_id), "gray")
+                                  + f"  ({status})", screens.screen_width() - 8))
+    if skill:
+        upcoming = crafting.next_unlock(skill, player.skills.level(skill))
+        if upcoming:
+            ui.echo(ui.style(f"  Próximo, no nível {upcoming[0]} de {SKILLS[skill]['name']}: "
+                             f"{', '.join(upcoming[1])}", "gray"))
+    choice = ui.choose(labels, prompt=capitalize_first(verb), cancel="Cancelar")
+    return None if choice is None else candidates[choice]
+
+
+def _explain_no_station(session: GameSession, skill: Optional[str], verb: str, known: List[str]) -> None:
+    needed = sorted({RECIPES[recipe_id]["station"] for recipe_id in known if RECIPES[recipe_id].get("station")})
+    if not known:
+        message = f"Você ainda não sabe {verb} nada."
+    elif not needed:
+        message = f"Não há nada para {verb} aqui."
+    else:
+        parts = []
+        for station_id in needed:
+            places = _known_places(session, lambda lm, sid=station_id: any(st["id"] == sid for st in lm.stations))
+            where = f" ({', '.join(places)})" if places else ""
+            parts.append(f"{STATIONS[station_id]['name']}{where}")
+        message = f"Para {verb}, você precisa de: {'; '.join(parts)}."
+    ui.echo_lines(ui.wrap(ui.style(message, "gray"), screens.screen_width() - 4, "  "))
+
+
+def _ask_count(maximum: int) -> Optional[int]:
+    raw = normalize(ui.ask("  Quantos? " + ui.style(f"(Enter = 1, 't' = todos os {maximum}, 0 cancela)", "gray")
+                           + f" {ui.sym('arrow')} "))
+    if not raw:
+        return 1
+    if raw in ("t", "tudo", "todos", "todas", "max"):
+        return maximum
+    if raw.isdigit() and int(raw) > 0:
+        return min(int(raw), maximum)
+    return None
 
 
 # --------------------------------------------------------------------------- personagem

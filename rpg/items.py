@@ -10,6 +10,7 @@ from . import ui
 from .data.appearance import ARMOR_COLORS
 from .data.classes import STATS
 from .data.items import ITEM_TYPES, ITEMS, QUALITIES, SLOTS, SUBTYPES
+from .utils import format_duration
 
 if TYPE_CHECKING:
     from .player import Player
@@ -133,20 +134,44 @@ class Inventory:
 
 # --------------------------------------------------------------------------- uso e descrição
 
+ELEMENT_NAMES = {"fisico": "Físico", "fogo": "Fogo", "gelo": "Gelo", "arcano": "Arcano", "sagrado": "Sagrado",
+                 "sombra": "Sombra", "natureza": "Natureza"}
+
+
+def buff_summary(spec: Mapping[str, Any]) -> str:
+    """"+3 VIG +3 ESP", "+1 de visão", "+3–5 de dano de Natureza nos golpes da arma"."""
+    parts = [f"+{value} {STATS[stat]['short']}" for stat, value in spec.get("stats", {}).items()]
+    if spec.get("vision"):
+        parts.append(f"+{spec['vision']} de visão")
+    coating = spec.get("coating")
+    if coating:
+        low, high = coating["damage"]
+        parts.append(f"+{low}–{high} de dano de {ELEMENT_NAMES[coating['element']]} nos golpes da arma")
+    return " ".join(parts)
+
+
 def apply_consumable(player: "Player", item_id: str, rng: Optional[random.Random] = None,
-                     max_hp: Optional[int] = None) -> str:
-    """Consome uma unidade do item e aplica o efeito. Devolve a mensagem para o jogador."""
+                     max_hp: Optional[int] = None, now: Optional[int] = None) -> str:
+    """Consome uma unidade do item e aplica o efeito. Devolve a mensagem para o jogador.
+
+    ``now`` (minutos do relógio do jogo) é preciso para os bônus temporários.
+    """
     rng = rng or random.Random()
     item = get_item(item_id)
     use = item["use"]
     player.inventory.remove(item_id, 1)
     parts = [use.get("verb") or f"Você usa {item['name']}."]
+    buff = use.get("buff")
+    if buff and now is not None:
+        player.add_buff(buff, now)
+        parts.append(f"{buff['name']}: {buff_summary(buff)} por {format_duration(buff['minutes'] * 60)}.")
     cap = max_hp if max_hp is not None else player.max_hp
     heal = (rng.randint(*use["heal"]) if "heal" in use else 0) + round(cap * use.get("heal_pct", 0) / 100)
     if heal:
         before = player.hp
         player.hp = min(cap, player.hp + heal)
-        parts.append(f"+{player.hp - before} de vida.")
+        if player.hp > before:
+            parts.append(f"+{player.hp - before} de vida.")
     if player.resource_id == "mana":
         mana = (rng.randint(*use["mana"]) if "mana" in use else 0)
         mana += round(player.max_resource * use.get("mana_pct", 0) / 100)
@@ -167,6 +192,10 @@ def item_summary(item_id: str) -> str:
         parts.append(SUBTYPES[item["subtype"]] + (" (duas mãos)" if item.get("two_handed") else ""))
     elif not item.get("slot"):
         parts.append(ITEM_TYPES.get(item["type"], item["type"]))
+    if item.get("tool"):
+        parts.append(item["tool"].capitalize() + (f" (+{item['power']:.0%})" if item.get("power") else ""))
+    if item.get("bag_slots"):
+        parts.append(f"+{item['bag_slots']} espaços")
     if item.get("damage"):
         parts.append(f"Dano {item['damage'][0]}–{item['damage'][1]}")
     if item.get("armor"):

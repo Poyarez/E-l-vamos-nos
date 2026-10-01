@@ -561,12 +561,14 @@ class ShopTest(QuietTestCase):
 
     def test_sell_junk(self):
         player = make_session().player
-        player.inventory.add("pena_corvo", 3)
-        player.inventory.add("presa_lobo")
+        player.inventory.add("rabo_rato", 3)
+        player.inventory.add("bugiganga_brilhante")
+        player.inventory.add("pena_corvo", 5)          # isca de pesca: não é sucata
         copper = player.copper
         units, earned = shop.sell_junk(player)
         self.assertEqual(units, 4)
-        self.assertEqual(earned, 3 * ITEMS["pena_corvo"]["value"] + ITEMS["presa_lobo"]["value"])
+        self.assertEqual(earned, 3 * ITEMS["rabo_rato"]["value"] + ITEMS["bugiganga_brilhante"]["value"])
+        self.assertEqual(player.inventory.count("pena_corvo"), 5)
         self.assertEqual(player.copper, copper + earned)
         self.assertEqual(shop.junk(player), [])
 
@@ -579,11 +581,11 @@ class ShopTest(QuietTestCase):
     def test_shop_screen(self):
         session = make_session()
         session.player.copper = 500
-        session.player.inventory.add("pena_corvo", 2)
-        self.type_in("1", "4", "2", "3", "0")   # compra 2 poções de cura menor, vende a sucata, sai
+        session.player.inventory.add("rabo_rato", 2)
+        self.type_in("1", "poção de cura m", "2", "3", "0")   # compra 2 poções de cura menor, vende a sucata, sai
         shop.run(session, "graca")
         self.assertEqual(session.player.inventory.count("pocao_cura_menor"), 4)
-        self.assertEqual(session.player.inventory.count("pena_corvo"), 0)
+        self.assertEqual(session.player.inventory.count("rabo_rato"), 0)
 
 
 class BestiaryTest(TempSaveDirMixin):

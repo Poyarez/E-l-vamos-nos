@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from . import ui
-from .conditions import as_list, conditions_met
+from .conditions import as_list, conditions_met, item_pairs
 from .data.npcs import NPCS
 from .utils import normalize
 
@@ -93,11 +93,9 @@ def apply_effects(effects: Optional[Mapping[str, Any]], session: "GameSession") 
         session.state.flags[flag] = True
     for entry in as_list(effects.get("journal", [])):
         session.add_journal(entry["id"], entry["title"], entry["text"])
-    if "give_item" in effects:
-        item_id, quantity = effects["give_item"]
+    for item_id, quantity in item_pairs(effects.get("give_item")):
         session.give_item(item_id, quantity)
-    if "take_item" in effects:
-        item_id, quantity = effects["take_item"]
+    for item_id, quantity in item_pairs(effects.get("take_item")):
         session.player.inventory.remove(item_id, quantity)
     if "give_copper" in effects:
         session.give_copper(int(effects["give_copper"]))

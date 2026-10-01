@@ -3,7 +3,7 @@
 RPG de fantasia medieval para o terminal, escrito em Python puro. Ele combina três referências:
 
 - **WoW Classic:** classes clássicas com Mana, Raiva e Energia, barra de ações, recargas, talentos e a curva de nível original (400 XP para o nível 2, até o 60).
-- **Old School RuneScape:** perícias de coleta e produção independentes do combate, cada uma de 1 a 99, com a tabela de XP clássica (83 XP para o nível 2 e 13.034.431 XP para o 99).
+- **Old School RuneScape:** seis perícias de coleta e produção independentes do combate — Mineração, Metalurgia, Pesca, Culinária, Alfaiataria e Alquimia —, cada uma de 1 a 99, com a tabela de XP clássica (83 XP para o nível 2 e 13.034.431 XP para o 99).
 - **Sea of Stars:** exploração com descrições ricas, minimapa em arte ASCII, ciclo de dia e noite, fases da lua, segredos escondidos no cenário e um combate por turnos com golpes no tempo certo, fraquezas elementares e selos que cancelam os ataques especiais das criaturas.
 
 ```
@@ -77,6 +77,37 @@ As mesmas preferências podem ser ajustadas no menu **Opções** e ficam salvas.
 - **Bestiário:** registra abates, saques vistos e as fraquezas descobertas, seja acertando o elemento certo ou analisando a criatura (`x`) durante a luta.
 - **Novas pistas:** a aljava gravada da Toca, o culto da Lua Cortada e a recompensa da Capitã Renna pelo Alfa Branco.
 
+### Etapa 3: coleta e ofícios
+
+- **Seis perícias de 1 a 99**, cada uma com a sua barra de XP, o próximo desbloqueio e um livro de ofício (`receitas`) que mostra onde coletar e o que dá para fazer.
+- **Coleta (18 pontos de coleta no mundo):**
+  - **Mineração:** cobre e estanho no Afloramento de Cobre, prata e cristais-de-eco na gruta secreta;
+  - **Pesca:** camarões e sardinhas no Píer do Lago, trutas e salmões no Vau das Lavadeiras, e peixes-cegos num lago escondido;
+  - **ervas para a Alquimia:** do pântano, da floresta, da fonte termal, da cachoeira e do santuário;
+  - **linho e lã para a Alfaiataria:** no Sítio dos Moreira.
+
+  Cada tentativa gasta minutos de jogo e acerta com uma chance que cresce com o nível e com a ferramenta: picareta velha, de bronze ou de ferro, rede, vara e tesoura. Peixes de vara gastam isca (minhocas, ou penas de corvo para trutas e salmões). Os pontos se esgotam e se recuperam aos poucos, e às vezes sai um achado raro, como uma granada bruta ou uma bota velha.
+- **Produção (67 receitas):**
+  - **Metalurgia (26):** barras na fornalha da forja do Brom, que só abre de dia; armas, armaduras de malha, picaretas e joias de prata na bigorna. O ferro impuro às vezes se esfarela, cada vez menos conforme o nível sobe.
+  - **Culinária (10):** na cozinha da estalagem, na fogueira da caravana ou na fogueira apagada do acampamento de caçadores, que pede uma tocha. A comida queima cada vez menos com o nível, e menos ainda na cozinha da Marta.
+  - **Alfaiataria (18):** fios na roca dos Moreira; roupas, couro e bolsas costurados em qualquer lugar com agulha e linha. Túnicas, capuzes, mantos e vestes saem tingidos na cor que você escolheu na criação.
+  - **Alquimia (13):** poções em qualquer lugar com o almofariz; elixires, venenos, óleos e frascos de arremesso no caldeirão da Mãe Brígida.
+- **O que os ofícios dão ao combate:**
+  - **comidas** curam fora de combate, e os pratos especiais deixam o herói **bem alimentado** (+atributos por 2 horas);
+  - **elixires** dão Vigor, Agilidade e Força, Intelecto e Espírito, ou visão noturna;
+  - o **veneno de aranha** soma dano de Natureza a cada golpe da arma;
+  - **frascos de arremesso** (fogo, gelo, luz e eco) causam dano do elemento e **rompem selos** desse elemento;
+  - equipamento forjado ou costurado, que vale para todas as classes.
+
+  Vale uma comida e um elixir por vez, e o tempo restante aparece no topo da tela.
+- **Bolsas:** a Bolsa de Linho, a de Lã e a de Seda de Aranha ampliam a mochila em 4, 6 ou 8 espaços.
+- **Segredos de perícia:** um mineiro experiente (Mineração 15) enxerga um veio de ferro escondido no Afloramento de Cobre, e um alquimista (Alquimia 30) reconhece os lírios-da-lua do Santuário, que só se abrem à noite. Antes disso, examinar o lugar dá só uma pista do nível necessário.
+- **Mestres e lojas:**
+  - Brom, Anselmo e Mãe Brígida ensinam os ofícios e dão a primeira ferramenta, e Marta abre a cozinha da estalagem;
+  - Brom, Anselmo, Brígida, Tobias e Zahir ganharam lojas;
+  - Tobias paga em farinha os rabos de rato do celeiro;
+  - Brom comemora a sua primeira barra de bronze.
+
 ## Comandos
 
 Acentos e maiúsculas não importam, e quase todo comando tem atalhos. Digite `ajuda` no jogo para ver a lista completa.
@@ -95,6 +126,9 @@ Acentos e maiúsculas não importam, e quase todo comando tem atalhos. Digite `a
 | `usar [item]` | come, bebe ou usa um consumível (`comer pão`, `beber poção`) |
 | `largar <item> [qtd]` | joga itens fora para abrir espaço na mochila |
 | `comerciar` | compra e vende com o mercador que estiver no local |
+| `minerar` `pescar` `colher` `coletar` | coleta no local (`minerar cobre 10`, `pescar tudo`); sem quantidade, tenta 5 itens |
+| `forjar` `cozinhar` `costurar` `preparar` `fabricar` | produz numa oficina ou com a ferramenta certa (`forjar barra tudo`) |
+| `receitas [perícia]` | livro de ofício: pontos de coleta, receitas, ingredientes e o que dá para fazer agora |
 | `ficha` `mochila` `pericias` `habilidades` `diario` `bestiario` | telas do personagem |
 | `salvar` `opcoes` `ajuda` `menu` | sistema |
 
@@ -105,7 +139,7 @@ Durante a luta:
 | `1` a `9` | usa a habilidade da barra de ações (`1 2` usa a habilidade 1 no inimigo 2); o nome da habilidade também funciona |
 | `a` | ataca com a arma |
 | `d` | defende: o dano recebido cai pela metade até o seu próximo turno |
-| `i` | usa um item |
+| `i` | usa um item: poções em você, frascos de arremesso num inimigo |
 | `x` | analisa um inimigo e revela fraquezas e resistências |
 | `f` | foge (impossível contra chefes) |
 | `?` | ajuda |
@@ -118,7 +152,7 @@ rpg/
   ui.py                  terminal: cores ANSI, molduras, barras, menus, entrada (com alternativa ASCII)
   config.py              título, versão, pasta de saves e preferências
   utils.py               texto, sorteios determinísticos, dinheiro (ouro/prata/cobre)
-  player.py              herói: aparência, atributos, curva de XP do WoW Classic, equipamento
+  player.py              herói: aparência, atributos, curva de XP do WoW Classic, equipamento, bolsas e bônus
   skills.py              perícias com a tabela de XP do OSRS (1 a 99)
   items.py               fábrica de itens, pilhas e mochila
   combat.py              motor de combate: turnos, habilidades, efeitos, selos, críticos e armadura
@@ -126,17 +160,18 @@ rpg/
   monsters.py            fábrica de monstros, XP por abate, cores de dificuldade, saque e encontros
   shop.py                comércio: preços, compra, venda e sucata
   conditions.py          condições usadas por diálogos e tabelas de encontros
-  crafting.py            reservado para coleta e ofícios (Etapa 3)
+  crafting.py            coleta e ofícios: pontos de coleta, receitas, estações, ferramentas e XP das perícias
   world.py               mapas em coordenadas, terrenos, regiões, locais, passagens, pathfinding
   time_system.py         relógio, períodos do dia, clima e fases da lua
   npcs.py                fábrica de NPCs, rotinas e motor de diálogos (condições e efeitos)
   state.py               estado completo da partida (o que vai para o save)
   save_system.py         saves em JSON: escrita atômica, backup, versões e migrações
-  session.py             regras da exploração: movimento, visão, tempo, segredos, encontros e derrota
+  session.py             regras da exploração: movimento, visão, tempo, segredos, encontros, derrota e ofícios
   commands.py            registro de comandos, apelidos, sugestões e ajuda automática
   screens.py, mapview.py telas e mapas em arte ASCII
   character_creation.py  criação de personagem e prólogo
-  data/                  o "banco de dados": classes, aparência, itens, terrenos, perícias, NPCs, monstros, lojas
+  data/                  o "banco de dados": classes, aparência, itens, terrenos, perícias, NPCs, monstros, lojas,
+                         pontos de coleta (gathering.py) e receitas (recipes.py)
     maps/                um módulo por mapa (vale_primordia.py, gruta_veu_prata.py, toca_dos_lobos.py)
 tests/                   testes automatizados (unittest, sem dependências)
 ```
@@ -148,9 +183,11 @@ Os módulos de `rpg/data` contêm **apenas dados**. Os módulos de regra funcion
 - **Novo item, classe ou habilidade:** edite `rpg/data/items.py` ou `rpg/data/classes.py`. Os efeitos das habilidades (dano, cura, efeitos periódicos, controle, combos...) são combinações de blocos que o motor de combate já entende.
 - **Novo monstro:** acrescente uma entrada em `rpg/data/monsters.py` (faixa de níveis, multiplicadores de vida, dano e armadura, fraquezas, habilidades com selos e tabela de saque). Depois coloque a criatura na tabela `encounters` de uma região ou num encontro fixo (`encounter`) de um local.
 - **Nova loja:** crie a entrada em `rpg/data/shops.py` e dê `"shop": "<id>"` a um NPC, com um nó de diálogo que tenha o efeito `open_shop`.
+- **Novo ponto de coleta:** crie o tipo em `rpg/data/gathering.py` (perícia, nível, item, XP, ferramenta, isca, chance e recuperação) e ponha `{"node": "<id>"}` em `resources` de um local. Um `if` faz o ponto aparecer só depois de um segredo.
+- **Nova receita ou oficina:** acrescente a receita em `rpg/data/recipes.py` (perícia, nível, XP, ingredientes, estação, ferramenta, chance de queimar). Uma oficina nova é só um `stations` num local, com horário (`if`), combustível (`fuel`) ou cozinha melhor (`burn`), se quiser.
 - **Novo comando:** use o decorador `@command(...)` em `rpg/commands.py`. Ele já aparece na ajuda.
 
-Os testes em `tests/test_world.py` validam todo o banco de dados: coordenadas válidas, locais alcançáveis, passagens com destino, diálogos sem nós quebrados, marcadores de texto conhecidos, monstros, tabelas de encontros, habilidades, itens e lojas.
+Os testes em `tests/test_world.py` validam todo o banco de dados: coordenadas válidas, locais alcançáveis, passagens com destino, diálogos sem nós quebrados, marcadores de texto conhecidos, monstros, tabelas de encontros, habilidades, itens, lojas, pontos de coleta e receitas. Um teste de "economia fechada" garante que todo ingrediente, isca e ferramenta pode ser obtido em algum lugar do jogo.
 
 ## Saves
 
@@ -162,7 +199,7 @@ Os saves ficam em `saves/<nome>-<id>.json` (a pasta pode ser trocada pela variá
 python -m unittest
 ```
 
-São 105 testes:
+São 157 testes:
 
 - curvas de XP do WoW e do OSRS;
 - atributos e equipamento de todas as classes;
@@ -170,8 +207,9 @@ São 105 testes:
 - regras de movimento, visão, tempo e segredos;
 - combate: fórmulas do Classic, selos, interrupção, atordoamento, recargas, combos, efeitos periódicos, chefes e reforços;
 - vitória, derrota, encontros aleatórios e fixos, caçada, equipamento, consumíveis e comércio;
+- coleta (chance, ferramentas, iscas, esgotamento e recuperação, achados raros), receitas (estações, horários, combustível, comida queimada, ferro que falha), bônus temporários, bolsas, frascos e venenos em combate, mestres dos ofícios e segredos de perícia;
 - a tela de combate com entradas simuladas;
-- saves, incluindo a recuperação pela cópia de segurança e o bestiário;
+- saves, incluindo a recuperação pela cópia de segurança, o bestiário, os pontos de coleta e os bônus ativos;
 - uma partida completa executando o `main.py` com entradas roteirizadas.
 
 ## Roteiro
@@ -183,8 +221,12 @@ São 105 testes:
   - timing de golpes, selos e fraquezas elementares no estilo Sea of Stars;
   - primeiras zonas de monstros (Floresta Sussurrante, Toca dos Lobos), com tabelas de loot por porcentagem;
   - equipamento, consumíveis, comércio e bestiário.
-- [ ] **Etapa 3:** coleta e ofícios no estilo OSRS (mineração, metalurgia, pesca, culinária, alfaiataria e alquimia) usando os pontos de coleta já marcados no mapa.
+- [x] **Etapa 3:** coleta e ofícios no estilo OSRS:
+  - mineração, metalurgia, pesca, culinária, alfaiataria e alquimia, de 1 a 99;
+  - oficinas, ferramentas, iscas, receitas e mestres;
+  - comidas, elixires, venenos, frascos de arremesso e bolsas que alimentam o combate;
+  - segredos revelados por nível de perícia.
 - [ ] **Etapa 4:**
   - missões a partir das pistas do diário;
-  - as três luas, a Mina de Ferro-Velho, o Bando do Corvo e a ilhota do lago;
+  - as três luas, a Mina de Ferro-Velho (com o ferro bom e o aço), o Bando do Corvo e a ilhota do lago;
   - baús trancados, NPCs ocultos, novas cidades e progressão de longo prazo.

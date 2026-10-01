@@ -51,7 +51,7 @@ MAP = {
             "examine": ("Os cristais vibram quando tocados, cada um numa nota diferente. Alguns, mais escuros e "
                         "densos, ecoam por muito tempo: cristais-de-eco, raríssimos, que só mãos muito "
                         "experientes em mineração conseguiriam extrair sem estilhaçar."),
-            "resources": [{"name": "Cristal-de-eco", "skill": "mineracao", "level": 40}],
+            "resources": [{"node": "cristais_eco"}],
         },
         {
             "id": "mural_veltharas", "name": "Mural de Vel'Tharas", "x": 3, "y": 3, "xp": 40,
@@ -92,6 +92,24 @@ MAP = {
                          "punhado de moedas antigas de prata e um pingente com uma pedra leitosa, que brilha em "
                          "resposta à sua presença."),
             },
+        },
+        {
+            "id": "margem_lago_escuro", "name": "Margem do Lago Escuro", "x": 11, "y": 4, "xp": 30,
+            "description": ("A gruta se abre sobre um lago subterrâneo de água negra e imóvel, que reflete os "
+                            "cristais do teto como um céu estrelado. Às vezes, algo pálido passa sob a "
+                            "superfície, rápido demais para os olhos."),
+            "examine": ("Os peixes que vivem aqui são brancos como leite e não têm olhos: nunca precisaram. "
+                        "Anselmo daria um braço para fisgar um desses."),
+            "resources": [{"node": "cardume_peixe_cego"}],
+        },
+        {
+            "id": "veio_prateado", "name": "Veio Prateado", "x": 12, "y": 5, "xp": 30,
+            "description": ("No canto mais fundo da gruta, a parede é riscada por um veio de prata tão puro que "
+                            "reflete a luz azul dos cristais como um espelho. Talvez seja daqui que a cachoeira "
+                            "tirou o nome."),
+            "examine": ("Ao redor do veio há marcas antigas de cinzel, pequenas e precisas. O povo de Vel'Tharas "
+                        "também mineirava aqui — e sabia exatamente o que procurava."),
+            "resources": [{"node": "veio_prata"}],
         },
         {
             "id": "porta_tres_luas", "name": "Porta Selada das Três Luas", "x": 13, "y": 3, "xp": 50,

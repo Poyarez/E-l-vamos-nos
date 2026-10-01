@@ -1,5 +1,5 @@
 """Integridade do "banco de dados": mapas, terrenos, locais, passagens, NPCs, diálogos,
-monstros, encontros, habilidades, itens e lojas.
+monstros, encontros, habilidades, itens, lojas, pontos de coleta e receitas.
 
 Estes testes protegem a expansão contínua do mundo: qualquer mapa, NPC ou monstro novo
 com erro de digitação, coordenada inválida, item inexistente ou nó de diálogo quebrado é
@@ -10,14 +10,16 @@ import string
 import unittest
 from collections import deque
 
-from rpg import npcs, world
+from rpg import crafting, npcs, world
 from rpg.character_creation import build_player
 from rpg.combat import ELEMENTS, MAX_ENEMIES
 from rpg.conditions import CONDITION_KEYS, as_list
 from rpg.data.classes import CLASSES, STATS
-from rpg.data.items import ITEM_TYPES, ITEMS, SLOTS, SUBTYPES
+from rpg.data.gathering import NODES
+from rpg.data.items import ITEM_TYPES, ITEMS, SLOTS, STARTING_ITEMS, SUBTYPES
 from rpg.data.monsters import FAMILIES, MONSTERS
 from rpg.data.npcs import NPCS
+from rpg.data.recipes import BURNT_ITEM, RECIPES, STATIONS
 from rpg.data.shops import SHOPS
 from rpg.data.terrain import TERRAIN
 from rpg.npcs import EFFECT_KEYS
@@ -35,7 +37,9 @@ MONSTER_EFFECTS = {"dot", "stun", "freeze", "fear", "debuff", "drain_mana", "hea
 REQUIREMENTS = {"first_round", "shield", "dagger", "combo", "target_below"}
 MODIFIED_STATS = {"ap", "armor", "dodge", "hit", "damage_dealt", "damage_taken", "max_hp"}
 SCALES = {None, "weapon", "ap", "sp"}
-USE_KEYS = {"heal", "heal_pct", "mana", "mana_pct", "combat", "minutes", "verb"}
+USE_KEYS = {"heal", "heal_pct", "mana", "mana_pct", "combat", "minutes", "verb", "buff", "damage", "element",
+            "combat_only"}
+BUFF_KEYS = {"id", "name", "group", "minutes", "stats", "vision", "coating"}
 
 
 def placeholders(text):
@@ -79,9 +83,17 @@ class MapIntegrityTest(unittest.TestCase):
                     self.assertTrue(landmark.description and landmark.examine, landmark.id)
                     if landmark.hint:
                         self.assertEqual(placeholders(landmark.hint), {"direcao"}, landmark.id)
-                    for node in landmark.resources:
-                        self.assertIn(node["skill"], SKILLS)
-                        self.assertTrue(1 <= node["level"] <= 99)
+                    for entry in landmark.resources:
+                        self.assertIn(entry["node"], NODES, landmark.id)
+                        self.assertLessEqual(set(entry.get("if", {})), CONDITION_KEYS)
+                    for station in landmark.stations:
+                        self.assertIn(station["id"], STATIONS, landmark.id)
+                        self.assertLessEqual(set(station.get("if", {})), CONDITION_KEYS)
+                        if station.get("fuel"):
+                            self.assertIn(station["fuel"], ITEMS)
+                    if landmark.secret and landmark.secret.get("skill"):
+                        self.assertLessEqual(set(landmark.secret["skill"]), set(SKILLS))
+                        self.assertTrue(landmark.secret.get("hint"), f"{landmark.id}: segredo de perícia sem dica")
                     if landmark.loot:
                         for item_id, quantity in landmark.loot.get("items", []):
                             self.assertIn(item_id, ITEMS)
@@ -280,8 +292,27 @@ class CombatDataTest(unittest.TestCase):
                     low, high = data["damage"]
                     self.assertTrue(0 < low <= high and data.get("subtype"))
                 self.assertLessEqual(set(data.get("stats", {})), set(STATS))
-                if data.get("use"):
-                    self.assertLessEqual(set(data["use"]), USE_KEYS)
+                if data["type"] == "ferramenta":
+                    self.assertIn(data["tool"], crafting.TOOL_NAMES)
+                    self.assertTrue(0 <= data.get("power", 0) < 0.5)
+                if data["type"] == "bolsa":
+                    self.assertEqual(data["slot"], "bolsa")
+                    self.assertGreater(data["bag_slots"], 0)
+                use = data.get("use")
+                if use:
+                    self.assertLessEqual(set(use), USE_KEYS)
+                    if use.get("damage"):
+                        low, high = use["damage"]
+                        self.assertTrue(0 < low <= high and use["combat_only"])
+                        self.assertIn(use["element"], ELEMENTS)
+                    buff = use.get("buff")
+                    if buff:
+                        self.assertLessEqual(set(buff), BUFF_KEYS)
+                        self.assertTrue(buff["id"] and buff["name"] and buff["group"] and buff["minutes"] > 0)
+                        self.assertFalse(use.get("combat", True), "bônus temporários só fora de combate")
+                        self.assertLessEqual(set(buff.get("stats", {})), set(STATS))
+                        if buff.get("coating"):
+                            self.assertIn(buff["coating"]["element"], ELEMENTS)
 
     def test_shops(self):
         for shop_id, data in SHOPS.items():
@@ -294,6 +325,8 @@ class CombatDataTest(unittest.TestCase):
         for npc in npcs.all_npcs():
             if npc.shop:
                 self.assertIn(npc.shop, SHOPS, npc.id)
+                self.assertTrue(any(node.get("effects", {}).get("open_shop") for node in npc.dialogue.values()),
+                                f"{npc.id} tem loja, mas nenhum diálogo a abre")
 
     def test_encounter_tables(self):
         for map_id in world.map_ids():
@@ -326,6 +359,98 @@ class CombatDataTest(unittest.TestCase):
                     journal = encounter.get("journal")
                     if journal:
                         self.assertTrue(journal["id"] and journal["title"] and journal["text"])
+
+
+
+def obtainable_items():
+    """Tudo o que o jogador consegue obter: coleta, receitas, lojas, saques, baús, NPCs e itens iniciais."""
+    sources = {node["item"] for node in NODES.values()}
+    sources |= {rare for node in NODES.values() for rare, _chance in node.get("rare", [])}
+    sources |= {recipe["output"][0] for recipe in RECIPES.values()} | {BURNT_ITEM}
+    sources |= {item_id for shop in SHOPS.values() for item_id in shop["stock"]}
+    for monster in MONSTERS.values():
+        for entry in monster.get("loot", []):
+            sources |= set(entry.get("one_of") or [entry["item"]])
+    sources |= {item_id for item_id, _quantity in STARTING_ITEMS}
+    sources |= {item_id for data in CLASSES.values() for item_id, _quantity in data["starting_items"]}
+    for map_id in world.map_ids():
+        for landmark in world.get_map(map_id).landmarks.values():
+            if landmark.loot:
+                sources |= {item_id for item_id, _quantity in landmark.loot.get("items", [])}
+    for npc in npcs.all_npcs():
+        for node in npc.dialogue.values():
+            give = node.get("effects", {}).get("give_item")
+            if give:
+                sources |= {item_id for item_id, _quantity in (give if isinstance(give[0], list) else [give])}
+    return sources
+
+
+class CraftingDataTest(unittest.TestCase):
+    def test_nodes(self):
+        for node_id, data in NODES.items():
+            with self.subTest(node=node_id):
+                self.assertIn(data["skill"], SKILLS)
+                self.assertTrue(1 <= data["level"] <= 99)
+                self.assertIn(data["item"], ITEMS)
+                self.assertGreater(data["xp"], 0)
+                self.assertTrue(0 < data["chance"] < 1)
+                self.assertGreater(data["minutes"], 0)
+                self.assertGreater(data["amount"], 0)
+                self.assertGreaterEqual(data["respawn"], data["amount"])
+                if data.get("tool"):
+                    self.assertIn(data["tool"], crafting.TOOL_NAMES)
+                if data.get("bait"):
+                    self.assertIn(data["bait"], ITEMS)
+                for rare_id, chance in data.get("rare", []):
+                    self.assertIn(rare_id, ITEMS)
+                    self.assertTrue(0 < chance < 0.2)
+                self.assertLessEqual(set(data.get("if", {})), CONDITION_KEYS)
+                if data.get("if"):
+                    self.assertTrue(data.get("closed"))
+                self.assertTrue(crafting.node_landmarks(node_id), "ponto de coleta que não existe no mapa")
+
+    def test_recipes(self):
+        tool_kinds = {data["tool"] for data in ITEMS.values() if data.get("tool")}
+        stations_in_world = {station["id"] for map_id in world.map_ids()
+                             for landmark in world.get_map(map_id).landmarks.values() for station in landmark.stations}
+        for recipe_id, recipe in RECIPES.items():
+            with self.subTest(recipe=recipe_id):
+                self.assertIn(recipe["skill"], SKILLS)
+                self.assertEqual(SKILLS[recipe["skill"]]["kind"], "produção")
+                self.assertTrue(1 <= recipe["level"] <= 99)
+                self.assertGreater(recipe["xp"], 0)
+                self.assertGreater(recipe["minutes"], 0)
+                output_id, quantity = recipe["output"]
+                self.assertIn(output_id, ITEMS)
+                self.assertGreater(quantity, 0)
+                self.assertTrue(recipe["inputs"])
+                for item_id, amount in recipe["inputs"]:
+                    self.assertIn(item_id, ITEMS)
+                    self.assertGreater(amount, 0)
+                    self.assertNotEqual(item_id, output_id)
+                if recipe.get("station"):
+                    self.assertIn(recipe["station"], STATIONS)
+                    self.assertIn(recipe["station"], stations_in_world, "estação que não existe em nenhum mapa")
+                if recipe.get("tool"):
+                    self.assertIn(recipe["tool"], tool_kinds)
+                for key in ("burn", "fail"):
+                    if recipe.get(key):
+                        chance, stop = recipe[key]
+                        self.assertTrue(0 < chance < 1 and recipe["level"] < stop <= 99)
+
+    def test_every_ingredient_tool_and_bait_can_be_obtained(self):
+        sources = obtainable_items()
+        needed = {item_id for recipe in RECIPES.values() for item_id, _amount in recipe["inputs"]}
+        needed |= {data["bait"] for data in NODES.values() if data.get("bait")}
+        self.assertEqual(needed - sources, set(), "ingredientes sem nenhuma fonte no jogo")
+        tool_kinds = ({data["tool"] for data in NODES.values() if data.get("tool")}
+                      | {recipe["tool"] for recipe in RECIPES.values() if recipe.get("tool")})
+        for kind in tool_kinds:
+            self.assertTrue(any(ITEMS[item_id].get("tool") == kind for item_id in sources), kind)
+
+    def test_every_skill_starts_at_level_one(self):
+        for skill_id in SKILLS:
+            self.assertTrue(crafting.unlocks(skill_id, 1), f"{skill_id} não tem nada para fazer no nível 1")
 
 
 if __name__ == "__main__":

@@ -383,12 +383,14 @@ class Battle:
         self._header("Ataque")
         dealt = self._hero_hit(target, hero.weapon_roll(self.rng), "fisico", False, timing, "Seu golpe")
         self._rage_from_damage(dealt, dealing=True)
+        self._weapon_coating(target, dealt)
         if hero.weapon("secundaria"):
             target = target if target.alive else self._target(None)
             if target is not None:
                 offhand = hero.weapon_roll(self.rng, offhand=True) * OFFHAND_FACTOR
                 dealt = self._hero_hit(target, offhand, "fisico", False, timing, "Mão secundária")
                 self._rage_from_damage(dealt, dealing=True)
+                self._weapon_coating(target, dealt)
         self._finish_hero_action()
         return True
 
@@ -432,7 +434,8 @@ class Battle:
         self._finish_hero_action()
         return True
 
-    def use_item(self, item_id: str) -> bool:
+    def use_item(self, item_id: str, target_index: Optional[int] = None, timing: Optional[str] = None) -> bool:
+        """Usa um item: poções no herói; frascos de arremesso (``damage``) num inimigo."""
         hero = self.hero
         item = get_item(item_id)
         use = item.get("use")
@@ -442,6 +445,18 @@ class Battle:
             return self._invalid(f"Não dá para usar {item['name']} no meio da luta!")
         if hero.player.inventory.count(item_id) == 0:
             return self._invalid(f"Você não tem {item['name']}.")
+        if use.get("damage"):
+            target = self._target(target_index)
+            if target is None:
+                return self._invalid("Alvo inválido.")
+            self._header(item["name"])
+            hero.player.inventory.remove(item_id, 1)
+            self._say(f"{use.get('verb', 'Você arremessa')} em {target.name}!")
+            amount = self.rng.uniform(*use["damage"])
+            self._hits = {}
+            self._hero_hit(target, amount, use.get("element", "fisico"), True, timing, item["name"])
+            self._finish_hero_action()
+            return True
         self._header(item["name"])
         self._say(apply_consumable(hero.player, item_id, self.rng, max_hp=hero.max_hp))
         self._finish_hero_action()
@@ -500,6 +515,8 @@ class Battle:
                         break
                     dealt = self._hero_hit(target, self._power(spec), element, spell, timing, name)
                     self._hits[id(target)] = self._hits.get(id(target), False) or dealt is not None
+                    if spec.get("scale") == "weapon":
+                        self._weapon_coating(target, dealt)
         elif kind == "finisher":
             target = enemies[0]
             amount = sum(self._power(spec) for _ in range(hero.combo))
@@ -612,14 +629,20 @@ class Battle:
         return self._hits[key]
 
     def _hero_hit(self, target: Monster, amount: float, element: str, spell: bool, timing: Optional[str],
-                  label: str) -> Optional[int]:
-        """Resolve um golpe do herói. Devolve o dano causado, ou ``None`` se errou."""
+                  label: str, proc: bool = False) -> Optional[int]:
+        """Resolve um golpe do herói. Devolve o dano causado, ou ``None`` se errou.
+
+        ``proc`` marca um dano extra que acompanha outro golpe (o veneno da arma): ele não
+        testa acerto nem crítico.
+        """
         hero = self.hero
-        if not self._roll_hit(target, spell):
+        if not proc and not self._roll_hit(target, spell):
             self._say(f"{label}: {target.name} {'resiste' if spell else 'se esquiva'}!")
             return None
-        crit = hero.crit_next or self.rng.random() < (hero.spell_crit_chance if spell else hero.crit_chance)
-        hero.crit_next = False
+        crit = False
+        if not proc:
+            crit = hero.crit_next or self.rng.random() < (hero.spell_crit_chance if spell else hero.crit_chance)
+            hero.crit_next = False
         if crit:
             amount *= SPELL_CRIT_MULTIPLIER if spell else CRIT_MULTIPLIER
         if timing == TIMING_PERFECT:
@@ -649,6 +672,15 @@ class Battle:
         if not target.alive:
             self._on_enemy_death(target)
         return dealt
+
+    def _weapon_coating(self, target: Monster, dealt: Optional[int]) -> None:
+        """Veneno de arma: dano extra do elemento a cada golpe de arma que acerta."""
+        buff = self.hero.player.coating
+        if dealt is None or buff is None or not target.alive:
+            return
+        coating = buff["coating"]
+        self._hero_hit(target, self.rng.uniform(*coating["damage"]), coating["element"], True, None, buff["name"],
+                       proc=True)
 
     def _break_lock(self, enemy: Monster, element: str) -> None:
         charge = enemy.charging

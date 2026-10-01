@@ -109,8 +109,9 @@ class Landmark:
     hidden: bool = False             # não aparece como "?" no mapa antes da descoberta
     reveal: int = 0                  # raio do mapa revelado ao descobrir (mirantes)
     rest: bool = False               # é possível dormir aqui
-    resources: Tuple[Dict[str, Any], ...] = ()   # pontos de coleta
-    secret: Optional[Dict[str, Any]] = None      # revelado ao examinar
+    resources: Tuple[Dict[str, Any], ...] = ()   # pontos de coleta ({"node": ..., "if": ...})
+    stations: Tuple[Dict[str, Any], ...] = ()    # oficinas: fornalha, bigorna, fogo, roca, caldeirão
+    secret: Optional[Dict[str, Any]] = None      # revelado ao examinar (pode exigir nível de perícia)
     loot: Optional[Dict[str, Any]] = None        # recompensa única ao examinar
     encounter: Optional[Dict[str, Any]] = None   # luta fixa ao se aproximar (até ser vencida)
 
@@ -176,7 +177,8 @@ class GameMap:
                         for r in data.get("regions", [])]
         self.landmarks: Dict[str, Landmark] = {}
         for entry in data.get("landmarks", []):
-            landmark = Landmark(**{**entry, "resources": tuple(entry.get("resources", ()))})
+            landmark = Landmark(**{**entry, "resources": tuple(entry.get("resources", ())),
+                                    "stations": tuple(entry.get("stations", ()))})
             self.landmarks[landmark.id] = landmark
         self._landmark_at: Dict[Coord, Landmark] = {lm.pos: lm for lm in self.landmarks.values()}
         self.portals = [Portal(**{**entry, "target": tuple(entry["target"]) if entry.get("target") else None})

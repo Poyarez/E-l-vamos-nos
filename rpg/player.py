@@ -1,4 +1,5 @@
-"""O herói: aparência, classe, atributos, experiência (curva do WoW Classic), equipamento e perícias."""
+"""O herói: aparência, classe, atributos, experiência (curva do WoW Classic), equipamento,
+perícias e bônus temporários (comidas, elixires e venenos de arma)."""
 
 from __future__ import annotations
 
@@ -8,7 +9,7 @@ from typing import Any, Dict, List, Mapping, Optional
 from .data.appearance import ALIGNMENTS, ARMOR_COLORS, FEATURES, GENDERS, HAIR_COLORS, HAIR_STYLES
 from .data.classes import CLASSES, RESOURCES, STATS, TALENT_START_LEVEL
 from .data.items import ITEMS, STARTING_COPPER, STARTING_ITEMS, SUBTYPES
-from .items import Inventory, ItemStack, get_item
+from .items import DEFAULT_BAG_SLOTS, Inventory, ItemStack, get_item
 from .skills import SkillSet
 from .utils import capitalize_first
 
@@ -78,7 +79,7 @@ class Player:
     def __init__(self, name: str, class_id: str, appearance: Appearance, alignment: str, level: int = 1,
                  xp: int = 0, hp: Optional[int] = None, resource: Optional[int] = None, copper: int = 0,
                  inventory: Optional[Inventory] = None, equipment: Optional[Dict[str, ItemStack]] = None,
-                 skills: Optional[SkillSet] = None) -> None:
+                 skills: Optional[SkillSet] = None, buffs: Optional[List[Dict[str, Any]]] = None) -> None:
         if class_id not in CLASSES:
             raise ValueError(f"Classe desconhecida: {class_id!r}")
         if alignment not in ALIGNMENTS:
@@ -94,6 +95,8 @@ class Player:
         self.inventory = inventory or Inventory()
         self.equipment: Dict[str, ItemStack] = dict(equipment or {})
         self.skills = skills or SkillSet()
+        self.buffs: List[Dict[str, Any]] = [dict(buff) for buff in (buffs or [])]
+        self._sync_capacity()
         self.hp = self.max_hp if hp is None else max(0, min(hp, self.max_hp))
         default_resource = self.max_resource if self.resource_data["starts_full"] else 0
         self.resource = default_resource if resource is None else max(0, min(resource, self.max_resource))
@@ -142,8 +145,11 @@ class Player:
     def gear_bonus(self, stat: str) -> int:
         return sum(stack.data.get("stats", {}).get(stat, 0) for stack in self.equipment.values())
 
+    def buff_bonus(self, stat: str) -> int:
+        return sum(buff.get("stats", {}).get(stat, 0) for buff in self.buffs)
+
     def stat(self, stat: str) -> int:
-        return self.base_stat(stat) + self.gear_bonus(stat)
+        return self.base_stat(stat) + self.gear_bonus(stat) + self.buff_bonus(stat)
 
     def stats(self) -> Dict[str, int]:
         return {stat: self.stat(stat) for stat in STATS}
@@ -227,7 +233,43 @@ class Player:
         else:
             self.resource = max(0, self.resource - 2 * minutes)
 
+    # ------------------------------------------------------------------ bônus temporários
+
+    def add_buff(self, spec: Mapping[str, Any], now: int) -> Dict[str, Any]:
+        """Aplica um bônus de comida, elixir ou veneno de arma. Um por grupo: o novo substitui o antigo."""
+        buff = {"id": spec["id"], "name": spec["name"], "group": spec.get("group", spec["id"]),
+                "stats": dict(spec.get("stats", {})), "vision": int(spec.get("vision", 0)),
+                "coating": dict(spec["coating"]) if spec.get("coating") else None,
+                "expires": int(now + spec["minutes"])}
+        self.buffs = [old for old in self.buffs if old["group"] != buff["group"]] + [buff]
+        return buff
+
+    def expire_buffs(self, now: int) -> List[Dict[str, Any]]:
+        """Remove os bônus vencidos e devolve quais foram."""
+        expired = [buff for buff in self.buffs if buff["expires"] <= now]
+        if expired:
+            self.buffs = [buff for buff in self.buffs if buff["expires"] > now]
+            self.clamp_vitals()
+        return expired
+
+    @property
+    def vision_bonus(self) -> int:
+        return sum(buff.get("vision", 0) for buff in self.buffs)
+
+    @property
+    def coating(self) -> Optional[Dict[str, Any]]:
+        """O veneno (ou óleo) aplicado na arma, se houver."""
+        return next((buff for buff in self.buffs if buff.get("coating")), None)
+
     # ------------------------------------------------------------------ equipamento
+
+    @property
+    def bag_slots(self) -> int:
+        bag = self.equipment.get("bolsa")
+        return bag.data.get("bag_slots", 0) if bag else 0
+
+    def _sync_capacity(self) -> None:
+        self.inventory.capacity = DEFAULT_BAG_SLOTS + self.bag_slots
 
     def equip_problem(self, item_id: str) -> Optional[str]:
         """Por que este item não pode ser equipado agora (``None`` se pode)."""
@@ -259,23 +301,31 @@ class Player:
         slot = data["slot"]
         slots = [slot] + (["secundaria"] if data.get("two_handed") else [])
         displaced = [name for name in slots if name in self.equipment]
-        free = self.inventory.free_slots + (1 if stack.quantity == 1 else 0)
-        if len(displaced) > free:
+        used_after = len(self.inventory) - (1 if stack.quantity == 1 else 0) + len(displaced)
+        capacity_after = DEFAULT_BAG_SLOTS + (data.get("bag_slots", 0) if slot == "bolsa" else self.bag_slots)
+        if used_after > capacity_after:
+            if slot == "bolsa":
+                raise ValueError("Essa bolsa é menor que a sua: esvazie um pouco a mochila antes de trocar.")
             raise ValueError("Não há espaço na mochila para guardar o que você está usando.")
         self.inventory.take(stack)
         removed = [self.equipment.pop(name) for name in displaced]
+        self.equipment[slot] = ItemStack(item_id, 1, dye)
+        self._sync_capacity()
         for old in removed:
             self.inventory.add(old.item_id, 1, old.dye)
-        self.equipment[slot] = ItemStack(item_id, 1, dye)
         self.clamp_vitals()
         return removed
 
     def unequip(self, slot: str) -> ItemStack:
         if slot not in self.equipment:
             raise ValueError("Não há nada equipado aí.")
-        if self.inventory.free_slots <= 0:
+        capacity_after = DEFAULT_BAG_SLOTS + (0 if slot == "bolsa" else self.bag_slots)
+        if len(self.inventory) + 1 > capacity_after:
+            if slot == "bolsa":
+                raise ValueError(f"Sem a bolsa, a mochila só tem {DEFAULT_BAG_SLOTS} espaços: esvazie um pouco antes.")
             raise ValueError("Sua mochila está cheia.")
         stack = self.equipment.pop(slot)
+        self._sync_capacity()
         self.inventory.add(stack.item_id, 1, stack.dye)
         self.clamp_vitals()
         return stack
@@ -322,6 +372,7 @@ class Player:
             "inventory": self.inventory.to_dict(),
             "equipment": {slot: stack.to_dict() for slot, stack in self.equipment.items()},
             "skills": self.skills.to_dict(),
+            "buffs": [dict(buff) for buff in self.buffs],
         }
 
     @classmethod
@@ -341,4 +392,6 @@ class Player:
             inventory=Inventory.from_dict(data.get("inventory")),
             equipment=equipment,
             skills=SkillSet.from_dict(data.get("skills")),
+            buffs=[buff for buff in data.get("buffs", [])
+                   if isinstance(buff, dict) and {"id", "name", "group", "expires"} <= set(buff)],
         )

@@ -88,7 +88,7 @@ def run(session: "GameSession", shop_id: str) -> None:
     player = session.player
     message = ""
     while True:
-        screens.section(f"{shop['name'].upper()}  {ui.sym('dot')}  sua bolsa: {format_money(player.copper)}")
+        screens.section(f"{shop['name'].upper()}  {ui.sym('dot')}  seu dinheiro: {format_money(player.copper)}")
         if message:
             ui.echo_lines(ui.wrap(message, screens.screen_width() - 4, "  "))
             ui.echo()
@@ -116,7 +116,8 @@ def _buy_menu(player: "Player", shop_id: str) -> str:
     stock = get_shop(shop_id)["stock"]
     labels = [f"{item_name(item_id)} — {ui.style(format_money(buy_price(shop_id, item_id)), 'bright_yellow')}"
               for item_id in stock]
-    details = [get_item(item_id)["description"] for item_id in stock]
+    details = [(item_summary(item_id) + ". " if get_item(item_id).get("slot") or get_item(item_id).get("tool") else "")
+               + get_item(item_id)["description"] for item_id in stock]
     choice = ui.choose(labels, prompt="Comprar", cancel="Voltar", details=details)
     if choice is None:
         return ""

@@ -10,12 +10,14 @@ Estrutura de um nó:
                 ``{"if": {...}, "text": "..."}`` para aparecer só sob condições.
   ``options`` — escolhas: ``{"text", "next", "if"}`` (``next: None`` encerra a conversa).
   ``next``    — sem opções: volta automaticamente para este nó.
-  ``effects`` — ao exibir o nó: ``set_flag``, ``journal``, ``xp``, ``give_item``,
-                ``take_item``, ``give_copper``, ``restore`` e ``open_shop`` (abre a loja do NPC,
-                definida em ``shop``, assim que a conversa termina).
+  ``effects`` — ao exibir o nó: ``set_flag``, ``journal``, ``xp``, ``give_item`` e
+                ``take_item`` (``[item, qtd]`` ou uma lista desses pares), ``give_copper``,
+                ``restore`` e ``open_shop`` (abre a loja do NPC, definida em ``shop``,
+                assim que a conversa termina).
 
 Condições (``if``): ``flag``, ``not_flag``, ``journal``, ``discovered``, ``class``,
-``moral``, ``law``, ``period``, ``night``, ``met`` e ``min_level``.
+``moral``, ``law``, ``period``, ``night``, ``met``, ``min_level``, ``item`` (ter
+``[item, qtd]`` na mochila) e ``skill`` (``{"perícia": nível}``).
 
 Marcadores de texto: ``{nome}``, ``{tratamento}``/``{Tratamento}``, ``{bem_vindo}``/``{Bem_vindo}``
 e ``{classe}``.
@@ -358,6 +360,7 @@ NPCS = {
         "color": "bright_red",
         "description": "Um homem enorme, de barba ruiva trançada e braços cobertos de cicatrizes de queimadura.",
         "map": "vale_primordia",
+        "shop": "brom",
         "schedule": [{"periods": DAY, "x": 28, "y": 16}, {"periods": ["entardecer", "noite"], "x": 33, "y": 14}],
         "dialogue": {
             "inicio": {
@@ -369,7 +372,12 @@ NPCS = {
                     {"if": {"met": True}, "text": "*Brom limpa as mãos no avental de couro.* {nome}! Precisa de alguma coisa?"},
                 ],
                 "options": [
-                    {"text": "Pode me ensinar a trabalhar o metal?", "next": "metalurgia"},
+                    {"text": "Pode me ensinar a trabalhar o metal?", "next": "metalurgia",
+                     "if": {"not_flag": "brom_aula"}},
+                    {"text": "Como funciona mesmo a forja?", "next": "forja_ajuda", "if": {"flag": "brom_aula"}},
+                    {"text": "Olhe: fundi minha primeira barra de bronze!", "next": "primeira_barra",
+                     "if": {"flag": "brom_aula", "not_flag": "brom_primeira_barra", "item": "barra_bronze"}},
+                    {"text": "Quero ver suas mercadorias.", "next": "negociar"},
                     {"text": "Onde consigo minério?", "next": "minerio"},
                     {"text": "De quem é o martelo com o nome \"Davi\"?", "next": "davi",
                      "if": {"discovered": "forja"}},
@@ -382,16 +390,46 @@ NPCS = {
                      "uma picareta, traga cobre e estanho das colinas, e eu mostro como fundir sua primeira barra "
                      "de bronze."),
                     "Todo ferreiro começa assim: com as mãos sujas e os dedos queimados.",
+                    ("*Ele tira um martelo de uma prateleira e o joga para você.* Tome, um dos meus velhos. Sem "
+                     "martelo, bigorna é só um peso de porta."),
                 ],
-                "effects": {"journal": {
-                    "id": "pista_metalurgia", "title": "Aulas de metalurgia",
-                    "text": ("Brom ensina a fundir bronze a quem trouxer minério de cobre e estanho das Colinas de "
-                             "Cobre. Será preciso uma picareta.")}},
+                "effects": {
+                    "set_flag": "brom_aula",
+                    "give_item": ["martelo_ferreiro", 1],
+                    "journal": {
+                        "id": "pista_metalurgia", "title": "Aulas de metalurgia",
+                        "text": ("Brom ensina a fundir bronze a quem trouxer minério de cobre e estanho das Colinas "
+                                 "de Cobre. Na fornalha da forja, cobre e estanho viram barras; na bigorna, as "
+                                 "barras viram armas e armaduras (comando 'forjar'). Será preciso uma picareta "
+                                 "('minerar').")}},
                 "next": "inicio",
+            },
+            "forja_ajuda": {
+                "text": [
+                    ("Minério na fornalha vira barra: um de cobre e um de estanho dão bronze. Barra na bigorna vira "
+                     "lâmina, elmo, escudo, picareta... É só dizer 'forjar' perto delas."),
+                    ("Quanto mais você forja, mais coisas sabe fazer — e o ferro só obedece a quem já suou muito "
+                     "no bronze. De noite eu tranco tudo: ladrão de ferro é o que não falta."),
+                ],
+                "next": "inicio",
+            },
+            "primeira_barra": {
+                "text": [
+                    "*Brom pega a barra, gira contra a luz e assente devagar.*",
+                    ("Bolhas aqui, aqui... e uma rachadura. Péssima. *Ele abre um sorriso enorme.* A minha primeira "
+                     "foi pior. Bem-vindo à forja, {nome}."),
+                ],
+                "effects": {"set_flag": "brom_primeira_barra", "xp": 100},
+                "next": "inicio",
+            },
+            "negociar": {
+                "text": ["Picaretas, martelos e o que mais sair da bigorna. Preço justo — mais ou menos."],
+                "effects": {"open_shop": True},
             },
             "minerio": {
                 "text": [
                     ("No Afloramento de Cobre, nas colinas a leste: cobre e estanho a céu aberto, fáceis de tirar. "
+                     "Os mineiros largaram umas picaretas por lá quando fugiram; alguma ainda deve prestar. "
                      "Ferro bom mesmo, só na Mina de Ferro-Velho..."),
                     "*O rosto dele se fecha.* ...mas da mina ninguém chega mais perto.",
                 ],
@@ -435,10 +473,37 @@ NPCS = {
                     {"text": "Quero um quarto para descansar.", "next": "quarto"},
                     {"text": "Ouviu algum boato interessante?", "next": "boatos"},
                     {"text": "Quem é o bardo que toca aqui?", "next": "bardo"},
+                    {"text": "Pode me ensinar a cozinhar?", "next": "cozinhar", "if": {"not_flag": "marta_cozinha"}},
+                    {"text": "Alguma dica de cozinha?", "next": "dicas_cozinha", "if": {"flag": "marta_cozinha"}},
                     {"text": "\"Tobias + Marta\", na Pedra do Viajante...", "next": "tobias",
                      "if": {"discovered": "pedra_viajante"}},
                     {"text": "Até mais, Marta.", "next": None},
                 ],
+            },
+            "cozinhar": {
+                "text": [
+                    ("*Ela joga um pano de prato no ombro.* Cozinhar? Fogo baixo, paciência alta e nunca, NUNCA vire "
+                     "as costas para uma truta na grelha. Pode usar minha cozinha quando quiser — só lave as panelas."),
+                    ("Leve estas carnes de javali para treinar. E, se um dia acertar a mão no ensopado, ponha uns "
+                     "cogumelos-lume da floresta: é o segredo que eu não conto para ninguém."),
+                ],
+                "effects": {
+                    "set_flag": "marta_cozinha",
+                    "give_item": ["carne_javali", 2],
+                    "journal": {
+                        "id": "pista_culinaria", "title": "A cozinha do Javali Dourado",
+                        "text": ("Marta deixa você usar a cozinha da estalagem (comando 'cozinhar'). O segredo do "
+                                 "ensopado de javali dela: cogumelos-lume da floresta.")}},
+                "next": "inicio",
+            },
+            "dicas_cozinha": {
+                "text": [
+                    ("Quanto mais você cozinha, menos queima. E a minha cozinha queima menos que qualquer fogueira "
+                     "de acampamento — pode confiar."),
+                    ("Comida boa faz mais que encher a barriga: quem come bem antes de sair luta melhor. Truta em "
+                     "torta, javali em ensopado, lobo com as especiarias da caravana... Experimente!"),
+                ],
+                "next": "inicio",
             },
             "quarto": {
                 "text": [
@@ -566,6 +631,7 @@ NPCS = {
         "color": "cyan",
         "description": "Pele queimada de sol, chapéu de palha furado e uma vara de pesca entre os joelhos.",
         "map": "vale_primordia",
+        "shop": "anselmo",
         "schedule": [{"periods": DAY, "x": 41, "y": 22}],
         "dialogue": {
             "inicio": {
@@ -577,7 +643,9 @@ NPCS = {
                     {"if": {"met": True}, "text": "*Anselmo ergue dois dedos em cumprimento, sem tirar os olhos da linha.*"},
                 ],
                 "options": [
-                    {"text": "Pode me ensinar a pescar?", "next": "pescar"},
+                    {"text": "Pode me ensinar a pescar?", "next": "pescar", "if": {"not_flag": "anselmo_rede"}},
+                    {"text": "O que mais morde por aqui?", "next": "peixes", "if": {"flag": "anselmo_rede"}},
+                    {"text": "Vende vara e iscas?", "next": "negociar"},
                     {"text": "Que ilhota é aquela no meio do lago?", "next": "ilhota"},
                     {"text": "O \"Rei do Lago\" existe mesmo?", "next": "rei"},
                     {"text": "Você conhece a Cachoeira do Véu de Prata?", "next": "cachoeira"},
@@ -590,12 +658,31 @@ NPCS = {
                      "Arranje uma vara e iscas, sente aqui e espere. Camarão e sardinha mordem fácil. Truta, só no "
                      "ribeirão, e só para quem tem paciência."),
                     "Depois leve o que pescar para a Marta. Ela cozinha como ninguém — e talvez até ensine você.",
+                    ("*Ele aponta com o queixo para as redes no varal.* Leve aquela ali, a remendada. Para "
+                     "camarão, serve."),
                 ],
-                "effects": {"journal": {
-                    "id": "pista_pesca", "title": "Pescaria no lago",
-                    "text": ("Anselmo diz que camarões e sardinhas mordem fácil no Píer do Lago Espelhado; trutas, "
-                             "só no ribeirão. Será preciso uma vara e iscas.")}},
+                "effects": {
+                    "set_flag": "anselmo_rede",
+                    "give_item": ["rede_pesca", 1],
+                    "journal": {
+                        "id": "pista_pesca", "title": "Pescaria no lago",
+                        "text": ("Anselmo diz que camarões (com rede) e sardinhas (com vara e minhocas) mordem fácil "
+                                 "no Píer do Lago Espelhado; trutas, só no ribeirão. Comando: 'pescar'.")}},
                 "next": "inicio",
+            },
+            "peixes": {
+                "text": [
+                    ("Camarão se pega de rede, aqui na beirada. Sardinha quer vara e minhoca. Truta e salmão moram no "
+                     "Vau das Lavadeiras e só mordem mosca: pena de corvo amarrada no anzol."),
+                    ("*Ele baixa a voz.* E dizem que debaixo da cachoeira tem um lago onde os peixes nem olhos têm. "
+                     "Bobagem, claro. *Ele não parece achar bobagem.*"),
+                ],
+                "next": "inicio",
+            },
+            "negociar": {
+                "text": ["*Anselmo indica um caixote sem tirar os olhos da água.* Vara, rede e minhoca. Pague o "
+                         "que está escrito e não espante os peixes."],
+                "effects": {"open_shop": True},
             },
             "ilhota": {
                 "text": [
@@ -641,6 +728,7 @@ NPCS = {
         "color": "green",
         "description": "Corcunda, de nariz adunco, óculos redondos e olhos verdes vivíssimos. Cheira a hortelã e fumaça.",
         "map": "vale_primordia",
+        "shop": "brigida",
         "schedule": [{"x": 9, "y": 23}],
         "dialogue": {
             "inicio": {
@@ -655,7 +743,9 @@ NPCS = {
                     {"if": {"met": True}, "text": "*Ela mexe o caldeirão sem olhar.* De volta, criança? O que o charco trouxe para mim hoje?"},
                 ],
                 "options": [
-                    {"text": "Que remédios você prepara?", "next": "remedios"},
+                    {"text": "Que remédios você prepara?", "next": "remedios", "if": {"not_flag": "brigida_aula"}},
+                    {"text": "Como se faz uma poção mesmo?", "next": "alquimia_ajuda", "if": {"flag": "brigida_aula"}},
+                    {"text": "Posso ver o que você vende?", "next": "negociar"},
                     {"text": "O que sabe sobre as tremuras?", "next": "tremuras"},
                     {"text": "A Irmã Celeste disse que você entende de sonhos.", "next": "sonhos",
                      "if": {"journal": "pista_sonhos"}},
@@ -669,11 +759,34 @@ NPCS = {
                     ("Unguentos para cortes, xaropes para tosse, chás para coração partido — esses vendem mais. Tudo "
                      "do pântano. As melhores ervas crescem onde ninguém quer pisar."),
                     "Se quiser aprender, traga ervas e paciência. Alquimia não é cozinhar: é convencer as plantas a fazer o que você quer.",
+                    ("*Ela enfia na sua mão um almofariz rachado e três frascos.* Toma. Folha-de-charco cresce aí "
+                     "fora, até no meu quintal. Duas folhas, um frasco: poção de cura. Comece por aí."),
                 ],
-                "effects": {"journal": {
-                    "id": "pista_alquimia", "title": "Lições de alquimia",
-                    "text": "Mãe Brígida ensina alquimia a quem lhe trouxer ervas do pântano — e paciência."}},
+                "effects": {
+                    "set_flag": "brigida_aula",
+                    "give_item": [["almofariz", 1], ["frasco_vazio", 3]],
+                    "journal": {
+                        "id": "pista_alquimia", "title": "Lições de alquimia",
+                        "text": ("Mãe Brígida ensina alquimia: ervas colhidas ('colher') viram poções no almofariz "
+                                 "('preparar'). As misturas fortes — elixires, óleos e frascos — só no caldeirão "
+                                 "da cabana dela.")}},
                 "next": "inicio",
+            },
+            "alquimia_ajuda": {
+                "text": [
+                    ("Cada erva tem um gênio. Folha-de-charco fecha feridas, cogumelo-lume desperta a mana, "
+                     "flor-de-breu quer pegar fogo, presa de javali deixa o sangue teimoso, glândula de aranha "
+                     "envenena..."),
+                    ("Poção simples você faz em qualquer canto, com o almofariz. Elixires, óleos e frascos de "
+                     "arremesso, só no meu caldeirão — e comigo olhando. *Ela aponta um dedo torto.* E não toque "
+                     "nos potes."),
+                ],
+                "next": "inicio",
+            },
+            "negociar": {
+                "text": ["*Ela abre um armário que range como um gato velho.* Frascos, remédios, um almofariz novo. "
+                         "Nada de olhos de sapo hoje: acabaram."],
+                "effects": {"open_shop": True},
             },
             "tremuras": {
                 "text": [
@@ -795,6 +908,7 @@ NPCS = {
         "color": "yellow",
         "description": "Turbante índigo, barba bem aparada e anéis em todos os dedos.",
         "map": "vale_primordia",
+        "shop": "zahir",
         "schedule": [{"periods": DAY, "x": 35, "y": 9}],
         "dialogue": {
             "inicio": {
@@ -808,6 +922,7 @@ NPCS = {
                 ],
                 "options": [
                     {"text": "O que você vende?", "next": "mercadorias"},
+                    {"text": "Não dá para abrir um fardo só para mim?", "next": "fardo", "if": {"flag": "zahir_fardos"}},
                     {"text": "Como vocês chegaram até aqui?", "next": "chegada"},
                     {"text": "Por que há uma flecha cravada na sua carroça?", "next": "flecha",
                      "if": {"discovered": "caravana"}},
@@ -820,8 +935,18 @@ NPCS = {
                      "se apagam — bem, quase nunca. Meus fardos estão cheios, mas meus compradores estão longe."),
                     ("Quando a rota for reaberta, monto minha banca no mercado da vila. Até lá, tudo fica bem "
                      "amarrado: o Bando do Corvo tem um faro excelente para seda."),
+                    "*Ele olha você de cima a baixo.* A não ser, é claro, que alguém me peça com muito jeito...",
                 ],
+                "effects": {"set_flag": "zahir_fardos"},
                 "next": "inicio",
+            },
+            "fardo": {
+                "text": [
+                    ("*Zahir olha para os lados, teatral.* Para meu cliente favorito... um fardo. Um só! "
+                     "Especiarias, um pouco de seda, uma ou outra ferramenta de qualidade."),
+                    "E não conte à Capitã: ela cobra imposto até de sorriso.",
+                ],
+                "effects": {"open_shop": True},
             },
             "chegada": {
                 "text": [
@@ -853,6 +978,7 @@ NPCS = {
         "color": "white",
         "description": "Um velho magro, coberto de farinha da cabeça aos pés, carregando um saco maior que ele.",
         "map": "vale_primordia",
+        "shop": "tobias",
         "schedule": [{"periods": ["amanhecer", "manha", "tarde", "entardecer"], "x": 39, "y": 18}],
         "dialogue": {
             "inicio": {
@@ -865,6 +991,9 @@ NPCS = {
                 ],
                 "options": [
                     {"text": "Que ratos?", "next": "ratos"},
+                    {"text": "Trouxe cinco rabos de rato do celeiro.", "next": "rabos",
+                     "if": {"journal": "rumor_ratos", "item": ["rabo_rato", 5]}},
+                    {"text": "Quero comprar farinha.", "next": "negociar"},
                     {"text": "O espantalho muda mesmo de lugar à noite?", "next": "espantalho",
                      "if": {"discovered": "espantalho"}},
                     {"text": "Você conhece a Marta da estalagem?", "next": "marta",
@@ -881,8 +1010,20 @@ NPCS = {
                 "effects": {"journal": {
                     "id": "rumor_ratos", "title": "Ratos gigantes no moinho",
                     "text": ("O celeiro de Tobias está infestado de ratos gigantes que saíram de buracos no chão "
-                             "depois das tremuras. Ele paga em farinha.")}},
+                             "depois das tremuras. Ele paga em farinha: cinco sacos a cada cinco rabos de rato.")}},
                 "next": "inicio",
+            },
+            "rabos": {
+                "text": [
+                    "*Tobias conta os rabos um por um, com uma careta de nojo e um sorriso de orelha a orelha.*",
+                    "Cinco! Cinco ratos a menos no meu celeiro! Tome, farinha da boa, como prometi.",
+                ],
+                "effects": {"take_item": ["rabo_rato", 5], "give_item": ["farinha", 5], "xp": 40},
+                "next": "inicio",
+            },
+            "negociar": {
+                "text": ["Farinha fresquinha, moída hoje. E pão, para quem tem pressa. *Ele espirra.* Saúde para mim."],
+                "effects": {"open_shop": True},
             },
             "espantalho": {
                 "text": [

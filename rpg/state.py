@@ -49,6 +49,7 @@ class GameState:
         self.journal: List[JournalEntry] = []
         self.met: Set[str] = set()             # NPCs com quem já conversou
         self.bestiary: Dict[str, Dict[str, Any]] = {}   # criatura -> abates, fatos e saques conhecidos
+        self.nodes: Dict[str, Dict[str, int]] = {}      # "local:ponto" -> o que resta e desde quando (coleta)
         self.stats: Dict[str, int] = {"passos": 0}
         self.play_seconds = 0.0
 
@@ -116,6 +117,7 @@ class GameState:
             "journal": [asdict(entry) for entry in self.journal],
             "met": sorted(self.met),
             "bestiary": {template_id: dict(entry) for template_id, entry in self.bestiary.items()},
+            "nodes": {key: dict(entry) for key, entry in self.nodes.items()},
             "stats": dict(self.stats),
             "play_seconds": round(self.play_seconds, 1),
         }
@@ -146,6 +148,8 @@ class GameState:
         state.bestiary = {template_id: {"kills": int(entry.get("kills", 0)), "facts": list(entry.get("facts", [])),
                                         "loot": list(entry.get("loot", []))}
                           for template_id, entry in data.get("bestiary", {}).items() if template_id in MONSTERS}
+        state.nodes = {key: {"left": int(entry.get("left", 0)), "time": int(entry.get("time", 0))}
+                       for key, entry in data.get("nodes", {}).items()}
         state.stats.update({key: int(value) for key, value in data.get("stats", {}).items()})
         state.play_seconds = float(data.get("play_seconds", 0.0))
         return state

@@ -260,6 +260,7 @@ MAP = {
             "examine": ("Atrás do balcão, uma cabeça de javali empalhada usa um chapéu de festa. Num quadro de "
                         "giz: \"Ensopado do dia: javali (de novo). Quarto: 5 cobres. Fiado: NÃO.\" Alguém "
                         "escreveu embaixo, com outra letra: \"exceto para heróis\"."),
+            "stations": [{"id": "fogo", "name": "Cozinha da estalagem", "burn": 0.75}],
         },
         {
             "id": "forja", "name": "Forja do Martelo Rubro", "x": 28, "y": 16, "xp": 15,
@@ -271,6 +272,12 @@ MAP = {
             "examine": ("Pendurado acima da bigorna, um martelo de cabo vermelho tem um nome gravado: "
                         "\"Davi\". Ao lado, um capacete de mineiro amassado, coberto de poeira. Ninguém parece "
                         "ter coragem de tirá-los dali."),
+            "stations": [
+                {"id": "fornalha", "name": "Fornalha do Brom", "if": {"period": ["amanhecer", "manha", "tarde"]},
+                 "closed": "A porta da forja está trancada com uma corrente. Brom só acende a fornalha de dia."},
+                {"id": "bigorna", "name": "Bigorna do Brom", "if": {"period": ["amanhecer", "manha", "tarde"]},
+                 "closed": "A porta da forja está trancada com uma corrente. Volte de dia."},
+            ],
         },
         {
             "id": "capela", "name": "Capela da Aurora", "x": 31, "y": 12, "xp": 15,
@@ -331,13 +338,18 @@ MAP = {
         },
         {
             "id": "sitio_moreira", "name": "Sítio dos Moreira", "x": 36, "y": 19, "xp": 15,
-            "description": ("Uma casa de fazenda com curral, galinheiro e uma horta caprichada. Roupas secam no "
-                            "varal, e um cão sarnento late para você abanando o rabo, sem decidir se é ameaça "
-                            "ou festa."),
+            "description": ("Uma casa de fazenda com um curral de ovelhas, galinheiro, uma horta caprichada e um "
+                            "linhal de flores azuis balançando ao vento. Na varanda, uma roca de fiar descansa "
+                            "ao lado de cestos de lã. Roupas secam no varal, e um cão sarnento late para você "
+                            "abanando o rabo, sem decidir se é ameaça ou festa."),
             "night": ("As galinhas estão no poleiro e o cão dorme na varanda. Pela janela, uma família janta em "
                       "silêncio, os olhos voltados para as plantações."),
             "examine": ("Há marcas de patas enormes na lama perto do galinheiro, e a cerca foi remendada às "
-                        "pressas. Na porta, uma ferradura pendurada de cabeça para cima — para segurar a sorte."),
+                        "pressas. Na porta, uma ferradura pendurada de cabeça para cima — para segurar a sorte. "
+                        "Um bilhete preso à roca diz: \"Pode fiar à vontade, só não leve a roca. — Família "
+                        "Moreira\"."),
+            "resources": [{"node": "linhal"}, {"node": "ovelhas"}],
+            "stations": [{"id": "roca", "name": "Roca de fiar dos Moreira"}],
         },
         {
             "id": "espantalho", "name": "Espantalho Solitário", "x": 42, "y": 19, "xp": 20,
@@ -385,6 +397,7 @@ MAP = {
             "examine": ("As rodas das carroças estão cobertas de lama seca do sul, e há uma flecha quebrada "
                         "cravada na lateral de uma delas. A caravana chegou ao vale por pouco — e não parece "
                         "ter pressa de sair."),
+            "stations": [{"id": "fogo", "name": "Fogueira da caravana"}],
         },
         {
             "id": "passo_norte", "name": "Passo do Norte", "x": 40, "y": 0, "xp": 40,
@@ -409,6 +422,7 @@ MAP = {
                       "outros sons do mundo."),
             "examine": ("A passagem atrás do véu continua lá, escura e convidativa. Os degraus de pedra brilham, "
                         "molhados. (Use 'entrar' para atravessar.)"),
+            "resources": [{"node": "musgo_prateado"}],
             "secret": {
                 "flag": "segredo_cachoeira",
                 "xp": 120,
@@ -433,7 +447,7 @@ MAP = {
             "examine": ("Presa entre duas pedras no fundo, você vê uma escama do tamanho de uma moeda, "
                         "azul-prateada e quase transparente. Grande demais para qualquer peixe do ribeirão... "
                         "não é?"),
-            "resources": [{"name": "Cardume de trutas", "skill": "pesca", "level": 10}],
+            "resources": [{"node": "cardume_trutas"}, {"node": "cardume_salmoes"}],
         },
         # --- Floresta Sussurrante
         {
@@ -457,6 +471,7 @@ MAP = {
             "examine": ("Dentro da mochila revirada há um diário encharcado. A última página legível diz: "
                         "\"Terceiro dia. Os lobos voltaram, e o grande estava com eles — branco, olhos azuis "
                         "como gelo. Não atacam. Só olham. Como se esperassem uma ordem.\""),
+            "stations": [{"id": "fogo", "name": "Fogueira dos caçadores", "fuel": "tocha"}],
         },
         {
             "id": "clareira_cogumelos", "name": "Clareira dos Cogumelos Luminosos", "x": 9, "y": 9, "xp": 35,
@@ -469,7 +484,7 @@ MAP = {
             "examine": ("Os anéis de cogumelos formam uma espiral perfeita, e no centro a grama é branca e morta, "
                         "num círculo do tamanho de uma pessoa deitada. Os aldeões chamam isso de \"cama das "
                         "fadas\": dormir aqui, dizem, traz sonhos verdadeiros."),
-            "resources": [{"name": "Cogumelos-lume", "skill": "alquimia", "level": 10}],
+            "resources": [{"node": "cogumelos_lume"}],
         },
         {
             "id": "carvalho_anciao", "name": "Carvalho Ancião", "x": 5, "y": 6, "xp": 45,
@@ -504,6 +519,22 @@ MAP = {
             "examine": ("Gravado no pedestal, em letras antigas que você mal decifra: \"Três luas guardam a "
                         "porta. Uma no véu, uma na mata, uma no altar. Quando as três se unirem, o Vigia "
                         "despertará.\" A concavidade tem o tamanho exato de um pingente."),
+            "resources": [{"node": "lirios_da_lua", "if": {"flag": "lirios_da_lua"}}],
+            "secret": {
+                "flag": "lirios_da_lua",
+                "skill": {"alquimia": 30},
+                "xp": 80,
+                "hint": ("Entre a hera do arco crescem botões brancos e fechados, de uma planta que você não "
+                         "reconhece."),
+                "text": ("Os botões brancos entre a hera são lírios-da-lua, uma das plantas mais raras do mundo: "
+                         "só se abrem sob a lua, e só onde a lua é venerada. Mãe Brígida daria tudo por um "
+                         "punhado deles. Volte à noite para colhê-los."),
+                "journal": {
+                    "title": "Lírios-da-lua",
+                    "text": ("No Santuário da Lua crescem lírios-da-lua, que só se abrem à noite. São ingrediente "
+                             "dos elixires e frascos mais poderosos da alquimia."),
+                },
+            },
         },
         # --- Pântano de Lodo-Negro
         {
@@ -517,7 +548,8 @@ MAP = {
             "examine": ("Na porta, uma placa: \"Remédios, unguentos, conselhos. Pagamento em moedas, favores ou "
                         "segredos.\" Abaixo, menor: \"Não toque nos potes.\" Um dos potes tem um olho que "
                         "acompanha seus movimentos."),
-            "resources": [{"name": "Ervas do pântano", "skill": "alquimia", "level": 1}],
+            "resources": [{"node": "ervas_pantano"}],
+            "stations": [{"id": "caldeirao", "name": "Caldeirão da Mãe Brígida"}],
         },
         {
             "id": "arvore_enforcados", "name": "Árvore dos Enforcados", "x": 4, "y": 21, "xp": 30,
@@ -552,7 +584,7 @@ MAP = {
             "examine": ("Ao mexer na borda com um graveto, você levanta do fundo um pedaço de pedra branca "
                         "entalhada — idêntica às das ruínas de Vel'Tharas. A pedra está morna, como se tivesse "
                         "vida."),
-            "resources": [{"name": "Flor-de-breu", "skill": "alquimia", "level": 15}],
+            "resources": [{"node": "flor_de_breu"}],
         },
         # --- Colinas de Cobre
         {
@@ -575,8 +607,30 @@ MAP = {
             "examine": ("As marcas na rocha são recentes, de no máximo uma semana — e não foram feitas por "
                         "ferramentas humanas: são finas, numerosas e baixas, como se feitas por algo da altura "
                         "de uma criança."),
-            "resources": [{"name": "Veio de Cobre", "skill": "mineracao", "level": 1},
-                          {"name": "Veio de Estanho", "skill": "mineracao", "level": 1}],
+            "resources": [{"node": "veio_cobre"}, {"node": "veio_estanho"},
+                          {"node": "veio_ferro", "if": {"flag": "veio_ferro_raso"}}],
+            "loot": {
+                "flag": "picareta_afloramento",
+                "items": [["picareta_velha", 1]],
+                "xp": 10,
+                "text": ("Entre as picaretas abandonadas pelos mineiros, uma ainda tem o cabo inteiro. A ponta "
+                         "está cega, mas ela ainda serve — e ninguém vai sentir falta. (Use 'minerar' aqui.)"),
+            },
+            "secret": {
+                "flag": "veio_ferro_raso",
+                "skill": {"mineracao": 15},
+                "xp": 60,
+                "hint": ("Na base do afloramento, uma faixa de rocha avermelhada chama sua atenção, mas você "
+                         "ainda não tem olho de mineiro para entender o que é."),
+                "text": ("Com o olho treinado, você reconhece a faixa avermelhada na base do afloramento: ferro! "
+                         "Um veio raso e pobre — nada que se compare ao da mina —, mas é ferro. Dá para "
+                         "minerá-lo aqui mesmo."),
+                "journal": {
+                    "title": "Ferro no afloramento",
+                    "text": ("Há um veio raso de ferro na base do Afloramento de Cobre. Pobre, mas suficiente para "
+                             "começar a forjar ferro na bigorna do Brom."),
+                },
+            },
         },
         {
             "id": "fonte_termal", "name": "Fonte Termal", "x": 55, "y": 18, "xp": 30,
@@ -588,6 +642,7 @@ MAP = {
                       "pés aqui enquanto o resto do vale dorme."),
             "examine": ("No fundo da fonte, pedras lisas formam um mosaico desbotado: uma figura alta, de braços "
                         "abertos, segurando três luas. Quem construiu as ruínas também esteve aqui."),
+            "resources": [{"node": "orquideas_termais"}],
         },
         {
             "id": "mina_ferro_velho", "name": "Mina de Ferro-Velho", "x": 53, "y": 12, "xp": 45,
@@ -656,8 +711,7 @@ MAP = {
                       "no centro do lago é só uma sombra contra o reflexo da lua."),
             "examine": ("Na cadeira de vime, marcas de peixes pescados: dezenas de risquinhos e, em destaque, o "
                         "desenho de um peixe enorme usando uma coroa. Embaixo: \"O Rei do Lago existe. — A.\""),
-            "resources": [{"name": "Cardume de camarões", "skill": "pesca", "level": 1},
-                          {"name": "Cardume de sardinhas", "skill": "pesca", "level": 5}],
+            "resources": [{"node": "cardume_camaroes"}, {"node": "cardume_sardinhas"}],
         },
         {
             "id": "torre_vigia", "name": "Torre de Vigia em Ruínas", "x": 52, "y": 22, "xp": 40, "reveal": 9,
