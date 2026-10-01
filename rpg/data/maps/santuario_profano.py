@@ -1,0 +1,147 @@
+"""Santuário Profano — o templo subterrâneo sob o Círculo de Pedras Rúnicas (30 x 14).
+
+Legenda: # rocha   . lajes brancas   & relevos   v fogo violeta
+
+Era o santuário dos Vigias da Lua; hoje é o covil do culto da Lua Cortada. A entrada se
+revela no Círculo de Runas numa noite de lua cheia — ou para quem carrega a chave de pedra
+negra dos acólitos. Morwen, a Senhora da Lua Cortada, espera no altar.
+"""
+
+CULT_ACTIVE = {"not_flag": "morwen_derrotada"}
+
+MAP = {
+    "id": "santuario_profano",
+    "name": "Santuário Profano",
+    "outdoor": False,
+    "light": 2,
+    "start": (1, 1),
+    "legend": {"#": "parede_gruta", ".": "lajes", "&": "entalhes", "v": "fogo_violeta"},
+    "layout": '''
+##############################
+#..&&&&&&&&&&&&&&&&&&&###....#
+#............................#
+#......................##....#
+####.##&##&##&.#&##&##.#######
+####.#########.######v.....v##
+#&.......##v.....v###.......##
+#&.......##.......###.......##
+#..&..&..##.......###.......##
+#&.......##.................##
+#&.&..&..##.......###.......##
+#........##.......###.......##
+#&.......##v.....v###v.....v##
+##############################
+''',
+    "regions": [
+        {
+            "id": "santuario_profano", "name": "Santuário Profano", "rects": [(0, 0, 29, 13)], "xp": 80,
+            "intro": ("Sob o Círculo de Runas, uma escadaria leva a um templo inteiro, talhado na rocha branca. Era "
+                      "o santuário dos Vigias da Lua. Agora, luas cortadas foram pintadas por cima dos relevos, e "
+                      "braseiros de fogo violeta queimam onde antes havia velas."),
+            "day": ["Um cântico abafado vem de algum salão adiante, em uma língua que arranha os ouvidos.",
+                    "Os relevos das paredes foram riscados a faca: alguém quis apagar os rostos dos Vigias.",
+                    "O fogo violeta faz as sombras se mexerem sozinhas."],
+            "encounters": {
+                "chance": 0.12,
+                "groups": [
+                    {"monsters": ["acolito_lua"], "weight": 3, "if": CULT_ACTIVE},
+                    {"monsters": ["acolito_lua", "cao_sombrio"], "weight": 2, "if": CULT_ACTIVE},
+                    {"monsters": ["guarda_capa_negra"], "weight": 2, "if": CULT_ACTIVE},
+                    {"monsters": ["guarda_capa_negra", "acolito_lua"], "weight": 1, "if": CULT_ACTIVE},
+                    {"monsters": ["eco_veltharas"], "weight": 2},
+                    {"monsters": ["eco_veltharas", "eco_veltharas"], "weight": 1, "if": {"flag": "morwen_derrotada"}},
+                ],
+            },
+        },
+    ],
+    "landmarks": [
+        {
+            "id": "escadaria_lua", "name": "Escadaria da Lua", "x": 1, "y": 1, "xp": 30,
+            "description": ("Os degraus que descem do Círculo de Runas terminam aqui, num patamar de pedra branca. Lá "
+                            "em cima, pela abertura, você ainda vê um pedaço de céu."),
+            "examine": ("Os degraus estão gastos no meio por séculos de passos — e manchados de cera violeta por "
+                        "passos bem recentes."),
+        },
+        {
+            "id": "corredor_luas", "name": "Corredor das Luas", "x": 11, "y": 2, "xp": 30,
+            "description": ("Um corredor longo e alto, com relevos de luas em todas as fases. Em cada um, alguém "
+                            "pintou por cima, em tinta preta, um risco atravessado: a lua cortada."),
+            "examine": ("Embaixo da tinta, os relevos contam uma história: Vigias cantando para uma montanha "
+                        "adormecida, três luas erguidas nas mãos. No último relevo, a montanha abre os olhos — e "
+                        "esse foi riscado com mais raiva que todos."),
+        },
+        {
+            "id": "biblioteca_vigias", "name": "Biblioteca dos Vigias", "x": 4, "y": 9, "xp": 50,
+            "description": ("Estantes de pedra cheias de tabuletas e rolos de pergaminho, muitos queimados. O culto "
+                            "procurava alguma coisa aqui — e jogou no chão tudo o que não servia."),
+            "examine": ("Entre os rolos queimados, uma tabuleta inteira, com letras dos Vigias: \"O Vigia dorme "
+                        "com o Primordial e sonha os sonhos dele. Se for acordado no meio de um pesadelo, "
+                        "acordará o gigante junto. Acorde-o com as três luas, cantando, e ele cantará de volta.\""),
+            "loot": {
+                "flag": "biblioteca_vigias_tomo",
+                "items": [["elixir_sussurrante", 2], ["poeira_lunar", 3]],
+                "xp": 80,
+                "text": ("Atrás de uma estante tombada, os cultistas esqueceram um estojo de couro: dois elixires "
+                         "e um saquinho de poeira lunar, com um bilhete — \"para a Senhora, antes do Eclipse\"."),
+            },
+        },
+        {
+            "id": "camara_ecos", "name": "Câmara dos Ecos", "x": 14, "y": 9, "xp": 50,
+            "description": ("Uma sala circular com quatro braseiros de fogo violeta, um em cada canto. No chão, "
+                            "círculos de giz e de sal prendem formas transparentes que se debatem em silêncio: os "
+                            "ecos de Vel'Tharas."),
+            "examine": ("Os ecos estão presos aos braseiros por fios de luz violeta. É daqui que o culto os solta "
+                        "nas ruínas, à noite. Quanto mais o fogo queima, mais os ecos esquecem quem foram."),
+        },
+        {
+            "id": "altar_profano", "name": "Altar Profano", "x": 24, "y": 8, "xp": 60,
+            "description": ("O antigo altar dos Vigias, de pedra-da-lua, foi coberto por um pano negro com a lua "
+                            "cortada bordada em prata. Em cima dele, as duas metades de um crescente brilham, "
+                            "separadas, como se tentassem se alcançar."),
+            "examine": ("Por baixo do pano negro, a pedra-da-lua do antigo altar dos Vigias ainda brilha, "
+                        "fraquinha, como se respirasse. Alguém gravou nela, há muito tempo: \"Aqui a lua minguante "
+                        "descansa entre as noites.\""),
+            "encounter": {
+                "flag": "morwen_derrotada", "radius": 2, "boss": True,
+                "monsters": [["morwen", 12]],
+                "intro": ("Uma mulher alta, de cabelos prateados e coroa de ferro negro, ergue os olhos do altar. "
+                          "\"Então é você quem a Ysolde mandou. Sabe o que ela não contou? Que o gigante lá embaixo "
+                          "é poder — poder puro, dormindo à toa. Eu só quero acordá-lo.\" Ela sorri. \"Pena que "
+                          "você não vai ver.\""),
+                "victory": ("Morwen cai de joelhos, e a coroa de ferro rola pelas lajes. \"Você... não entende... ele "
+                            "vai acordar de qualquer jeito...\" Os braseiros violetas se apagam um a um. No altar, as "
+                            "duas metades da lua minguante ficam ao seu alcance."),
+                "journal": {
+                    "id": "senhora_derrotada", "title": "A Senhora da Lua Cortada",
+                    "text": ("Morwen, a Senhora da Lua Cortada, foi derrotada no altar do santuário sob o Círculo "
+                             "de Runas. Ela partiu a lua minguante em duas para quebrar a canção dos Vigias."),
+                },
+            },
+        },
+        {
+            "id": "cofre_senhora", "name": "Cofre da Senhora", "x": 27, "y": 2, "xp": 40,
+            "description": ("No fim do corredor, uma câmara pequena guarda um baú de ébano com ferragens de prata "
+                            "negra. A fechadura tem a forma de uma lua partida."),
+            "examine": ("O ébano do baú é entalhado com corvos, kobolds e lobos — todos com coleiras. Morwen "
+                        "colecionava servos como quem coleciona joias."),
+            "chest": {
+                "flag": "cofre_senhora_aberto",
+                "key": "chave_lua_cortada", "consume_key": False, "pick": 12,
+                "locked": "A fechadura em forma de lua partida não cede.",
+                "items": [["pocao_cura_maior", 2], ["frasco_eco", 1]],
+                "copper": 1800,
+                "xp": 150,
+                "text": ("Dentro: moedas de três reinos diferentes, duas poções de cura maior e um frasco que canta "
+                         "baixinho. O tesouro da Senhora — pago, sem dúvida, com o medo do vale."),
+            },
+        },
+    ],
+    "portals": [
+        {
+            "id": "santuario_saida", "x": 1, "y": 1, "direction": "n", "verb": "sair",
+            "label": "Círculo de Pedras Rúnicas", "target": ("vale_primordia", 50, 4),
+            "travel_text": ("Você sobe a escadaria e sai entre as pedras rúnicas, no meio das ruínas. O ar da noite "
+                            "nunca foi tão bom de respirar."),
+        },
+    ],
+}

@@ -8,8 +8,15 @@ Um bloco de condições é um dicionário em que todas as chaves precisam ser ve
 * ``class``, ``moral``, ``law`` — classe e eixos do alinhamento do herói;
 * ``period``, ``night`` — hora do dia;
 * ``min_level`` — nível mínimo do herói;
-* ``item`` — ter um item na mochila: ``"barra_bronze"`` ou ``["rabo_rato", 5]``;
+* ``item`` — ter itens na mochila: ``"barra_bronze"``, ``["rabo_rato", 5]`` ou uma lista de pares;
+* ``owns`` — possuir os itens, na mochila ou equipados: ``"pingente"`` ou ``["a", "b"]``;
 * ``skill`` — níveis mínimos de perícia: ``{"mineracao": 15}``;
+* ``copper`` — ter pelo menos esse tanto de moedas de cobre;
+* ``moon`` — fase da lua (nome ou lista de nomes, ex.: ``"Lua cheia"``);
+* ``quest_active`` / ``quest_done`` — missões em andamento ou concluídas;
+  ``quest_stage`` — ``["missao", n]``: a missão está exatamente na etapa ``n`` (0 = a primeira);
+* ``talents`` — ``True`` se o herói já gastou algum ponto de talento (``False``: nenhum);
+* ``any`` — lista de blocos de condições: basta um deles ser verdadeiro;
 * ``met`` — (só em diálogos) se o herói já conhecia o NPC antes da conversa.
 """
 
@@ -23,7 +30,8 @@ if TYPE_CHECKING:
     from .state import GameState
 
 CONDITION_KEYS = {"flag", "not_flag", "journal", "discovered", "class", "moral", "law", "period", "night",
-                  "met", "min_level", "item", "skill"}
+                  "met", "min_level", "item", "owns", "skill", "copper", "moon", "quest_active", "quest_done",
+                  "quest_stage", "talents", "any"}
 
 
 def as_list(value: Any) -> List[Any]:
@@ -77,10 +85,28 @@ def conditions_met(conditions: Optional[Mapping[str, Any]], state: "GameState", 
         elif key == "min_level":
             ok = player.level >= int(value)
         elif key == "item":
-            item_id, quantity = item_requirement(value)
-            ok = player.inventory.count(item_id) >= quantity
+            ok = all(player.inventory.count(item_id) >= quantity for item_id, quantity in item_pairs(value))
+        elif key == "owns":
+            equipped = {stack.item_id for stack in player.equipment.values()}
+            ok = all(item_id in equipped or player.inventory.count(item_id) for item_id in as_list(value))
         elif key == "skill":
             ok = all(player.skills.level(skill_id) >= int(level) for skill_id, level in value.items())
+        elif key == "copper":
+            ok = player.copper >= int(value)
+        elif key == "moon":
+            ok = state.clock.moon_phase in as_list(value)
+        elif key == "quest_active":
+            ok = all(state.quests.get(quest_id, {}).get("done") is False for quest_id in as_list(value))
+        elif key == "quest_done":
+            ok = all(state.quests.get(quest_id, {}).get("done") is True for quest_id in as_list(value))
+        elif key == "quest_stage":
+            quest_id, stage = value
+            entry = state.quests.get(quest_id, {})
+            ok = entry.get("done") is False and entry.get("stage") == int(stage)
+        elif key == "talents":
+            ok = (sum(player.talents.values()) > 0) == bool(value)
+        elif key == "any":
+            ok = any(conditions_met(block, state, met) for block in value)
         else:
             raise KeyError(f"Condição desconhecida: {key!r}")
         if not ok:

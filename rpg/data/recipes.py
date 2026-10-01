@@ -42,6 +42,10 @@ RECIPES = {
         "skill": "metalurgia", "level": 20, "xp": 13.7, "station": "fornalha", "minutes": 3,
         "inputs": [["minerio_prata", 1]], "output": ["barra_prata", 1],
     },
+    "barra_aco": {
+        "skill": "metalurgia", "level": 30, "xp": 17.5, "station": "fornalha", "minutes": 3,
+        "inputs": [["minerio_ferro", 1], ["carvao", 2]], "output": ["barra_aco", 1],
+    },
     # ------------------------------------------------------------------ metalurgia: bigorna (bronze)
     "adaga_bronze": {
         "skill": "metalurgia", "level": 1, "xp": 12.5, "station": "bigorna", "tool": "martelo", "minutes": 4,
@@ -54,6 +58,10 @@ RECIPES = {
     "maca_bronze": {
         "skill": "metalurgia", "level": 3, "xp": 12.5, "station": "bigorna", "tool": "martelo", "minutes": 4,
         "inputs": [["barra_bronze", 1]], "output": ["maca_bronze", 1],
+    },
+    "pregos_bronze": {
+        "skill": "metalurgia", "level": 4, "xp": 12.5, "station": "bigorna", "tool": "martelo", "minutes": 3,
+        "inputs": [["barra_bronze", 1]], "output": ["pregos_bronze", 10],
     },
     "elmo_bronze": {
         "skill": "metalurgia", "level": 4, "xp": 12.5, "station": "bigorna", "tool": "martelo", "minutes": 4,
@@ -124,6 +132,47 @@ RECIPES = {
         "skill": "metalurgia", "level": 31, "xp": 75, "station": "bigorna", "tool": "martelo", "minutes": 8,
         "inputs": [["barra_ferro", 3]], "output": ["perneiras_ferro", 1],
     },
+    # ------------------------------------------------------------------ metalurgia: bigorna (aço)
+    "adaga_aco": {
+        "skill": "metalurgia", "level": 30, "xp": 37.5, "station": "bigorna", "tool": "martelo", "minutes": 5,
+        "inputs": [["barra_aco", 1]], "output": ["adaga_aco", 1],
+    },
+    "maca_aco": {
+        "skill": "metalurgia", "level": 32, "xp": 37.5, "station": "bigorna", "tool": "martelo", "minutes": 5,
+        "inputs": [["barra_aco", 1]], "output": ["maca_aco", 1],
+    },
+    "machado_aco": {
+        "skill": "metalurgia", "level": 33, "xp": 37.5, "station": "bigorna", "tool": "martelo", "minutes": 5,
+        "inputs": [["barra_aco", 1]], "output": ["machado_aco", 1],
+    },
+    "elmo_aco": {
+        "skill": "metalurgia", "level": 34, "xp": 37.5, "station": "bigorna", "tool": "martelo", "minutes": 5,
+        "inputs": [["barra_aco", 1]], "output": ["elmo_aco", 1],
+    },
+    "espada_aco": {
+        "skill": "metalurgia", "level": 35, "xp": 37.5, "station": "bigorna", "tool": "martelo", "minutes": 5,
+        "inputs": [["barra_aco", 1]], "output": ["espada_aco", 1],
+    },
+    "picareta_aco": {
+        "skill": "metalurgia", "level": 35, "xp": 75, "station": "bigorna", "tool": "martelo", "minutes": 7,
+        "inputs": [["barra_aco", 2]], "output": ["picareta_aco", 1],
+    },
+    "botas_aco": {
+        "skill": "metalurgia", "level": 36, "xp": 37.5, "station": "bigorna", "tool": "martelo", "minutes": 5,
+        "inputs": [["barra_aco", 1]], "output": ["botas_aco", 1],
+    },
+    "escudo_aco": {
+        "skill": "metalurgia", "level": 38, "xp": 75, "station": "bigorna", "tool": "martelo", "minutes": 7,
+        "inputs": [["barra_aco", 2]], "output": ["escudo_aco", 1],
+    },
+    "cota_aco": {
+        "skill": "metalurgia", "level": 41, "xp": 112.5, "station": "bigorna", "tool": "martelo", "minutes": 12,
+        "inputs": [["barra_aco", 3]], "output": ["cota_aco", 1],
+    },
+    "perneiras_aco": {
+        "skill": "metalurgia", "level": 44, "xp": 112.5, "station": "bigorna", "tool": "martelo", "minutes": 10,
+        "inputs": [["barra_aco", 3]], "output": ["perneiras_aco", 1],
+    },
     # ------------------------------------------------------------------ metalurgia: joias de prata
     "anel_prata": {
         "skill": "metalurgia", "level": 20, "xp": 25, "station": "bigorna", "tool": "martelo", "minutes": 6,
@@ -174,6 +223,10 @@ RECIPES = {
         "skill": "culinaria", "level": 25, "xp": 90, "station": "fogo", "minutes": 3, "burn": [0.55, 50],
         "inputs": [["salmao_cru", 1]], "output": ["salmao_assado", 1],
     },
+    "carpa_assada": {
+        "skill": "culinaria", "level": 20, "xp": 85, "station": "fogo", "minutes": 3, "burn": [0.5, 45],
+        "inputs": [["carpa_prateada", 1]], "output": ["carpa_assada", 1],
+    },
     "peixe_cego_assado": {
         "skill": "culinaria", "level": 32, "xp": 120, "station": "fogo", "minutes": 4, "burn": [0.6, 60],
         "inputs": [["peixe_cego_cru", 1]], "output": ["peixe_cego_assado", 1],
@@ -203,6 +256,10 @@ RECIPES = {
     "bolsa_linho": {
         "skill": "alfaiataria", "level": 6, "xp": 55, "tool": "agulha", "minutes": 15,
         "inputs": [["fio_linho", 4]], "output": ["bolsa_linho", 1],
+    },
+    "remendo_lona": {
+        "skill": "alfaiataria", "level": 8, "xp": 45, "tool": "agulha", "minutes": 10,
+        "inputs": [["fio_linho", 4]], "output": ["remendo_lona", 1],
     },
     "colar_presas": {
         "skill": "alfaiataria", "level": 9, "xp": 50, "tool": "agulha", "minutes": 8,
@@ -240,6 +297,14 @@ RECIPES = {
         "skill": "alfaiataria", "level": 23, "xp": 120, "tool": "agulha", "minutes": 15,
         "inputs": [["pele_lobo", 4], ["novelo_la", 1]], "output": ["manto_pele_lobo", 1],
     },
+    "capuz_negro": {
+        "skill": "alfaiataria", "level": 26, "xp": 120, "tool": "agulha", "minutes": 12,
+        "inputs": [["tecido_negro", 3], ["fio_linho", 1]], "output": ["capuz_negro", 1],
+    },
+    "vestes_acolito": {
+        "skill": "alfaiataria", "level": 28, "xp": 140, "tool": "agulha", "minutes": 18,
+        "inputs": [["tecido_negro", 4], ["fio_linho", 2]], "output": ["vestes_acolito", 1],
+    },
     "luvas_seda_aranha": {
         "skill": "alfaiataria", "level": 25, "xp": 120, "tool": "agulha", "minutes": 12,
         "inputs": [["fio_seda", 2]], "output": ["luvas_seda_aranha", 1],
@@ -269,6 +334,10 @@ RECIPES = {
     "oleo_inflamavel": {
         "skill": "alquimia", "level": 15, "xp": 45, "station": "caldeirao", "tool": "almofariz", "minutes": 5,
         "inputs": [["flor_breu", 2], ["frasco_vazio", 1]], "output": ["oleo_inflamavel", 1],
+    },
+    "piche": {
+        "skill": "alquimia", "level": 15, "xp": 40, "station": "caldeirao", "tool": "almofariz", "minutes": 5,
+        "inputs": [["flor_breu", 2], ["frasco_vazio", 1]], "output": ["piche", 1],
     },
     "veneno_aranha": {
         "skill": "alquimia", "level": 18, "xp": 50, "station": "caldeirao", "tool": "almofariz", "minutes": 5,
@@ -303,6 +372,10 @@ RECIPES = {
     "pocao_mana": {
         "skill": "alquimia", "level": 36, "xp": 100, "tool": "almofariz", "minutes": 5,
         "inputs": [["cogumelo_lume", 2], ["orquidea_termal", 1], ["frasco_vazio", 1]], "output": ["pocao_mana", 1],
+    },
+    "pocao_cura_maior": {
+        "skill": "alquimia", "level": 40, "xp": 110, "tool": "almofariz", "minutes": 6,
+        "inputs": [["musgo_prata", 2], ["poeira_lunar", 1], ["frasco_vazio", 1]], "output": ["pocao_cura_maior", 1],
     },
     "frasco_eco": {
         "skill": "alquimia", "level": 42, "xp": 125, "station": "caldeirao", "tool": "almofariz", "minutes": 8,

@@ -119,9 +119,29 @@ MAP = {
             "examine": ("Você encosta o ouvido na pedra. Do outro lado, muito ao longe, algo enorme respira — "
                         "uma vez a cada longo minuto. A concavidade crescente parece feita para encaixar uma "
                         "joia."),
+            "secret": {
+                "flag": "porta_aberta",
+                "if": {"owns": ["pingente_pedra_da_lua", "lua_cheia", "lua_minguante"]},
+                "xp": 500,
+                "hint": "As três concavidades esperam suas luas: a crescente, a cheia e a minguante.",
+                "text": ("Você ergue as três luas diante da porta. Uma a uma, elas acendem — crescente, cheia, "
+                         "minguante — e as concavidades da pedra acendem junto. A porta, que não tem dobradiças, "
+                         "simplesmente deixa de estar ali. (Use 'entrar' para atravessar.)"),
+                "journal": {
+                    "title": "A porta das três luas",
+                    "text": ("Com as três luas reunidas, a Porta Selada da gruta se abriu. Do outro lado fica a "
+                             "câmara do Vigia."),
+                },
+            },
         },
     ],
     "portals": [
+        {
+            "id": "camara_entrada", "x": 13, "y": 3, "verb": "entrar", "label": "Câmara do Vigia",
+            "target": ("camara_vigia", 1, 4), "requires_flag": "porta_aberta",
+            "travel_text": ("Você atravessa o lugar onde a porta estava. O ar do outro lado é morno e vibra, como o "
+                            "peito de alguém que dorme."),
+        },
         {
             "id": "gruta_saida", "x": 4, "y": 8, "direction": "s", "verb": "sair",
             "label": "Cachoeira do Véu de Prata", "target": ("vale_primordia", 23, 3),

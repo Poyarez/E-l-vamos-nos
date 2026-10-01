@@ -1,0 +1,127 @@
+"""Ilhota da Garça — a ilha no meio do Lago Espelhado (24 x 9), alcançável de barco.
+
+Legenda: ~ água funda   w água rasa   _ praia   . campina   " relva alta   T mata   o pedras
+
+Um lugar calmo, sem feras: aqui ficaram guardadas a canção dos Vigias (nas pedras que
+cantam, à noite) e as provisões de um Vigia que nunca voltou para buscá-las.
+"""
+
+MAP = {
+    "id": "ilhota_garca",
+    "name": "Ilhota da Garça",
+    "outdoor": True,
+    "start": (10, 7),
+    "legend": {"~": "agua", "w": "agua_rasa", "_": "areia", ".": "planicie", '"': "relva_alta", "T": "floresta",
+               "o": "rochas"},
+    "layout": '''
+~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~ww___ww~~~~~~~~~~
+~~~~w___.."TTT"_ww~~~~~~
+~~~w__.."TTTTooT"._w~~~~
+~~w__."TTTo..ooTT".__w~~
+~~~w_.."TTTooTTT"..._w~~
+~~~~ww__.."TT""..__ww~~~
+~~~~~~www_____www~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+''',
+    "regions": [
+        {
+            "id": "ilhota_garca", "name": "Ilhota da Garça", "rects": [(0, 0, 23, 8)], "xp": 60,
+            "intro": ("A ilhota que ninguém visita há anos: uma praia de areia clara, um bosque fechado e, no meio "
+                      "dele, um círculo de pedras cinzentas. O silêncio é tão grande que você ouve o lago "
+                      "respirar."),
+            "day": ["Uma garça-real observa você de cima de uma pedra, sem medo nenhum.",
+                    "Peixes saltam perto da margem, deixando círculos que se abrem devagar.",
+                    "Do outro lado do lago, a vila parece de brinquedo."],
+            "night": ["As pedras do bosque zumbem baixinho, como alguém cantarolando de boca fechada.",
+                      "A lua desenha um caminho prateado sobre a água, da ilha até o píer."],
+        },
+    ],
+    "landmarks": [
+        {
+            "id": "praia_garca", "name": "Praia da Garça", "x": 10, "y": 7, "xp": 30,
+            "description": ("O barco de Anselmo encalha suavemente na areia. A praia é coberta de conchinhas e de "
+                            "pegadas de garça, finas como garfos."),
+            "examine": ("Entre as conchas, você acha um anzol de prata antigo, verde de tempo. Alguém pescava aqui "
+                        "muito antes de Anselmo nascer. (Use 'navegar' para voltar ao píer.)"),
+        },
+        {
+            "id": "ninho_garca", "name": "Ninho da Garça-Real", "x": 4, "y": 4, "xp": 30,
+            "description": ("Na ponta oeste da ilha, sobre um tronco caído, uma garça-real enorme vigia um ninho de "
+                            "galhos. Ela abre as asas quando você se aproxima — e decide que você não é ameaça."),
+            "examine": ("O ninho foi forrado com coisas brilhantes que a garça juntou pelo lago: tampinhas, uma "
+                        "colher, um botão — e, agora, uma das suas moedas."),
+            "loot": {
+                "flag": "ninho_garca_pingente",
+                "items": [["bugiganga_brilhante", 3]],
+                "copper": 120,
+                "xp": 30,
+                "text": ("O ninho foi forrado com coisas brilhantes que a garça juntou pelo lago. Com todo o "
+                         "cuidado, você troca um punhado delas — e um saquinho de moedas velhas — por uma moeda "
+                         "nova e reluzente. A garça aceita a troca com um olhar crítico."),
+            },
+        },
+        {
+            "id": "pedras_que_cantam", "name": "Pedras que Cantam", "x": 13, "y": 4, "xp": 50,
+            "description": ("No coração do bosque, sete pedras cinzentas da altura de uma pessoa formam um círculo "
+                            "torto. Cada uma tem um buraco atravessando a pedra de lado a lado, como uma flauta."),
+            "night": ("Sob a lua, o vento passa pelos buracos das pedras e elas cantam — de verdade: três notas, "
+                      "longas e tristes, que se repetem sem parar."),
+            "examine": ("Os buracos foram furados à mão, com paciência de séculos. Encostando o ouvido numa pedra, "
+                        "você ouve o lago, o vento e, muito no fundo, um zumbido afinado."),
+            "secret": {
+                "flag": "cancao_tres_notas",
+                "if": {"night": True},
+                "xp": 300,
+                "hint": ("As pedras parecem vibrar de leve, como se esperassem a noite para dizer alguma coisa. "
+                         "(Volte à noite.)"),
+                "text": ("O vento da noite atravessa as pedras, e elas cantam: três notas, uma grave, uma média e "
+                         "uma aguda, como a lua minguante, a cheia e a crescente. Você fecha os olhos e repete "
+                         "baixinho até as notas ficarem gravadas. É a canção dos Vigias — a mesma da balada de "
+                         "Lírio, mas sem palavras."),
+                "journal": {
+                    "title": "A canção das três notas",
+                    "text": ("Nas Pedras que Cantam, na Ilhota da Garça, o vento da noite toca três notas: a canção "
+                             "dos Vigias. Kael disse que o Carvalho Ancião se abre para quem a canta à noite."),
+                },
+            },
+        },
+        {
+            "id": "arca_vigia", "name": "Arca do Vigia", "x": 12, "y": 2, "xp": 40,
+            "description": ("Escondida sob as raízes de um carvalho do bosque, uma arca de pedra branca, sem "
+                            "fechadura, tem três linhas de notas musicais gravadas na tampa."),
+            "examine": ("A pedra da arca é a mesma das ruínas, lisa e fria. As notas da tampa estão gastas, como "
+                        "se dedos as tivessem lido no escuro muitas vezes. Embaixo, uma inscrição: \"Para o próximo "
+                        "Vigia. — K.\""),
+            "chest": {
+                "flag": "arca_vigia_aberta",
+                "if": {"flag": "cancao_tres_notas"},
+                "opens": ("Você cantarola as três notas das pedras. Na terceira, ouve-se um estalo dentro da pedra, "
+                          "e a tampa da arca desliza sozinha."),
+                "locked": ("A tampa não se move. As notas gravadas formam uma canção que você ainda não conhece."),
+                "items": [["frasco_luz", 3], ["pocao_cura", 2]],
+                "copper": 1500,
+                "xp": 200,
+                "text": ("Dentro, embrulhados em lona encerada, há frascos de luz lunar, poções e um saco de moedas "
+                         "antigas: as provisões de um Vigia que nunca voltou para buscá-las."),
+            },
+        },
+        {
+            "id": "poco_do_rei", "name": "Poço do Rei", "x": 21, "y": 5, "xp": 40,
+            "description": ("Na ponta leste, a água rasa termina de repente num poço redondo e escuro, tão fundo que "
+                            "o lago fica preto. Carpas prateadas circulam devagar na beirada."),
+            "examine": ("Lá no fundo, por um instante, algo enorme e azul-prateado passa sob as carpas — com uma "
+                        "barbatana que parece uma coroa. Anselmo não estava mentindo. (Só um pescador muito "
+                        "experiente, de Pesca 35, conseguiria segurá-lo.)"),
+            "resources": [{"node": "poco_do_rei"}],
+        },
+    ],
+    "portals": [
+        {
+            "id": "ilhota_barco", "x": 10, "y": 7, "verb": "navegar", "label": "Píer do Lago Espelhado",
+            "target": ("vale_primordia", 41, 22),
+            "travel_text": ("Você empurra o barco para a água e rema de volta. A ilhota encolhe atrás de você até "
+                            "virar só uma mancha verde no espelho do lago."),
+        },
+    ],
+}

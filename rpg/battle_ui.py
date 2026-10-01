@@ -20,6 +20,7 @@ from .utils import format_money, normalize
 
 #: Habilidades com estes efeitos usam o minijogo de "golpe no tempo certo".
 TIMED_EFFECTS = {"damage", "finisher", "execute", "heal"}
+BOSS_LOOT_ROOM = 3          # espaços livres recomendados antes de enfrentar um chefe
 
 COMBAT_HELP = [
     "Números (1–9): habilidades da barra de ações. Acrescente o alvo: '1 2' usa a habilidade 1 no inimigo 2.",
@@ -97,6 +98,13 @@ def _encounter_screen(session: GameSession, request: BattleRequest, enemies: Lis
         ui.echo(ui.style("  Emboscada! Não há tempo para pensar.", "bright_red bold"))
         ui.pause("Pressione Enter para lutar...")
         return "lutar"
+    if request.boss and player.inventory.free_slots < BOSS_LOOT_ROOM:
+        free = player.inventory.free_slots
+        room = f"{free} {'espaço livre' if free == 1 else 'espaços livres'}"
+        ui.echo_lines(ui.wrap(ui.style(
+            f"Sua mochila só tem {room}: o que o chefe deixar cair pode ficar para trás. Talvez seja bom recuar e "
+            "abrir espaço.", "bright_yellow"), width - 4, "  "))
+        ui.echo()
     if request.kind == "fixo":
         options, keys = ["Lutar", "Recuar"], ["lutar", "recuar"]
     elif request.kind == "caca":
@@ -217,7 +225,8 @@ def _action_bar(battle: Battle, width: int) -> List[str]:
     entries = []
     for slot, ability in enumerate(hero.player.abilities(), 1):
         usable, _reason = battle.ability_status(ability)
-        cost = f" {ability['cost']} {resource['name']}" if ability.get("cost") else ""
+        price = hero.player.ability_cost(ability)
+        cost = f" {price} {resource['name']}" if price else ""
         ready = hero.cooldowns.get(ability["id"], 0) - battle.round
         status = f" (recarga {ready})" if ready > 0 else ""
         label = f"[{slot}] {ability['name']}{cost}{status}"

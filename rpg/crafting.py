@@ -236,7 +236,10 @@ def gather(player: "Player", state: "GameState", spot: Spot, quantity: int,
             player.inventory.remove(data["bait"], 1)
             report.bait_used += 1
         _add_xp(player, data["skill"], skill_xp(data["xp"]), report)
-        for rare_id, chance in data.get("rare", []):
+        for rare in data.get("rare", []):
+            rare_id, chance = rare[0], rare[1]
+            if len(rare) > 2 and player.skills.level(data["skill"]) < rare[2]:
+                continue   # achados que só mãos experientes conseguem (ex.: o Rei do Lago)
             if rng.random() < chance and player.inventory.add(rare_id, 1) == 0:
                 report.rare.append(rare_id)
     entry = state.nodes.get(spot.key)

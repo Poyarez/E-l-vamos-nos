@@ -1,0 +1,102 @@
+"""Câmara do Vigia — atrás da Porta Selada das Três Luas, na gruta da cachoeira (17 x 9).
+
+Legenda: # rocha   . lajes brancas   & relevos   x cristais
+
+Aqui o Vigia, guardião do sono do Primordial, sonha o pesadelo que o culto plantou. Para
+despertá-lo em paz é preciso vencê-lo — e ter as três luas consigo.
+"""
+
+MAP = {
+    "id": "camara_vigia",
+    "name": "Câmara do Vigia",
+    "outdoor": False,
+    "light": 3,
+    "start": (1, 4),
+    "legend": {"#": "parede_gruta", ".": "lajes", "&": "entalhes", "x": "cristais"},
+    "layout": '''
+#################
+####&&&&&&&&&&###
+####.x..x..x...##
+###.............#
+#...............#
+###.............#
+####.x..x..x...##
+####&&&&&&&&&&###
+#################
+''',
+    "regions": [
+        {
+            "id": "camara_vigia", "name": "Câmara do Vigia", "rects": [(0, 0, 16, 8)], "xp": 120,
+            "intro": ("Atrás da porta das três luas, um salão de pedra branca se abre sob uma cúpula de cristais. "
+                      "O chão vibra num ritmo lento e enorme: uma respiração que vem de baixo — de muito, muito "
+                      "baixo."),
+            "day": ["Os cristais da cúpula pulsam no ritmo da respiração que sobe do chão.",
+                    "O ar cheira a chuva antiga e a pedra recém-partida.",
+                    "Por um instante, você ouve as três notas da canção — e depois uma quarta, desafinada."],
+        },
+    ],
+    "landmarks": [
+        {
+            "id": "limiar_luas", "name": "Limiar das Três Luas", "x": 1, "y": 4, "xp": 40,
+            "description": ("Do lado de dentro, a porta selada mostra as três luas acesas, uma em cada concavidade, "
+                            "como olhos que acompanham você."),
+            "examine": ("Nas paredes do limiar, os Vigias gravaram seus nomes: centenas, em letras cada vez mais "
+                        "recentes. O último é \"Kael\". Há espaço para muitos outros."),
+        },
+        {
+            "id": "coracao_vale", "name": "Coração do Vale", "x": 8, "y": 1, "xp": 60,
+            "description": ("No alto da parede norte, um relevo enorme mostra um coração de pedra atravessado por "
+                            "raízes e rios. A cada respiração que vem do chão, ele brilha de leve."),
+            "examine": ("De perto, o relevo não é um relevo: é uma janela de cristal, e do outro lado, muito ao "
+                        "longe, algo do tamanho de uma montanha se mexe no escuro."),
+            "secret": {
+                "flag": "coracao_vale_visto",
+                "if": {"flag": "vigia_desperto"},
+                "xp": 300,
+                "hint": "A janela de cristal está turva, como um vidro embaçado por um sonho ruim.",
+                "text": ("Agora que o Vigia canta, a janela de cristal clareia. Lá embaixo, o Primordial dorme de "
+                         "novo: um gigante de pedra e raízes, enrolado como uma criança, com o vale inteiro "
+                         "sobre as costas. Os tremores pararam. Você fica olhando por um longo tempo."),
+                "journal": {
+                    "title": "O Primordial dorme",
+                    "text": ("Pela janela do Coração do Vale, na câmara do Vigia, dá para ver o Primordial: um "
+                             "gigante de pedra e raízes, dormindo em paz sob o vale. Os tremores pararam."),
+                },
+            },
+        },
+        {
+            "id": "leito_vigia", "name": "Leito do Vigia", "x": 13, "y": 4, "xp": 80,
+            "description": ("No fundo do salão, sobre um estrado de pedra-da-lua, um gigante de pedra branca dorme "
+                            "sentado, de pernas cruzadas e mãos abertas sobre os joelhos — mãos do tamanho de uma "
+                            "porta, esperando três luas."),
+            "examine": ("O rosto do Vigia é sereno e gasto como uma pedra de rio. Nas palmas das mãos, três "
+                        "concavidades em forma de lua refletem a luz dos cristais."),
+            "encounter": {
+                "flag": "vigia_desperto", "radius": 2, "boss": True,
+                "monsters": [["vigia_atormentado", 13]],
+                "intro": ("As três luas na sua mochila começam a brilhar. O gigante de pedra estremece, e os olhos "
+                          "dele se abrem — vazios, violetas, cheios de pesadelo. \"QUEM... CANTA... FORA DO "
+                          "TEMPO?\" A voz dele faz os cristais trincarem. O Vigia se levanta, e o chão se levanta "
+                          "com ele."),
+                "victory": ("O Vigia cai de joelhos, e a luz violeta escorre dos olhos dele como fumaça. Você ergue "
+                            "as três luas e canta as três notas. Na terceira, o gigante canta junto — uma voz "
+                            "grave, enorme, que atravessa a pedra e desce, desce, até o fundo do vale. Lá embaixo, "
+                            "algo imenso suspira e volta a dormir. O tremor que sempre esteve ali, tão constante "
+                            "que você nem notava, para."),
+                "journal": {
+                    "id": "vigia_despertado", "title": "O Vigia despertou em paz",
+                    "text": ("Na câmara atrás da Porta das Três Luas, o Vigia lutou dentro do pesadelo plantado pelo "
+                             "culto. Com as três luas e a canção, ele despertou em paz e cantou o Primordial de "
+                             "volta ao sono. Ysolde precisa saber."),
+                },
+            },
+        },
+    ],
+    "portals": [
+        {
+            "id": "camara_saida", "x": 1, "y": 4, "direction": "o", "verb": "sair",
+            "label": "Gruta do Véu de Prata", "target": ("gruta_veu_prata", 13, 3),
+            "travel_text": "Você atravessa a porta das três luas de volta à gruta. Atrás de você, ela continua aberta.",
+        },
+    ],
+}

@@ -14,7 +14,7 @@ Campos:
 * ``minutes`` — tempo de jogo de cada tentativa;
 * ``amount`` e ``respawn`` — quantos itens o ponto rende antes de se esgotar e em quantos
   minutos se recupera por completo (aos poucos, como no OSRS);
-* ``rare`` — achados raros por item colhido: ``[item, chance]``;
+* ``rare`` — achados raros por item colhido: ``[item, chance]`` ou ``[item, chance, nível mínimo]``;
 * ``if`` / ``closed`` — quando o ponto pode ser usado (ex.: só à noite) e o aviso fora disso.
 """
 
@@ -43,6 +43,18 @@ NODES = {
         "tool": "picareta", "chance": 0.38, "minutes": 4, "amount": 5, "respawn": 300,
         "rare": [["granada_bruta", 0.04]],
         "verb": "A picareta tilinta contra a prata, e o eco corre a gruta inteira.",
+    },
+    "veio_ferro_bom": {
+        "name": "Veio de Ferro", "skill": "mineracao", "level": 15, "item": "minerio_ferro", "xp": 35,
+        "tool": "picareta", "chance": 0.48, "minutes": 4, "amount": 10, "respawn": 180,
+        "rare": [["granada_bruta", 0.03]],
+        "verb": "Você ataca o veio largo e vermelho que deu nome à mina.",
+    },
+    "veio_carvao": {
+        "name": "Veio de Carvão", "skill": "mineracao", "level": 30, "item": "carvao", "xp": 50,
+        "tool": "picareta", "chance": 0.42, "minutes": 4, "amount": 8, "respawn": 240,
+        "rare": [["granada_bruta", 0.02]],
+        "verb": "Pó negro sobe a cada golpe. Você tosse, mas o carvão vem.",
     },
     "cristais_eco": {
         "name": "Cristais-de-eco", "skill": "mineracao", "level": 40, "item": "cristal_eco", "xp": 80,
@@ -76,6 +88,12 @@ NODES = {
         "name": "Peixes-cegos", "skill": "pesca", "level": 30, "item": "peixe_cego_cru", "xp": 85,
         "tool": "vara", "bait": "isca_minhoca", "chance": 0.35, "minutes": 4, "amount": 6, "respawn": 300,
         "verb": "Você desce a linha devagar na água negra e imóvel do lago subterrâneo.",
+    },
+    "poco_do_rei": {
+        "name": "Poço do Rei", "skill": "pesca", "level": 20, "item": "carpa_prateada", "xp": 60,
+        "tool": "vara", "bait": "isca_minhoca", "chance": 0.42, "minutes": 4, "amount": 8, "respawn": 240,
+        "rare": [["rei_do_lago", 0.04, 35], ["bota_velha", 0.02]],
+        "verb": "Você deixa a isca descer até o fundo do poço, onde a água fica escura e parada.",
     },
     # ------------------------------------------------------------------ ervas (alquimia)
     "ervas_pantano": {

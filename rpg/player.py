@@ -1,5 +1,5 @@
 """O herói: aparência, classe, atributos, experiência (curva do WoW Classic), equipamento,
-perícias e bônus temporários (comidas, elixires e venenos de arma)."""
+perícias, talentos e bônus temporários (comidas, elixires e venenos de arma)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Mapping, Optional
 from .data.appearance import ALIGNMENTS, ARMOR_COLORS, FEATURES, GENDERS, HAIR_COLORS, HAIR_STYLES
 from .data.classes import CLASSES, RESOURCES, STATS, TALENT_START_LEVEL
 from .data.items import ITEMS, STARTING_COPPER, STARTING_ITEMS, SUBTYPES
+from . import talents as talent_rules
 from .items import DEFAULT_BAG_SLOTS, Inventory, ItemStack, get_item
 from .skills import SkillSet
 from .utils import capitalize_first
@@ -79,7 +80,8 @@ class Player:
     def __init__(self, name: str, class_id: str, appearance: Appearance, alignment: str, level: int = 1,
                  xp: int = 0, hp: Optional[int] = None, resource: Optional[int] = None, copper: int = 0,
                  inventory: Optional[Inventory] = None, equipment: Optional[Dict[str, ItemStack]] = None,
-                 skills: Optional[SkillSet] = None, buffs: Optional[List[Dict[str, Any]]] = None) -> None:
+                 skills: Optional[SkillSet] = None, buffs: Optional[List[Dict[str, Any]]] = None,
+                 talents: Optional[Mapping[str, int]] = None) -> None:
         if class_id not in CLASSES:
             raise ValueError(f"Classe desconhecida: {class_id!r}")
         if alignment not in ALIGNMENTS:
@@ -96,6 +98,10 @@ class Player:
         self.equipment: Dict[str, ItemStack] = dict(equipment or {})
         self.skills = skills or SkillSet()
         self.buffs: List[Dict[str, Any]] = [dict(buff) for buff in (buffs or [])]
+        catalog = talent_rules.all_talents(class_id)
+        self.talents: Dict[str, int] = {talent_id: min(int(ranks), catalog[talent_id][1]["ranks"])
+                                        for talent_id, ranks in (talents or {}).items()
+                                        if talent_id in catalog and int(ranks) > 0}
         self._sync_capacity()
         self.hp = self.max_hp if hp is None else max(0, min(hp, self.max_hp))
         default_resource = self.max_resource if self.resource_data["starts_full"] else 0
@@ -148,8 +154,12 @@ class Player:
     def buff_bonus(self, stat: str) -> int:
         return sum(buff.get("stats", {}).get(stat, 0) for buff in self.buffs)
 
+    def talent_bonus(self, kind: str, key: Optional[str] = None) -> float:
+        return talent_rules.bonus(self.class_id, self.talents, kind, key)
+
     def stat(self, stat: str) -> int:
-        return self.base_stat(stat) + self.gear_bonus(stat) + self.buff_bonus(stat)
+        return (self.base_stat(stat) + self.gear_bonus(stat) + self.buff_bonus(stat)
+                + int(self.talent_bonus("stat", stat)))
 
     def stats(self) -> Dict[str, int]:
         return {stat: self.stat(stat) for stat in STATS}
@@ -157,7 +167,8 @@ class Player:
     @property
     def max_hp(self) -> int:
         data = self.class_data
-        return data["base_hp"] + data["hp_per_level"] * (self.level - 1) + self.stat("vigor") * 2
+        base = data["base_hp"] + data["hp_per_level"] * (self.level - 1) + self.stat("vigor") * 2
+        return int(round(base * (1 + self.talent_bonus("max_hp_pct"))))
 
     @property
     def max_resource(self) -> int:
@@ -165,11 +176,13 @@ class Player:
         if fixed:
             return fixed
         data = self.class_data
-        return data["base_mana"] + data["mana_per_level"] * (self.level - 1) + self.stat("intelecto") * 3
+        base = data["base_mana"] + data["mana_per_level"] * (self.level - 1) + self.stat("intelecto") * 3
+        return int(round(base * (1 + self.talent_bonus("max_resource_pct"))))
 
     @property
     def armor(self) -> int:
-        return sum(stack.data.get("armor", 0) for stack in self.equipment.values()) + self.stat("agilidade") * 2
+        base = sum(stack.data.get("armor", 0) for stack in self.equipment.values()) + self.stat("agilidade") * 2
+        return int(round(base * (1 + self.talent_bonus("armor_pct"))))
 
     @property
     def xp_needed(self) -> int:
@@ -177,11 +190,40 @@ class Player:
 
     @property
     def talent_points(self) -> int:
-        return max(0, self.level - TALENT_START_LEVEL + 1)
+        """Pontos de talento ainda livres."""
+        return talent_rules.points_total(self.level) - talent_rules.points_spent(self.talents)
+
+    def learn_talent(self, talent_id: str) -> None:
+        """Gasta um ponto num talento. Levanta ``ValueError`` se não der."""
+        talent_rules.learn(self.class_id, self.level, self.talents, talent_id)
+        self.clamp_vitals()
+
+    def reset_talents(self) -> int:
+        """Esquece todos os talentos e devolve quantos pontos voltaram."""
+        refunded = talent_rules.points_spent(self.talents)
+        self.talents = {}
+        self.clamp_vitals()
+        return refunded
 
     def abilities(self, include_locked: bool = False) -> List[Dict[str, Any]]:
-        return [ability for ability in self.class_data["abilities"]
-                if include_locked or ability["level"] <= self.level]
+        """Habilidades conhecidas (as de talento só depois de aprender o talento)."""
+        granted = set(talent_rules.granted_abilities(self.class_id, self.talents))
+        known = []
+        for ability in self.class_data["abilities"]:
+            if ability.get("talent"):
+                if include_locked or ability["id"] in granted:
+                    known.append(ability)
+            elif include_locked or ability["level"] <= self.level:
+                known.append(ability)
+        return known
+
+    def ability_cost(self, ability: Mapping[str, Any]) -> int:
+        reduction = self.talent_bonus("cost", ability["id"])
+        return max(0, int(ability.get("cost", 0) - reduction))
+
+    def ability_cooldown(self, ability: Mapping[str, Any]) -> int:
+        reduction = self.talent_bonus("cooldown", ability["id"])
+        return max(0, int(ability.get("cooldown", 0) - reduction))
 
     # ------------------------------------------------------------------ progressão
 
@@ -200,7 +242,8 @@ class Player:
                 stat_gains={stat: self.stat(stat) - value for stat, value in before_stats.items()},
                 hp_gain=self.max_hp - before_hp,
                 resource_gain=self.max_resource - before_res,
-                new_abilities=[a["name"] for a in self.class_data["abilities"] if a["level"] == self.level],
+                new_abilities=[a["name"] for a in self.class_data["abilities"]
+                               if a["level"] == self.level and not a.get("talent")],
                 talent_point=self.level >= TALENT_START_LEVEL,
             ))
             self.restore()
@@ -226,7 +269,8 @@ class Player:
         if self.hp < self.max_hp:
             self.hp = min(self.max_hp, self.hp + max(1, round(self.max_hp * (0.004 + spirit / 25000) * minutes)))
         if self.resource_id == "mana":
-            gain = max(1, round(self.max_resource * (0.005 + spirit / 20000) * minutes))
+            rate = (0.005 + spirit / 20000) * (1 + self.talent_bonus("mana_regen_pct"))
+            gain = max(1, round(self.max_resource * rate * minutes))
             self.resource = min(self.max_resource, self.resource + gain)
         elif self.resource_id == "energia":
             self.resource = self.max_resource
@@ -301,7 +345,7 @@ class Player:
         slot = data["slot"]
         slots = [slot] + (["secundaria"] if data.get("two_handed") else [])
         displaced = [name for name in slots if name in self.equipment]
-        used_after = len(self.inventory) - (1 if stack.quantity == 1 else 0) + len(displaced)
+        used_after = self.inventory.used_slots - (1 if stack.quantity == 1 else 0) + len(displaced)
         capacity_after = DEFAULT_BAG_SLOTS + (data.get("bag_slots", 0) if slot == "bolsa" else self.bag_slots)
         if used_after > capacity_after:
             if slot == "bolsa":
@@ -320,7 +364,7 @@ class Player:
         if slot not in self.equipment:
             raise ValueError("Não há nada equipado aí.")
         capacity_after = DEFAULT_BAG_SLOTS + (0 if slot == "bolsa" else self.bag_slots)
-        if len(self.inventory) + 1 > capacity_after:
+        if self.inventory.used_slots + 1 > capacity_after:
             if slot == "bolsa":
                 raise ValueError(f"Sem a bolsa, a mochila só tem {DEFAULT_BAG_SLOTS} espaços: esvazie um pouco antes.")
             raise ValueError("Sua mochila está cheia.")
@@ -373,6 +417,7 @@ class Player:
             "equipment": {slot: stack.to_dict() for slot, stack in self.equipment.items()},
             "skills": self.skills.to_dict(),
             "buffs": [dict(buff) for buff in self.buffs],
+            "talents": dict(self.talents),
         }
 
     @classmethod
@@ -394,4 +439,5 @@ class Player:
             skills=SkillSet.from_dict(data.get("skills")),
             buffs=[buff for buff in data.get("buffs", [])
                    if isinstance(buff, dict) and {"id", "name", "group", "expires"} <= set(buff)],
+            talents=data.get("talents"),
         )

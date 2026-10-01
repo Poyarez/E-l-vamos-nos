@@ -2,7 +2,9 @@
 
 Estrutura de um NPC:
   ``schedule`` — onde o NPC está em cada período do dia (a primeira regra que bate vale;
-  sem regra correspondente, o NPC não está no mapa naquele horário).
+  sem regra correspondente, o NPC não está no mapa naquele horário). Uma regra pode ter
+  ``if`` (o NPC só aparece sob condições: fantasmas, resgatados, mercadores que chegam
+  com a história) e ``map`` (outro mapa que não o de ``map``).
   ``dialogue`` — nós de conversa. A conversa começa em ``"inicio"``.
 
 Estrutura de um nó:
@@ -12,12 +14,14 @@ Estrutura de um nó:
   ``next``    — sem opções: volta automaticamente para este nó.
   ``effects`` — ao exibir o nó: ``set_flag``, ``journal``, ``xp``, ``give_item`` e
                 ``take_item`` (``[item, qtd]`` ou uma lista desses pares), ``give_copper``,
-                ``restore`` e ``open_shop`` (abre a loja do NPC, definida em ``shop``,
-                assim que a conversa termina).
+                ``take_copper``, ``restore``, ``start_quest`` (começa uma missão de
+                ``rpg.data.quests``), ``reset_talents`` e ``open_shop`` (abre a loja do NPC,
+                definida em ``shop``, assim que a conversa termina).
 
-Condições (``if``): ``flag``, ``not_flag``, ``journal``, ``discovered``, ``class``,
-``moral``, ``law``, ``period``, ``night``, ``met``, ``min_level``, ``item`` (ter
-``[item, qtd]`` na mochila) e ``skill`` (``{"perícia": nível}``).
+Condições (``if``): as de ``rpg.conditions`` — ``flag``, ``not_flag``, ``journal``,
+``discovered``, ``class``, ``moral``, ``law``, ``period``, ``night``, ``met``, ``min_level``,
+``item`` (ter ``[item, qtd]`` na mochila), ``owns``, ``skill`` (``{"perícia": nível}``),
+``copper``, ``moon``, ``quest_active``/``quest_done``/``quest_stage``, ``talents`` e ``any``.
 
 Marcadores de texto: ``{nome}``, ``{tratamento}``/``{Tratamento}``, ``{bem_vindo}``/``{Bem_vindo}``
 e ``{classe}``.
@@ -57,6 +61,11 @@ NPCS = {
                      "if": {"flag": "segredo_cachoeira"}},
                     {"text": "Vi um mural na gruta: um gigante adormecido.", "next": "primordial",
                      "if": {"flag": "lenda_primordial"}},
+                    {"text": "Como vai a busca pelas três luas?", "next": "luas_progresso",
+                     "if": {"quest_active": "tres_luas", "not_flag": "vigia_desperto"}},
+                    {"text": "O Vigia despertou. O Primordial voltou a dormir.", "next": "final",
+                     "if": {"flag": "vigia_desperto", "not_flag": "ysolde_final"}},
+                    {"text": "E agora, anciã? Como fica o vale?", "next": "depois", "if": {"flag": "ysolde_final"}},
                     {"text": "Com quem devo falar na vila?", "next": "conselhos"},
                     {"text": "Até logo, anciã.", "next": None},
                 ],
@@ -131,6 +140,59 @@ NPCS = {
                 },
                 "next": "inicio",
             },
+            "luas_progresso": {
+                "text": [
+                    {"if": {"quest_stage": ["tres_luas", 0]}, "text": (
+                        "A primeira lua... \"Onde a água cai em véu de prata, a lua dorme em sua casa.\" A balada do "
+                        "bardo fala da cachoeira, {nome}. Procure atrás da água.")},
+                    {"if": {"quest_stage": ["tres_luas", 1]}, "text": (
+                        "Você achou a crescente! Agora precisamos de alguém que saiba das outras. Os Vigias estão "
+                        "enterrados no cemitério da colina, e minha avó jurava que Kael nunca descansou de verdade. "
+                        "Vá até o túmulo dele — à noite.")},
+                    {"if": {"quest_stage": ["tres_luas", 2]}, "text": (
+                        "Uma canção nas pedras da ilhota? Então você vai precisar de um barco. O Anselmo tem um — "
+                        "furado, mas tem. Talvez você consiga consertá-lo.")},
+                    {"if": {"quest_stage": ["tres_luas", 3]}, "text": (
+                        "Com a canção, o Carvalho Ancião deve abrir o coração para você. Mas só à noite: árvores "
+                        "velhas dormem de dia, como as velhas.")},
+                    {"if": {"quest_stage": ["tres_luas", 4]}, "text": (
+                        "A minguante está com a Senhora da Lua Cortada, sob o Círculo de Runas. A Torre Tombada diz "
+                        "que o caminho se revela quando o olho se abre — na lua cheia. Ou talvez os próprios "
+                        "cultistas carreguem alguma chave...")},
+                    {"if": {"quest_stage": ["tres_luas", 5]}, "text": (
+                        "Partida ao meio? *Ela fecha os olhos por um momento.* Prata une o que a lua quebra, dizia "
+                        "minha avó. Leve as metades ao Brom — e uma barra de prata, se tiver.")},
+                    {"if": {"quest_stage": ["tres_luas", 6]}, "text": (
+                        "As três luas, enfim! *As mãos dela tremem.* Leve-as à porta selada, na gruta atrás da "
+                        "cachoeira.")},
+                    {"if": {"quest_stage": ["tres_luas", 7]}, "text": (
+                        "O Vigia está atrás da porta, sonhando o pesadelo que plantaram nele. Vá com cuidado, "
+                        "{nome}. Leve poções. Leve coragem. E volte.")},
+                ],
+                "next": "inicio",
+            },
+            "final": {
+                "text": [
+                    "*Ysolde fica muito tempo em silêncio. Depois ri baixinho, e as lágrimas descem sem pressa.*",
+                    ("Os tremores pararam. Eu senti, hoje de manhã: a louça não tilintou. Pela primeira vez em três "
+                     "luas, a louça não tilintou."),
+                    ("*Ela abre um baú aos pés da cama e tira de lá um manto cinza-prateado, dobrado com cuidado.* "
+                     "Era dos Vigias. Minha avó o guardou para \"quem um dia merecer\". Eu achava que esse dia não "
+                     "vinha nunca."),
+                    "Obrigada, {nome}. Em nome do vale — e em nome de todos os que cantaram antes de você.",
+                ],
+                "effects": {"set_flag": "ysolde_final"},
+                "next": "inicio",
+            },
+            "depois": {
+                "text": [
+                    ("O vale vai se curar devagar, como os velhos. A mina trabalha de novo, as caravanas voltaram, "
+                     "e as crianças brincam de \"Vigia e Senhora\" na praça — você sempre ganha, sabia?"),
+                    ("Mas o Passo do Norte continua fechado, e a ponte do Rio Largo caiu. Lá fora, o mundo ainda "
+                     "treme em outros lugares. Gente como você nunca fica sem estrada por muito tempo."),
+                ],
+                "next": "inicio",
+            },
             "conselhos": {
                 "text": [
                     ("A Capitã Renna guarda o Portão Norte: é durona, mas justa, e sabe tudo sobre os perigos lá "
@@ -187,6 +249,14 @@ NPCS = {
                      "if": {"flag": "varek_derrotado", "not_flag": "renna_viu_coleira"}},
                     {"text": "O Alfa Branco está morto. A Toca dos Lobos está livre.", "next": "alfa",
                      "if": {"flag": "presa_de_gelo_derrotado", "not_flag": "renna_recompensa_alfa"}},
+                    {"text": "Você parece preocupada, capitã.", "next": "tome_sumiu",
+                     "if": {"min_level": 9, "not_flag": "renna_tome_sumiu"}},
+                    {"text": "Tomé está a salvo. Ele já está voltando para casa.", "next": "tome_salvo",
+                     "if": {"flag": "tome_salvo", "not_flag": "renna_tome"}},
+                    {"text": "Encontrei esta carta no cofre do capataz da mina.", "next": "carta",
+                     "if": {"item": "carta_capataz", "not_flag": "renna_carta"}},
+                    {"text": "Ulric Corvo-Negro está morto. O Bando do Corvo acabou.", "next": "rota_livre",
+                     "if": {"flag": "ulric_derrotado", "not_flag": "rota_liberada"}},
                     {"text": "Até mais, capitã.", "next": None},
                 ],
             },
@@ -301,6 +371,58 @@ NPCS = {
                 "effects": {"set_flag": "renna_recompensa_alfa", "give_copper": 500, "xp": 250},
                 "next": "inicio",
             },
+            "tome_sumiu": {
+                "text": [
+                    ("*Renna esfrega o rosto com as duas mãos.* O Tomé sumiu. Ontem à noite ele saiu dizendo que ia "
+                     "ver \"o olho se abrir\", lá na Torre Tombada, nas ruínas. Não voltou."),
+                    ("Eu não posso largar o portão: se eu sair, metade da guarda vai atrás de mim, e a vila fica "
+                     "aberta. *Ela olha nos seus olhos.* Você pode ir? À noite. É à noite que aquele lugar acorda."),
+                ],
+                "effects": {"set_flag": "renna_tome_sumiu", "start_quest": "sobrinho"},
+                "next": "inicio",
+            },
+            "tome_salvo": {
+                "text": [
+                    "*Renna fecha os olhos e solta o ar devagar, como se o segurasse desde ontem.*",
+                    ("Cultistas. Na torre. Com o meu sobrinho. *A mão dela aperta o cabo da espada até os dedos "
+                     "ficarem brancos.* Obrigada, {nome}. De verdade."),
+                    ("Tome: a capa da guarda. Era do meu pai. O Tomé vai ficar com inveja — ótimo. Talvez assim ele "
+                     "entenda que capa se ganha, não se pega."),
+                ],
+                "effects": {"set_flag": "renna_tome"},
+                "next": "inicio",
+            },
+            "carta": {
+                "text": [
+                    "*Renna lê a carta uma vez. Depois lê de novo, mais devagar, e o rosto dela vai endurecendo.*",
+                    ("\"M.\" — a Senhora da Lua Cortada. Então é isso: o culto paga o Bando do Corvo com as flechas "
+                     "da mina para manter o vale isolado. Ninguém entra, ninguém sai, ninguém pede ajuda."),
+                    ("*Ela dobra a carta e a guarda no peito.* Vou abrir o Portão Sul — para você. Desça a Rota dos "
+                     "Mercadores, encontre o acampamento desse tal Ulric e acabe com o Bando. Sem flechas, sem "
+                     "pedágio, sem cerco."),
+                ],
+                "effects": {
+                    "take_item": ["carta_capataz", 1],
+                    "set_flag": ["renna_carta", "rota_aberta"],
+                    "journal": {
+                        "id": "portao_sul_aberto", "title": "O Portão Sul se abre",
+                        "text": ("A carta do capataz prova que o culto paga o Bando do Corvo para isolar o vale. A "
+                                 "Capitã Renna abriu o Portão Sul: o acampamento de Ulric Corvo-Negro fica em algum "
+                                 "lugar da Rota dos Mercadores.")},
+                },
+                "next": "inicio",
+            },
+            "rota_livre": {
+                "text": [
+                    "*Renna fica um bom tempo olhando para o sul, para a estrada vazia.*",
+                    ("Então acabou. Amanhã mesmo eu mando avisar Alvorada: a Rota dos Mercadores está aberta. As "
+                     "caravanas vão voltar, e o Zahir finalmente vai poder vender aquela seda toda."),
+                    ("*Ela tira do dedo um anel de bronze gasto, com o brasão do vale.* A guarda de Primórdia só "
+                     "deu três destes. Agora são quatro."),
+                ],
+                "effects": {"set_flag": "rota_liberada"},
+                "next": "inicio",
+            },
         },
     },
     # ================================================================== DONA GRAÇA, A QUITANDEIRA
@@ -327,6 +449,9 @@ NPCS = {
                     {"text": "Quero negociar.", "next": "negociar"},
                     {"text": "O que você compra?", "next": "compra"},
                     {"text": "Como anda o mercado?", "next": "mercado"},
+                    {"text": "Precisa de alguma ajuda, Dona Graça?", "next": "pedido", "if": {"not_flag": "graca_pedido"}},
+                    {"text": "Trouxe cinco peles de lobo.", "next": "peles_entregues",
+                     "if": {"quest_active": "peles", "item": ["pele_lobo", 5]}},
                     {"text": "Até mais, Dona Graça.", "next": None},
                 ],
             },
@@ -345,9 +470,31 @@ NPCS = {
             },
             "mercado": {
                 "text": [
-                    ("Fraco, {tratamento}. Sem as caravanas do sul, vendo pão para quem tem dinheiro e fiado para "
-                     "quem não tem. Se as coisas não melhorarem, só os lobos vão engordar neste inverno."),
+                    {"if": {"not_flag": "rota_liberada"}, "text": (
+                        "Fraco, {tratamento}. Sem as caravanas do sul, vendo pão para quem tem dinheiro e fiado para "
+                        "quem não tem. Se as coisas não melhorarem, só os lobos vão engordar neste inverno.")},
+                    {"if": {"flag": "rota_liberada"}, "text": (
+                        "Com as caravanas de volta? Uma beleza! Vendi mais esta semana do que nas três luas "
+                        "anteriores. E aquele Zahir montou banca do meu lado — concorrência boa, das que trazem "
+                        "freguês.")},
                 ],
+                "next": "inicio",
+            },
+            "pedido": {
+                "text": [
+                    ("Ajuda? Ah, se preciso! O inverno vem aí, e meus netos estão sem casaco. Se você me trouxer "
+                     "cinco peles de lobo — inteiras, hein! —, eu costuro casacos para eles."),
+                    "E para você eu faço uma bolsa de lã das boas, que cabe o dobro do que parece.",
+                ],
+                "effects": {"set_flag": "graca_pedido", "start_quest": "peles"},
+                "next": "inicio",
+            },
+            "peles_entregues": {
+                "text": [
+                    "*Graça examina cada pele contra a luz, puxa o pelo, cheira, e finalmente sorri.*",
+                    "Peles boas! Os meninos vão passar o inverno parecendo filhotes de lobo. Tome a sua bolsa, como prometi.",
+                ],
+                "effects": {"take_item": ["pele_lobo", 5], "set_flag": "graca_peles"},
                 "next": "inicio",
             },
         },
@@ -380,7 +527,11 @@ NPCS = {
                     {"text": "Quero ver suas mercadorias.", "next": "negociar"},
                     {"text": "Onde consigo minério?", "next": "minerio"},
                     {"text": "De quem é o martelo com o nome \"Davi\"?", "next": "davi",
-                     "if": {"discovered": "forja"}},
+                     "if": {"discovered": "forja", "not_flag": "davi_resgatado"}},
+                    {"text": "Davi está vivo! Eu o tirei da mina.", "next": "davi_voltou",
+                     "if": {"flag": "davi_resgatado", "not_flag": "brom_davi_voltou"}},
+                    {"text": "Consegue juntar as duas metades desta lua de pedra?", "next": "metades",
+                     "if": {"item": "metades_lua_minguante"}},
                     {"text": "Até mais, Brom.", "next": None},
                 ],
             },
@@ -447,6 +598,53 @@ NPCS = {
                     "id": "pista_davi", "title": "O aprendiz desaparecido",
                     "text": ("Davi, aprendiz de Brom, desapareceu na Mina de Ferro-Velho durante a grande tremura. "
                              "Brom espera por notícias.")}},
+                "next": "inicio",
+            },
+            "davi_voltou": {
+                "text": [
+                    ("*Brom larga o martelo e esmaga você num abraço que estala três costelas.* EU SEI! Ele entrou "
+                     "por aquela porta pedindo pão e trabalho, nessa ordem!"),
+                    ("Magro como um cabo de vassoura, mas inteiro. *O ferreiro enxuga os olhos com o avental, "
+                     "fingindo que é fuligem.* Você trouxe o meu menino de volta, {nome}."),
+                    ("E a mina livre quer dizer ferro de novo — e carvão. Vou ensinar o Davi a fazer aço, e a forja "
+                     "volta a vender coisa boa. Ah, e ele fez questão de forjar uma peça para você, do jeito que "
+                     "você luta. Não conte que eu contei."),
+                ],
+                "effects": {"set_flag": "brom_davi_voltou"},
+                "next": "inicio",
+            },
+            "metades": {
+                "text": [
+                    "*Brom gira as duas metades contra a luz da forja, com uma delicadeza que você não esperava.*",
+                    ("Pedra-da-lua. Nunca trabalhei com isso... Mas pedra quebrada se junta com metal macio. Prata, "
+                     "de preferência — prata pura, da boa, como a do véu da cachoeira."),
+                ],
+                "options": [
+                    {"text": "Aqui está uma barra de prata.", "next": "juntar_lua", "if": {"item": "barra_prata"}},
+                    {"text": "Não tenho prata. Pode usar a sua? (3 moedas de prata)", "next": "juntar_lua_pago",
+                     "if": {"copper": 300, "not_flag": "brom_lua_paga"}},
+                    {"text": "Vou buscar a prata.", "next": "inicio"},
+                ],
+            },
+            "juntar_lua_pago": {
+                "text": [
+                    ("*Brom some nos fundos da forja e volta com uma barrinha de prata embrulhada num pano.* Era para "
+                     "a aliança de alguém que desistiu de casar. Melhor ter um destino nobre."),
+                    ("*Ele aquece a prata até ela ficar mole como mel e a passa, com um pincel de ferro, na fratura "
+                     "da pedra. As duas metades se encaixam com um estalo, e a luz delas para de piscar.*"),
+                ],
+                "effects": {"take_copper": 300, "set_flag": "brom_lua_paga",
+                            "take_item": ["metades_lua_minguante", 1], "give_item": ["lua_minguante", 1], "xp": 300},
+                "next": "inicio",
+            },
+            "juntar_lua": {
+                "text": [
+                    ("*Brom aquece a prata até ela ficar mole como mel e a passa, com um pincel de ferro, na fratura "
+                     "da pedra. As duas metades se encaixam com um estalo, e a luz delas para de piscar.*"),
+                    "Pronto. A cicatriz vai brilhar mais que o resto, mas... *ele dá de ombros* ...cicatriz também é história.",
+                ],
+                "effects": {"take_item": [["metades_lua_minguante", 1], ["barra_prata", 1]],
+                            "give_item": ["lua_minguante", 1], "xp": 300},
                 "next": "inicio",
             },
         },
@@ -575,6 +773,11 @@ NPCS = {
                     {"text": "Por que há uma lua no vitral?", "next": "lua", "if": {"discovered": "capela"}},
                     {"text": "Você parece cansada.", "next": "cansada"},
                     {"text": "Pode me abençoar?", "next": "bencao"},
+                    {"text": "Posso ajudar a capela de alguma forma?", "next": "ajuda", "if": {"not_flag": "celeste_pedido"}},
+                    {"text": "Trouxe três poções de cura menor para os feridos.", "next": "pocoes",
+                     "if": {"quest_active": "remedios", "item": ["pocao_cura_menor", 3]}},
+                    {"text": "Pode me ajudar a esquecer o que aprendi? (talentos)", "next": "esquecer",
+                     "if": {"min_level": 10, "talents": True}},
                     {"text": "Que a Aurora a guarde, Irmã.", "next": None},
                 ],
             },
@@ -621,6 +824,44 @@ NPCS = {
                 "effects": {"restore": True},
                 "next": "inicio",
             },
+            "ajuda": {
+                "text": [
+                    ("Desde as tremuras, a capela vive cheia: gente que caiu, que se cortou fugindo de lobo, que não "
+                     "dorme. As poções da Mãe Brígida acabam antes de chegar aqui."),
+                    "Se você conseguir três poções de cura menor, eu as divido entre os feridos. A Aurora retribui — e eu também.",
+                ],
+                "effects": {"set_flag": "celeste_pedido", "start_quest": "remedios"},
+                "next": "inicio",
+            },
+            "pocoes": {
+                "text": [
+                    "*Celeste segura as poções como se fossem frágeis como ovos.*",
+                    ("O velho Joaquim do moinho vai poder dormir. E a menina dos Moreira, que cortou a mão na cerca... "
+                     "Obrigada, {nome}. Tome isto: um símbolo da Aurora, abençoado no altar."),
+                ],
+                "effects": {"take_item": ["pocao_cura_menor", 3], "set_flag": "celeste_remedios"},
+                "next": "inicio",
+            },
+            "esquecer": {
+                "text": [
+                    ("A Aurora ensina que todo dia é um recomeço. Há uma prece antiga de esquecimento: ela devolve o "
+                     "que você aprendeu nos seus caminhos de luta, para que possa escolher de novo."),
+                    "Só peço uma oferta para o óleo das lamparinas: duas moedas de prata.",
+                ],
+                "options": [
+                    {"text": "Faça a prece. (2 moedas de prata)", "next": "esquecer_feito", "if": {"copper": 200}},
+                    {"text": "Agora não, Irmã.", "next": "inicio"},
+                ],
+            },
+            "esquecer_feito": {
+                "text": [
+                    ("*Celeste pousa as mãos na sua cabeça e reza baixinho. Por um instante, você esquece o peso das "
+                     "armas, o ritmo das magias, os truques aprendidos a duras penas... e sente tudo isso voltar, "
+                     "leve, esperando ser escolhido de novo.*"),
+                ],
+                "effects": {"take_copper": 200, "reset_talents": True},
+                "next": "inicio",
+            },
         },
     },
     # ================================================================== ANSELMO, O PESCADOR
@@ -648,6 +889,15 @@ NPCS = {
                     {"text": "Vende vara e iscas?", "next": "negociar"},
                     {"text": "Que ilhota é aquela no meio do lago?", "next": "ilhota"},
                     {"text": "O \"Rei do Lago\" existe mesmo?", "next": "rei"},
+                    {"text": "Posso ajudar a consertar o seu barco?", "next": "barco",
+                     "if": {"journal": "rumor_ilhota", "not_flag": "anselmo_barco"}},
+                    {"text": "Trouxe os pregos, o piche e o remendo para o barco.", "next": "barco_pronto",
+                     "if": {"flag": "anselmo_barco", "not_flag": "barco_consertado",
+                            "item": [["pregos_bronze", 10], ["piche", 2], ["remendo_lona", 1]]}},
+                    {"text": "E o Rei do Lago? Onde ele mora?", "next": "rei_missao",
+                     "if": {"flag": "barco_consertado", "not_flag": "anselmo_rei_missao"}},
+                    {"text": "Olhe o que eu fisguei no Poço do Rei!", "next": "rei_pescado",
+                     "if": {"item": "rei_do_lago", "quest_active": "rei_do_lago"}},
                     {"text": "Você conhece a Cachoeira do Véu de Prata?", "next": "cachoeira"},
                     {"text": "Boa pescaria.", "next": None},
                 ],
@@ -705,6 +955,48 @@ NPCS = {
                 ],
                 "next": "inicio",
             },
+            "barco": {
+                "text": [
+                    ("*Anselmo tira o chapéu e coça a cabeça.* Consertar? Ele está furado de lado a lado, mas o "
+                     "casco é bom. Carvalho do vale."),
+                    ("Precisa de dez pregos de bronze, que não enferrujam; dois potes de piche para vedar; e um "
+                     "remendo de lona para o buraco grande. O Brom faz pregos, a Brígida tem piche e a Graça vende "
+                     "lona. Ou você mesmo faz, se tiver mãos para isso."),
+                ],
+                "effects": {"set_flag": "anselmo_barco", "start_quest": "barco"},
+                "next": "inicio",
+            },
+            "barco_pronto": {
+                "text": [
+                    "*Anselmo examina cada prego, cheira o piche e estica o remendo contra o sol.*",
+                    ("Serve. Serve muito bem. *Algumas horas e muitos palavrões depois, o barquinho flutua de novo, "
+                     "sem uma gota de água dentro.* Pode usar quando quiser. Só traga ele de volta."),
+                    "*(Use 'navegar' no píer para ir à Ilhota da Garça.)*",
+                ],
+                "effects": {"take_item": [["pregos_bronze", 10], ["piche", 2], ["remendo_lona", 1]],
+                            "set_flag": "barco_consertado"},
+                "next": "inicio",
+            },
+            "rei_missao": {
+                "text": [
+                    ("O Rei mora no Poço do Rei, na ponta leste da ilhota. Eu via ele de longe, quando ainda tinha "
+                     "barco. Mas segurar um bicho daqueles... só um pescador de mão muito firme."),
+                    ("*Ele estende a mão calejada.* Faça o seguinte: fisgue um Rei do Lago e me mostre. Se fizer "
+                     "isso, eu dou a você a minha vara. Ela merece um dono que ainda tenha os dois joelhos bons."),
+                ],
+                "effects": {"set_flag": "anselmo_rei_missao", "start_quest": "rei_do_lago"},
+                "next": "inicio",
+            },
+            "rei_pescado": {
+                "text": [
+                    "*Anselmo fica de pé pela primeira vez desde que você o conhece. O chapéu cai na água.*",
+                    ("Um Rei do Lago. Um REI DO LAGO! Então são vários... o que arrebentou a minha linha há quarenta "
+                     "anos devia ser o avô deste aqui. *Ele ri e chora ao mesmo tempo.*"),
+                    "A vara é sua, como prometi. E o peixe vai para a Marta: hoje o Javali Dourado janta como um rei.",
+                ],
+                "effects": {"take_item": ["rei_do_lago", 1], "set_flag": "anselmo_rei"},
+                "next": "inicio",
+            },
             "cachoeira": {
                 "text": [
                     ("Conheço. Pesquei lá a vida inteira com o Joaquim, que a Aurora o tenha. Ele vivia dizendo que "
@@ -751,6 +1043,8 @@ NPCS = {
                      "if": {"journal": "pista_sonhos"}},
                     {"text": "Por que há uma lua cortada na Árvore dos Enforcados?", "next": "arvore",
                      "if": {"discovered": "arvore_enforcados"}},
+                    {"text": "Tirei esta chave de pedra negra de um acólito.", "next": "chave",
+                     "if": {"item": "chave_lua_cortada"}},
                     {"text": "Preciso ir.", "next": None},
                 ],
             },
@@ -829,6 +1123,19 @@ NPCS = {
                 },
                 "next": "inicio",
             },
+            "chave": {
+                "text": [
+                    ("*Brígida pega a chave com a ponta de dois dedos, como se fosse um sapo morto.* Pedra de lua "
+                     "nova. Isso abre o que só se abre na lua cheia, criança."),
+                    ("Já viu o disco das pedras que giram, nas ruínas? Com isto na mão, ele gira em qualquer noite. "
+                     "Ou dia. *Ela devolve a chave.* E, onde tem chave, tem fechadura. Procure as duas."),
+                ],
+                "effects": {"journal": {
+                    "id": "pista_chave_negra", "title": "A chave de lua nova",
+                    "text": ("Segundo Mãe Brígida, a chave de pedra negra dos acólitos abre o disco do Círculo de "
+                             "Pedras Rúnicas em qualquer noite — e talvez alguma fechadura do culto.")}},
+                "next": "inicio",
+            },
         },
     },
     # ================================================================== LÍRIO, O BARDO
@@ -856,6 +1163,8 @@ NPCS = {
                     {"text": "Por que você ficou no vale?", "next": "porque"},
                     {"text": "Quem é \"L.\" na Pedra do Viajante?", "next": "pedra",
                      "if": {"discovered": "pedra_viajante"}},
+                    {"text": "Ouvi dizer que você compôs uma balada nova.", "next": "balada_heroi",
+                     "if": {"flag": "vigia_desperto"}},
                     {"text": "Talvez mais tarde.", "next": None},
                 ],
             },
@@ -889,6 +1198,17 @@ NPCS = {
                 ],
                 "next": "inicio",
             },
+            "balada_heroi": {
+                "text": [
+                    "*Lírio sobe numa cadeira, pigarreia, afina o alaúde e anuncia: \"A Balada de {nome}!\"*",
+                    ("Veio de longe, com um cartaz na mão, / sem saber de lua, de culto ou de dragão. / Desceu à "
+                     "mina, subiu ao altar, / e ensinou um gigante de pedra a cantar."),
+                    ("Três luas acesas, o sono guardado, / o vale dormindo, o corvo calado. / E se a terra tremer "
+                     "noutro lugar qualquer, / já sabem o nome de quem vai lá resolver."),
+                    "*Ele faz uma reverência exagerada.* Ainda falta rimar \"Primordial\". Estou trabalhando nisso.",
+                ],
+                "next": "inicio",
+            },
             "pedra": {
                 "text": [
                     ("*Lírio ri, sem graça.* Você leu aquilo? Foi numa noite ruim. Perdi tudo num jogo de dados com o "
@@ -909,7 +1229,8 @@ NPCS = {
         "description": "Turbante índigo, barba bem aparada e anéis em todos os dedos.",
         "map": "vale_primordia",
         "shop": "zahir",
-        "schedule": [{"periods": DAY, "x": 35, "y": 9}],
+        "schedule": [{"periods": DAY, "x": 32, "y": 16, "if": {"flag": "rota_liberada"}},
+                     {"periods": DAY, "x": 35, "y": 9}],
         "dialogue": {
             "inicio": {
                 "text": [
@@ -918,7 +1239,11 @@ NPCS = {
                         "Saudações, viajante! Zahir ibn Kadir, mercador de maravilhas, especiarias e coisas que você "
                         "não sabia que precisava. Infelizmente, no momento, também mercador de coisa nenhuma: "
                         "estamos presos neste vale encantador.")},
-                    {"if": {"met": True}, "text": "Ah, meu cliente favorito, que ainda não comprou nada! *Ele sorri.* Como vai?"},
+                    {"if": {"met": True, "not_flag": "rota_liberada"},
+                     "text": "Ah, meu cliente favorito, que ainda não comprou nada! *Ele sorri.* Como vai?"},
+                    {"if": {"flag": "rota_liberada"}, "text": (
+                        "*Zahir abre os braços diante da banca nova, no mercado da vila.* A rota está aberta! Meus "
+                        "fardos finalmente respiram! E chegaram coisas novas de Alvorada, vá vendo, vá vendo...")},
                 ],
                 "options": [
                     {"text": "O que você vende?", "next": "mercadorias"},
@@ -926,6 +1251,8 @@ NPCS = {
                     {"text": "Como vocês chegaram até aqui?", "next": "chegada"},
                     {"text": "Por que há uma flecha cravada na sua carroça?", "next": "flecha",
                      "if": {"discovered": "caravana"}},
+                    {"text": "Encontrei um fardo seu no acampamento do Corvo.", "next": "fardo_devolvido",
+                     "if": {"item": "fardo_zahir"}},
                     {"text": "Adeus, Zahir.", "next": None},
                 ],
             },
@@ -954,6 +1281,17 @@ NPCS = {
                      "Desfiladeiro das Viúvas. Perdi uma carroça e dois camelos — que a areia os receba."),
                     "Chegamos com o que sobrou. E agora a Capitã diz que não podemos sair. *Ele suspira.* Ao menos o ensopado da estalagem é bom.",
                 ],
+                "next": "inicio",
+            },
+            "fardo_devolvido": {
+                "text": [
+                    "*Zahir rompe o lacre com o polegar, enfia o nariz na seda e respira fundo, de olhos fechados.*",
+                    ("Seda de Qadira, intacta! Achei que nunca mais a veria. *Ele aperta a sua mão com as duas "
+                     "dele.* Um mercador paga as dívidas — sobretudo as de honra. Tome, e não discuta: discutir "
+                     "preço comigo é perder duas vezes."),
+                ],
+                "effects": {"take_item": ["fardo_zahir", 1], "give_copper": 800, "xp": 200,
+                            "set_flag": "zahir_fardo_devolvido"},
                 "next": "inicio",
             },
             "flecha": {
@@ -993,6 +1331,8 @@ NPCS = {
                     {"text": "Que ratos?", "next": "ratos"},
                     {"text": "Trouxe cinco rabos de rato do celeiro.", "next": "rabos",
                      "if": {"journal": "rumor_ratos", "item": ["rabo_rato", 5]}},
+                    {"text": "Dei um jeito nos ratos dos campos.", "next": "ratos_mortos",
+                     "if": {"quest_stage": ["ratos", 1]}},
                     {"text": "Quero comprar farinha.", "next": "negociar"},
                     {"text": "O espantalho muda mesmo de lugar à noite?", "next": "espantalho",
                      "if": {"discovered": "espantalho"}},
@@ -1007,10 +1347,14 @@ NPCS = {
                      "celeiro. Comem o grão, roem os sacos e me olham como se eu fosse a próxima refeição."),
                     "Pago bem a quem der um jeito neles. Em farinha, mas farinha boa!",
                 ],
-                "effects": {"journal": {
-                    "id": "rumor_ratos", "title": "Ratos gigantes no moinho",
-                    "text": ("O celeiro de Tobias está infestado de ratos gigantes que saíram de buracos no chão "
-                             "depois das tremuras. Ele paga em farinha: cinco sacos a cada cinco rabos de rato.")}},
+                "effects": {
+                    "start_quest": "ratos",
+                    "journal": {
+                        "id": "rumor_ratos", "title": "Ratos gigantes no moinho",
+                        "text": ("O celeiro de Tobias está infestado de ratos gigantes que saíram de buracos no chão "
+                                 "depois das tremuras. Ele paga em farinha: cinco sacos a cada cinco rabos de "
+                                 "rato.")},
+                },
                 "next": "inicio",
             },
             "rabos": {
@@ -1019,6 +1363,15 @@ NPCS = {
                     "Cinco! Cinco ratos a menos no meu celeiro! Tome, farinha da boa, como prometi.",
                 ],
                 "effects": {"take_item": ["rabo_rato", 5], "give_item": ["farinha", 5], "xp": 40},
+                "next": "inicio",
+            },
+            "ratos_mortos": {
+                "text": [
+                    "*Tobias abraça você e deixa uma marca de farinha do tamanho de um moleiro na sua roupa.*",
+                    ("Seis ratos! Ontem à noite o celeiro ficou quietinho pela primeira vez em três luas. Dormi como "
+                     "uma pedra. Tome, tome: dinheiro e pão, que farinha você já deve ter até nas orelhas."),
+                ],
+                "effects": {"set_flag": "tobias_ratos"},
                 "next": "inicio",
             },
             "negociar": {
@@ -1043,6 +1396,386 @@ NPCS = {
                     "*Tobias fica vermelho como um tomate.* M-Marta? Conheço, claro. Todo mundo conhece a Marta. Por quê? Ela falou de mim?",
                     "*Ele pigarreia.* Esquece. Coisa de criança, faz quarenta anos. *Uma pausa.* Ela ainda faz aquele bolo de mel?",
                 ],
+                "next": "inicio",
+            },
+        },
+    },
+    # ================================================================== KAEL, O ÚLTIMO VIGIA (fantasma)
+    "kael": {
+        "name": "Kael, o Último Vigia",
+        "short": "Kael",
+        "title": "Fantasma do Cemitério da Colina",
+        "color": "bright_cyan",
+        "description": ("Um homem translúcido, de armadura antiga e manto cinza-prateado, sentado sobre a lápide mais "
+                        "velha do cemitério. Os olhos dele são dois pedaços de luar."),
+        "map": "vale_primordia",
+        "schedule": [{"periods": ["noite", "madrugada"], "x": 37, "y": 11,
+                      "if": {"flag": "bau_gruta_aberto", "not_flag": "kael_descansa"}}],
+        "dialogue": {
+            "inicio": {
+                "text": [
+                    {"if": {"met": False}, "text": (
+                        "*O fantasma ergue os olhos. Por um instante eles brilham mais forte, na direção da lua "
+                        "crescente que você carrega.*")},
+                    {"if": {"met": False}, "text": (
+                        "Você traz a lua crescente. Faz trezentos anos que espero alguém que a encontre. Eu sou "
+                        "Kael — o último dos Vigias da Lua. Ou o que sobrou dele.")},
+                    {"if": {"met": True, "not_flag": "vigia_desperto"},
+                     "text": "*Kael inclina a cabeça.* O vale ainda treme, {nome}. Mas treme menos quando você está por perto."},
+                    {"if": {"flag": "vigia_desperto"}, "text": (
+                        "*Kael está de pé, e a luz dele está mais forte e mais fraca ao mesmo tempo.* Ele canta de "
+                        "novo. Eu ouço daqui. Você conseguiu, {nome}.")},
+                ],
+                "options": [
+                    {"text": "O que são as três luas?", "next": "luas"},
+                    {"text": "Onde está a lua cheia?", "next": "cheia", "if": {"flag": "kael_conversou"}},
+                    {"text": "E a lua minguante?", "next": "minguante", "if": {"flag": "kael_conversou"}},
+                    {"text": "O que é o Vigia?", "next": "vigia"},
+                    {"text": "Por que você ainda está aqui?", "next": "porque", "if": {"not_flag": "vigia_desperto"}},
+                    {"text": "Pode descansar agora, Kael.", "next": "adeus", "if": {"flag": "vigia_desperto"}},
+                    {"text": "Até a próxima noite.", "next": None},
+                ],
+            },
+            "luas": {
+                "text": [
+                    ("As três luas são as vozes da canção que faz o Primordial dormir: a crescente, a cheia e a "
+                     "minguante. Juntas, elas cantam. Separadas, são só pedras bonitas."),
+                    ("Mas pedra não canta sozinha: precisa de alguém que saiba a canção. Eu a escondi onde o culto "
+                     "nunca procuraria — nas pedras que cantam, na ilha da garça, no meio do lago. Só à noite elas "
+                     "lembram."),
+                ],
+                "effects": {
+                    "set_flag": "kael_conversou",
+                    "xp": 300,
+                    "journal": {
+                        "id": "kael_cancao", "title": "Kael, o último Vigia",
+                        "text": ("O fantasma de Kael, o último Vigia da Lua, aparece à noite no Cemitério da Colina. "
+                                 "A canção que faz o Primordial dormir está nas Pedras que Cantam, na Ilhota da "
+                                 "Garça — e só se ouve à noite. Para chegar lá, é preciso um barco.")},
+                },
+                "next": "inicio",
+            },
+            "cheia": {
+                "text": [
+                    ("A cheia eu entreguei ao Carvalho Ancião, na mata antiga, quando os Vigias acabaram. Ele a "
+                     "guarda no coração, enrolada nas raízes."),
+                    "Cante para ele, à noite, e ele abrirá. Árvores velhas dormem de dia, como os velhos.",
+                ],
+                "effects": {"journal": {
+                    "id": "pista_lua_cheia", "title": "A lua cheia",
+                    "text": "Kael entregou a lua cheia ao Carvalho Ancião. Cantando a canção dos Vigias para ele, à "
+                            "noite, a árvore se abre."}},
+                "next": "inicio",
+            },
+            "minguante": {
+                "text": [
+                    ("A minguante ficava no altar das ruínas. Foi roubada há três luas — e foi aí que os tremores "
+                     "começaram. Uma mulher de cabelos prateados a levou: Morwen. Ela se chama de Senhora da Lua "
+                     "Cortada."),
+                    ("Os seguidores dela se escondem sob o círculo de pedras rúnicas. Na lua cheia, o círculo se abre "
+                     "para quem sabe olhar."),
+                ],
+                "effects": {"journal": {
+                    "id": "pista_minguante", "title": "A lua minguante",
+                    "text": ("Morwen, a Senhora da Lua Cortada, roubou a lua minguante do Altar Rachado. O culto se "
+                             "esconde sob o Círculo de Pedras Rúnicas, que se abre nas noites de lua cheia.")}},
+                "next": "inicio",
+            },
+            "vigia": {
+                "text": [
+                    ("O Vigia não sou eu. Eu fui só o último dos Vigias vivos. O Vigia é um guardião de pedra que "
+                     "dorme junto do Primordial e canta para ele, atrás da porta das três luas."),
+                    ("Se o culto o acordar no meio de um pesadelo, ele acordará o gigante junto. Mas se alguém o "
+                     "acordar com as três luas e a canção... ele cantará de volta."),
+                ],
+                "next": "inicio",
+            },
+            "porque": {
+                "text": [
+                    "Porque jurei guardar o sono dele até o fim, e o fim ainda não chegou.",
+                    "*Ele sorri, triste.* Ou talvez eu só esteja esperando alguém para passar a vigília adiante.",
+                ],
+                "next": "inicio",
+            },
+            "adeus": {
+                "text": [
+                    ("*Kael se levanta e, pela primeira vez, a luz dele não treme.* Então eu passo a vigília para "
+                     "você, {nome}. Cante de vez em quando. Ele gosta."),
+                    "*O fantasma se desfaz em poeira de luar, que sobe devagar, devagar, até se perder entre as estrelas.*",
+                ],
+                "effects": {"set_flag": "kael_descansa", "xp": 200},
+            },
+        },
+    },
+    # ================================================================== DAVI, O APRENDIZ
+    "davi": {
+        "name": "Davi",
+        "short": "Davi",
+        "title": "Aprendiz de Ferreiro",
+        "color": "red",
+        "description": "Um rapaz magro, de braços queimados de forja e olhos fundos, com um sorriso que volta aos poucos.",
+        "map": "vale_primordia",
+        "schedule": [
+            {"map": "mina_ferro_velho", "x": 27, "y": 10,
+             "if": {"flag": "gorran_derrotado", "not_flag": "davi_resgatado"}},
+            {"periods": DAY, "x": 28, "y": 16, "if": {"flag": "davi_resgatado"}},
+            {"periods": ["entardecer", "noite"], "x": 33, "y": 14, "if": {"flag": "davi_resgatado"}},
+        ],
+        "dialogue": {
+            "inicio": {
+                "text": [
+                    {"if": {"not_flag": "davi_resgatado"},
+                     "text": "*O rapaz acorrentado à bigorna olha para você como quem vê um fantasma.*"},
+                    {"if": {"not_flag": "davi_resgatado"}, "text": (
+                        "Você... você não é um deles. Derrubou o Gorran! Eu sou Davi, aprendiz do Brom, lá da vila. "
+                        "Ou era.")},
+                    {"if": {"flag": "davi_resgatado"},
+                     "text": "*Davi ergue o martelo em cumprimento, sem perder o ritmo.* {nome}! A forja nunca esteve tão animada."},
+                ],
+                "options": [
+                    {"text": "Vim tirar você daqui. Vamos para casa.", "next": "resgate",
+                     "if": {"not_flag": "davi_resgatado"}},
+                    {"text": "O que eles obrigavam você a fazer?", "next": "flechas"},
+                    {"text": "Como está a forja?", "next": "forja", "if": {"flag": "davi_resgatado"}},
+                    {"text": "Até mais, Davi.", "next": None},
+                ],
+            },
+            "resgate": {
+                "text": [
+                    "*Uma pancada no cadeado gasto, e a corrente cai. Davi esfrega os pulsos, sem acreditar.*",
+                    ("Três luas aqui embaixo... Conheço o caminho de olhos fechados: fiz ele mil vezes empurrando "
+                     "vagonete. Vou para casa. Diga ao Brom... não, eu mesmo digo!"),
+                    ("*Ele para na saída do fosso.* Ah: o capataz guardava as cartas da Senhora num cofre, no quarto "
+                     "dele. A chave ficava no cinto. Boa sorte, {nome}. E obrigado."),
+                ],
+                "effects": {
+                    "set_flag": "davi_resgatado",
+                    "xp": 200,
+                    "journal": {
+                        "id": "davi_livre", "title": "Davi está livre",
+                        "text": ("Davi, o aprendiz de Brom, estava acorrentado à forja do capataz, no fundo da mina. "
+                                 "Livre, ele voltou para a vila. O capataz guardava as cartas da Senhora num cofre, "
+                                 "e a chave ficava com ele.")},
+                },
+            },
+            "flechas": {
+                "text": [
+                    ("Pontas de flecha. Milhares. O Gorran dizia que eram para \"os corvos\", na estrada do sul, e "
+                     "que a Senhora pagava bem por elas."),
+                    ("Eu fazia malfeito de propósito, quando dava: uma ponta torta aqui, outra mal temperada ali. *Ele "
+                     "sorri pela primeira vez.* Uma vingança pequenininha."),
+                ],
+                "effects": {"journal": {
+                    "id": "pista_flechas_mina", "title": "As flechas do Corvo",
+                    "text": ("As flechas do Bando do Corvo eram forjadas por Davi, à força, na Mina de Ferro-Velho. "
+                             "Quem pagava era a Senhora da Lua Cortada.")}},
+                "next": "inicio",
+            },
+            "forja": {
+                "text": [
+                    ("Com o ferro da mina de volta, o Brom está me ensinando aço de verdade: ferro e carvão no fogo "
+                     "mais quente que a fornalha aguenta."),
+                    "Se precisar de uma lâmina boa, a forja vende. Se precisar de uma ótima, fale comigo. *Ele pisca.*",
+                ],
+                "next": "inicio",
+            },
+        },
+    },
+    # ================================================================== PIP, O KOBOLD
+    "pip": {
+        "name": "Pip",
+        "short": "Pip",
+        "title": "Kobold Comerciante",
+        "color": "bright_yellow",
+        "description": ("Um kobold do tamanho de uma criança, de focinho de rato e olhos de brasa, com uma vela acesa "
+                        "presa no capacete e um sorriso cheio de dentinhos."),
+        "map": "mina_ferro_velho",
+        "shop": "pip",
+        "schedule": [{"x": 4, "y": 3, "if": {"flag": "gorran_derrotado"}}],
+        "dialogue": {
+            "inicio": {
+                "text": [
+                    {"if": {"met": False}, "text": "*O kobold dá um pulo para trás e quase derruba a vela do capacete.*"},
+                    {"if": {"met": False}, "text": (
+                        "Gente-alta! Não bate! Pip é amigo! Gente-alta derrubou o Homem-Chicote, Pip viu! Kobolds "
+                        "livres! Pip agradece. Pip... vende coisas?")},
+                    {"if": {"met": True},
+                     "text": "Gente-alta voltou! Pip tem vela, tem carvão, tem pedra-de-ferro. Gente-alta compra?"},
+                ],
+                "options": [
+                    {"text": "Quero ver suas coisas.", "next": "negociar"},
+                    {"text": "Por que os kobolds vieram para a mina?", "next": "vieram"},
+                    {"text": "Quem era o Homem-Chicote?", "next": "gorran"},
+                    {"text": "O que tem lá embaixo, no poço?", "next": "fundo", "if": {"discovered": "poco_fundo"}},
+                    {"text": "Até mais, Pip.", "next": None},
+                ],
+            },
+            "negociar": {
+                "text": ["Pip tem coisas boas! Pip não rouba. Pip não rouba MUITO."],
+                "effects": {"open_shop": True},
+            },
+            "vieram": {
+                "text": [
+                    ("Grande Barulho! *Pip imita um tremor com o corpo inteiro.* Pedra Grande lá embaixo sonha mal, "
+                     "vira de lado, e Fundo-Fundo desaba. Kobolds sobem, sobem, sobem..."),
+                    "...e acham buraco de gente-alta, cheio de ferro! Kobolds gostam de ferro. Ferro é bonito.",
+                ],
+                "effects": {"journal": {
+                    "id": "rumor_kobolds", "title": "Os kobolds da mina",
+                    "text": ("Os kobolds vieram do \"Fundo-Fundo\", bem abaixo da mina, fugindo do \"Grande "
+                             "Barulho\": a Pedra Grande que sonha mal. Eles sentem o Primordial.")}},
+                "next": "inicio",
+            },
+            "gorran": {
+                "text": [
+                    ("Homem-Chicote chegou com fogo roxo. Disse: kobolds cavam ou kobolds queimam. Kobolds "
+                     "cavaram. *Pip mostra uma queimadura no braço.*"),
+                    "Mulher-da-Lua mandava cartas para ele. Pip não sabe ler. Pip sabe que as cartas cheiravam a vela roxa.",
+                ],
+                "next": "inicio",
+            },
+            "fundo": {
+                "text": [
+                    ("Fundo-Fundo. Casa de kobold. Muito longe, muito quente, muito escuro. Pip não volta lá: corda "
+                     "cortada, e coisa grande mexe lá embaixo, perto da Pedra Grande."),
+                    ("*Ele baixa a voz.* Do outro lado da montanha, gente-alta cava também. Pedravale. Pip ouve as "
+                     "picaretas deles quando encosta a orelha na pedra."),
+                ],
+                "effects": {"journal": {
+                    "id": "pista_fundo_fundo", "title": "O Fundo-Fundo",
+                    "text": ("Sob a Mina de Ferro-Velho, um poço desce até o Fundo-Fundo, o lar dos kobolds. A corda "
+                             "foi cortada. Pip diz que, do outro lado da montanha, os mineiros de Pedravale também "
+                             "cavam fundo.")}},
+                "next": "inicio",
+            },
+        },
+    },
+    # ================================================================== TOMÉ, O SOBRINHO DA CAPITÃ
+    "tome": {
+        "name": "Tomé Valbrand",
+        "short": "Tomé",
+        "title": "Sobrinho da Capitã",
+        "color": "blue",
+        "description": ("Um garoto magrelo de dezesseis anos, com uma espada de madeira na cintura e um cabelo que "
+                        "nenhum pente jamais venceu."),
+        "map": "vale_primordia",
+        "schedule": [
+            {"x": 48, "y": 1, "if": {"flag": "tome_cultistas", "not_flag": "tome_salvo"}},
+            {"periods": DAY, "x": 29, "y": 11, "if": {"flag": "tome_salvo"}},
+        ],
+        "dialogue": {
+            "inicio": {
+                "text": [
+                    {"if": {"not_flag": "tome_salvo"},
+                     "text": "*O garoto ainda segura a espada de madeira com as duas mãos, tremendo.*"},
+                    {"if": {"not_flag": "tome_salvo"}, "text": (
+                        "Você... derrubou os dois! Eu vi! Foi incrível! Eu sou Tomé. Tomé Valbrand. Minha tia vai me "
+                        "matar.")},
+                    {"if": {"flag": "tome_salvo"}, "text": (
+                        "*Tomé abaixa a espada de madeira, que estava usando contra um poste.* {nome}! Estou "
+                        "treinando! A tia disse que, se eu treinar todo dia, um dia entro para a guarda.")},
+                ],
+                "options": [
+                    {"text": "Você está bem? Sua tia está desesperada.", "next": "salvo",
+                     "if": {"not_flag": "tome_salvo"}},
+                    {"text": "O que você viu nas ruínas?", "next": "viu"},
+                    {"text": "Como vai o treino?", "next": "treino", "if": {"flag": "tome_salvo"}},
+                    {"text": "Até mais, Tomé.", "next": None},
+                ],
+            },
+            "salvo": {
+                "text": [
+                    ("*Tomé fica vermelho até as orelhas.* Eu só queria ver o olho se abrir! Está escrito na torre: "
+                     "\"quando o olho se abre, o caminho se revela\". E aí eles chegaram..."),
+                    "*Ele respira fundo.* Vou para casa. Juro. Direto, sem parar em lugar nenhum.",
+                ],
+                "effects": {"set_flag": "tome_salvo", "xp": 150},
+                "next": "viu",
+            },
+            "viu": {
+                "text": [
+                    ("Eles falavam de descer debaixo do círculo de pedras, na lua cheia. E de uma chave de pedra preta "
+                     "que abre o círculo em qualquer noite: os acólitos levam uma, lá na Árvore dos Enforcados, no "
+                     "pântano."),
+                    "E da Senhora. Todo mundo tem medo da Senhora. Até os que têm espada de verdade.",
+                ],
+                "effects": {"journal": {
+                    "id": "pista_circulo", "title": "O que Tomé ouviu",
+                    "text": ("Os cultistas descem sob o Círculo de Pedras Rúnicas nas noites de lua cheia. Os "
+                             "acólitos da Árvore dos Enforcados, no pântano, carregam uma chave de pedra negra que "
+                             "abre o círculo em qualquer noite.")}},
+                "next": "inicio",
+            },
+            "treino": {
+                "text": [
+                    ("Ataque, defesa, ataque, defesa! A tia diz que o mais importante é saber quando correr. Eu acho "
+                     "que é saber quando NÃO correr."),
+                    "*Ele pensa um pouco.* Ela disse que eu pareço você. Acho que foi um elogio. Acho.",
+                ],
+                "next": "inicio",
+            },
+        },
+    },
+    # ================================================================== O VIGIA
+    "vigia": {
+        "name": "O Vigia",
+        "short": "Vigia",
+        "title": "Guardião do Sono do Primordial",
+        "color": "bright_white",
+        "description": ("Um gigante de pedra branca sentado de pernas cruzadas, com as mãos abertas sobre os joelhos. "
+                        "Os olhos dele são calmos e cinzentos como um lago ao amanhecer."),
+        "map": "camara_vigia",
+        "schedule": [{"x": 13, "y": 4, "if": {"flag": "vigia_desperto"}}],
+        "dialogue": {
+            "inicio": {
+                "text": [
+                    {"if": {"met": False}, "text": (
+                        "*O gigante de pedra inclina a cabeça, devagar, como uma montanha que faz uma reverência. A "
+                        "voz dele é tão grave que você a sente nos ossos.*")},
+                    {"if": {"met": False}, "text": (
+                        "Pequeno cantor. Você me tirou do sonho ruim. Há trezentos anos ninguém cantava para mim.")},
+                    {"if": {"met": True}, "text": "*O Vigia abre um olho.* Pequeno cantor. O sono dele está bom hoje."},
+                ],
+                "options": [
+                    {"text": "Quem é você, de verdade?", "next": "quem"},
+                    {"text": "O Primordial vai acordar de novo?", "next": "primordial"},
+                    {"text": "O que eu faço com as três luas?", "next": "luas"},
+                    {"text": "Existem outros como ele?", "next": "outros"},
+                    {"text": "Durma bem, Vigia.", "next": None},
+                ],
+            },
+            "quem": {
+                "text": [
+                    ("Fui feito pelos Vigias da Lua, com a pedra do próprio vale, para cantar enquanto eles "
+                     "descansavam. Eles se foram, um a um. Eu continuei cantando."),
+                    "Até que alguém roubou a minha voz minguante e plantou um pesadelo no meu sono.",
+                ],
+                "next": "inicio",
+            },
+            "primordial": {
+                "text": [
+                    ("Ele dorme, e vai dormir por muito tempo, se ninguém o acordar. Mas a Senhora não era a única que "
+                     "queria o poder dele. Haverá outros. Sempre há."),
+                ],
+                "next": "inicio",
+            },
+            "luas": {
+                "text": [
+                    ("Fique com elas. Enquanto as três estiverem juntas, nas mãos de quem conhece a canção, o sono "
+                     "dele está guardado. Você é a vigília agora, {nome}."),
+                ],
+                "next": "inicio",
+            },
+            "outros": {
+                "text": [
+                    ("O mundo é feito de gigantes adormecidos, pequeno cantor. Um sob este vale. Outro sob as "
+                     "montanhas do norte, onde a gente de Pedravale cava fundo demais. Outros sob o mar."),
+                    "Quando as montanhas tremerem lá também, lembre-se da canção.",
+                ],
+                "effects": {"journal": {
+                    "id": "outros_primordiais", "title": "Outros gigantes adormecidos",
+                    "text": ("O Vigia contou que há outros Primordiais adormecidos: um sob as montanhas do norte, "
+                             "perto de Pedravale, e outros sob o mar.")}},
                 "next": "inicio",
             },
         },

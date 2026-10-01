@@ -74,6 +74,19 @@ MAP = {
                     "Você tem a nítida sensação de estar sendo observado."],
             "night": ["Um brilho violeta pulsa fraco nas frestas das pedras, como uma respiração.",
                       "Sussurros numa língua desconhecida parecem vir de todos os lados — e de lugar nenhum."],
+            "encounters": {
+                "chance": 0.06, "night_bonus": 0.05,
+                "groups": [
+                    {"monsters": ["sentinela_ruinas"], "weight": 3, "time": "dia"},
+                    {"monsters": ["sentinela_ruinas", "sentinela_ruinas"], "weight": 1, "time": "dia",
+                     "levels": [8, 9]},
+                    {"monsters": ["acolito_lua"], "weight": 3, "time": "noite", "if": {"not_flag": "morwen_derrotada"}},
+                    {"monsters": ["acolito_lua", "guarda_capa_negra"], "weight": 1, "time": "noite",
+                     "if": {"not_flag": "morwen_derrotada"}},
+                    {"monsters": ["cao_sombrio"], "weight": 1, "time": "noite", "if": {"not_flag": "morwen_derrotada"}},
+                    {"monsters": ["eco_veltharas"], "weight": 2, "time": "noite"},
+                ],
+            },
         },
         {
             "id": "colinas_de_cobre", "name": "Colinas de Cobre", "rects": [(44, 9, 58, 21)], "xp": 35,
@@ -497,6 +510,19 @@ MAP = {
             "examine": ("Na casca, um rosto foi entalhado há tanto tempo que a árvore cresceu em volta dele, "
                         "tornando-o quase natural. Ao tocar a madeira, você sente uma vibração lenta — como um "
                         "coração que bate uma vez por minuto."),
+            "chest": {
+                "flag": "carvalho_lua_cheia",
+                "if": {"flag": "cancao_tres_notas", "night": True},
+                "opens": ("Você encosta a testa na casca e canta as três notas. Os sinos de osso respondem, um a um. "
+                          "As raízes rangem, se afastam devagar e abrem uma fenda no coração do tronco."),
+                "locked": ("Entre as raízes há uma fresta escura, fechada como uma boca. Os sinos de osso tilintam, "
+                           "como se esperassem uma canção — e a noite."),
+                "items": [["lua_cheia", 1]],
+                "xp": 400,
+                "text": ("Dentro da árvore, num ninho de raízes, repousa um disco de pedra-da-lua perfeitamente "
+                         "redondo, que brilha como a lua cheia. A segunda lua. Quando você a pega, o Carvalho "
+                         "Ancião fecha a fenda devagar, como quem volta a dormir."),
+            },
         },
         {
             "id": "toca_lobos", "name": "Toca dos Lobos", "x": 3, "y": 15, "xp": 40,
@@ -561,6 +587,21 @@ MAP = {
                       "numa ciranda."),
             "examine": ("Uma das cordas não está podre: é nova, de cânhamo trançado, amarrada há pouco tempo. Na "
                         "casca, alguém entalhou uma lua minguante cortada ao meio por um risco."),
+            "encounter": {
+                "flag": "acolitos_arvore", "radius": 1, "if": {"night": True, "min_level": 8},
+                "monsters": [["acolito_lua", 9], ["acolito_lua", 9]],
+                "intro": ("Dois vultos de capa negra estão ajoelhados sob a árvore, amarrando uma corda nova num "
+                          "galho e murmurando uma prece à lua cortada. Eles se levantam ao ver você. \"Ninguém pode "
+                          "saber do Eclipse\", diz um deles, sacando uma adaga curva."),
+                "victory": ("Os acólitos caem na lama do pântano. Um deles trazia, pendurada no pescoço, uma chave "
+                            "de pedra negra em forma de lua partida."),
+                "items": [["chave_lua_cortada", 1]],
+                "journal": {
+                    "id": "chave_acolitos", "title": "A chave de pedra negra",
+                    "text": ("Os acólitos da Árvore dos Enforcados carregavam uma chave de pedra negra em forma de "
+                             "lua partida. Mãe Brígida ou alguém das ruínas talvez saiba o que ela abre."),
+                },
+            },
         },
         {
             "id": "passarela_troncos", "name": "Passarela de Troncos", "x": 15, "y": 22, "xp": 20,
@@ -679,6 +720,21 @@ MAP = {
             "examine": ("O disco central tem uma rachadura recente, de onde escapa um ar quente com cheiro de "
                         "tempestade. Você encosta a mão na pedra e sente: lá embaixo, muito fundo, algo está "
                         "acordando."),
+            "secret": {
+                "flag": "passagem_circulo",
+                "if": {"any": [{"night": True, "moon": "Lua cheia"}, {"item": "chave_lua_cortada"}]},
+                "xp": 250,
+                "hint": ("No centro do disco há uma fenda fina em forma de lua partida. \"Quando o olho se abre, o "
+                         "caminho se revela\", dizia a Torre Tombada — e o olho, no mapa celeste, era a lua cheia."),
+                "text": ("A lua cheia se reflete no disco, e as runas acendem todas ao mesmo tempo. Com um ronco de "
+                         "pedra, o disco gira sobre si mesmo e afunda, revelando uma escadaria que desce para a "
+                         "escuridão. (Use 'entrar' para descer.)"),
+                "journal": {
+                    "title": "A escadaria sob o círculo",
+                    "text": ("O disco do Círculo de Pedras Rúnicas esconde uma escadaria para um santuário "
+                             "subterrâneo. O culto da Lua Cortada entra por ali."),
+                },
+            },
         },
         {
             "id": "altar_rachado", "name": "Altar Rachado", "x": 54, "y": 3, "xp": 40,
@@ -700,6 +756,15 @@ MAP = {
                       "antigos de Vel'Tharas aqui, estudando a lua."),
             "examine": ("Gravado no parapeito, um mapa celeste mostra a lua em oito fases, com a lua cheia "
                         "marcada por um olho aberto. Abaixo: \"Quando o olho se abre, o caminho se revela.\""),
+            "encounter": {
+                "flag": "tome_cultistas", "radius": 1, "if": {"quest_active": "sobrinho", "night": True},
+                "monsters": [["guarda_capa_negra", 10], ["acolito_lua", 9]],
+                "intro": ("No alto da torre, dois vultos de capa negra cercam um garoto magrelo encolhido entre os "
+                          "blocos, com uma espada de madeira erguida. \"O pirralho viu demais\", diz o maior deles. "
+                          "\"A Senhora decide o que fazer com ele.\""),
+                "victory": ("Os cultistas rolam pelos blocos da torre. O garoto continua encolhido, de espada de "
+                            "madeira em punho, olhando para você com olhos enormes."),
+            },
         },
         # --- Lago Espelhado
         {
@@ -759,17 +824,33 @@ MAP = {
         },
         {
             "id": "portao_sul_saida", "x": 30, "y": 29, "direction": "s", "label": "Rota dos Mercadores",
-            "locked": True,
+            "unlock_flag": "rota_aberta", "target": ("rota_mercadores", 21, 0),
             "locked_text": ("Um dos guardas ergue a lança e balança a cabeça: \"Ninguém passa, ordens da Capitã. O "
                             "Bando do Corvo está na estrada. Quando a rota for liberada, você será a primeira "
                             "pessoa a saber.\""),
+            "travel_text": ("Os guardas afastam uma das carroças da barricada, o bastante para você passar. \"Boa "
+                            "caçada\", diz um deles. \"E volte, por favor.\""),
         },
         {
             "id": "mina_entrada", "x": 53, "y": 12, "verb": "entrar", "label": "Mina de Ferro-Velho",
-            "locked": True,
+            "target": ("mina_ferro_velho", 4, 12), "min_level": 8,
             "locked_text": ("Você dá alguns passos para dentro da mina, e o cântico agudo lá no fundo para de "
-                            "repente. Dezenas de olhinhos brilham na escuridão. Sem companhia, sem preparo e sem "
-                            "saber o que enfrenta, avançar seria loucura. Melhor voltar com mais experiência."),
+                            "repente. Dezenas de olhinhos brilham na escuridão. Sem preparo, avançar seria loucura. "
+                            "(Recomendado: nível 8 ou mais.)"),
+            "travel_text": ("Você acende uma tocha e segue os trilhos para dentro da montanha. O cântico agudo lá no "
+                            "fundo fica mais alto a cada passo."),
+        },
+        {
+            "id": "santuario_entrada", "x": 50, "y": 4, "verb": "entrar", "label": "Escadaria sob o Círculo",
+            "target": ("santuario_profano", 1, 1), "requires_flag": "passagem_circulo",
+            "travel_text": ("Você desce a escadaria em espiral. As runas do círculo se apagam lá em cima, e um "
+                            "brilho violeta sobe do fundo para recebê-lo."),
+        },
+        {
+            "id": "barco_ilhota", "x": 41, "y": 22, "verb": "navegar", "label": "Ilhota da Garça (de barco)",
+            "target": ("ilhota_garca", 10, 7), "requires_flag": "barco_consertado",
+            "travel_text": ("Você desamarra o barco de Anselmo, agora sem furos, e rema pelo espelho do lago. A ilhota "
+                            "cresce à sua frente, verde e silenciosa."),
         },
         {
             "id": "toca_lobos_entrada", "x": 3, "y": 15, "verb": "entrar", "label": "Toca dos Lobos",

@@ -315,7 +315,7 @@ class CraftingTest(QuietTestCase):
     def test_unlocks(self):
         self.assertIn("Veio de Ferro Raso", crafting.unlocks("mineracao", 15))
         self.assertIn("Barra de Ferro", crafting.unlocks("metalurgia", 15))
-        self.assertEqual(crafting.next_unlock("mineracao", 1), (15, ["Veio de Ferro Raso"]))
+        self.assertEqual(crafting.next_unlock("mineracao", 1), (15, ["Veio de Ferro Raso", "Veio de Ferro"]))
         self.assertIsNone(crafting.next_unlock("mineracao", 99))
 
 

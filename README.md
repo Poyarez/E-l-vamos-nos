@@ -108,6 +108,41 @@ As mesmas preferências podem ser ajustadas no menu **Opções** e ficam salvas.
   - Tobias paga em farinha os rabos de rato do celeiro;
   - Brom comemora a sua primeira barra de bronze.
 
+### Etapa 4: missões, segredos e progressão de longo prazo
+
+- **Talentos no estilo WoW Classic:**
+  - a partir do nível 10, cada nível dá um ponto de talento (comando `talentos`);
+  - três árvores por classe: Armas, Fúria e Proteção; Arcano, Fogo e Gelo; Disciplina, Sagrado e Sombra; Assassinato, Combate e Sutileza;
+  - quatro talentos por árvore, em quatro tiers que exigem 0, 5, 10 e 13 pontos gastos na árvore;
+  - os bônus valem de verdade no combate: atributos, críticos, esquiva, acerto, dano por elemento ou por habilidade, custo e recarga das habilidades, Raiva gerada, regeneração de mana, cura, escudos, mão secundária e venenos;
+  - o último talento de cada árvore ensina uma habilidade nova: Golpe Mortal, Rodopio, Golpe de Escudo, Escudo de Mana, Pirolançamento, Lança de Gelo, Infusão de Poder, Fogo Sagrado, Açoite Mental, Mutilar, Adrenalina e Hemorragia;
+  - a Irmã Celeste conhece uma prece que faz esquecer os talentos, por duas moedas de prata.
+- **Missões** (comando `missoes`): cada uma mostra a etapa atual, o progresso ("Pele de Lobo: 3/5") e a recompensa.
+  - Algumas começam numa conversa; outras começam sozinhas quando uma pista importante entra no diário.
+  - Os objetivos combinam locais, itens, segredos, conversas e caçadas.
+  - As recompensas trazem XP, moedas, itens e, às vezes, uma peça feita para a sua classe.
+  - Uma missão espera você abrir espaço na mochila antes de entregar a recompensa, e os itens de missão vão num bolso à parte: uma mochila cheia nunca trava a história.
+- **A história principal, As Três Luas:** nove etapas que costuram as pistas das etapas anteriores — a balada do bardo, o mural da gruta, o túmulo do último Vigia, a lua cortada, o espantalho — até um desfecho na câmara atrás da Porta Selada.
+- **Oito missões secundárias:** o aprendiz desaparecido do Brom, o Bando do Corvo, o sobrinho da Capitã Renna, o barco do Anselmo (com pregos, piche e lona: as três perícias de produção trabalhando juntas), o lendário Rei do Lago (só para quem tem Pesca 35), os ratos do Tobias, os casacos da Dona Graça e os remédios da capela.
+- **Quadro de avisos** (comando `avisos`, na Praça do Poço):
+  - todo dia, três tarefas sorteadas entre vinte, de acordo com o seu nível e com a história: caçadas e encomendas para as perícias;
+  - até três tarefas aceitas ao mesmo tempo, entregues no próprio quadro;
+  - dá para desistir de uma tarefa e aceitar outra.
+- **Cinco mapas novos:**
+  - a **Mina de Ferro-Velho** (nível 8+), com kobolds, toupeiras-de-ferro, o grande veio de ferro, carvão e uma forja de fogo violeta;
+  - a **Ilhota da Garça**, alcançada de barco (comando `navegar`), com pedras que cantam à noite e o Poço do Rei;
+  - o **Santuário Profano**, escondido sob o Círculo de Runas, que só se abre na lua cheia ou com a chave certa;
+  - a **Rota dos Mercadores**, além do Portão Sul, com o Desfiladeiro das Viúvas e o acampamento do Bando do Corvo;
+  - a **Câmara do Vigia**.
+- **Mais segredos:**
+  - baús trancados que se abrem com a chave certa, com a gazua de um ladino experiente ou com uma canção;
+  - segredos que dependem da noite, da fase da lua, de itens ou de pistas;
+  - NPCs ocultos: um fantasma que só aparece à noite no cemitério, um kobold comerciante, um garoto perdido nas ruínas;
+  - NPCs que mudam de lugar com a história: o aprendiz resgatado volta para a forja, e o mercador da caravana abre banca no mercado quando a rota reabre;
+  - lojas cujo estoque cresce com a história (aço na forja do Brom, novidades de Alvorada com o Zahir).
+- **16 criaturas novas, entre elas 4 chefes:** Gorran, o Capataz (nível 10), Ulric Corvo-Negro (11), Morwen, a Senhora da Lua Cortada (12), e o Vigia Atormentado (13). Os números foram ajustados por simulação: cada chefe vence quem chega no nível certo com algumas poções, e castiga quem chega sem preparo.
+- **Ofícios:** aço (ferro e carvão), dez peças e uma picareta de aço, pregos de bronze, piche, remendo de lona, roupas do tecido do culto, carpa prateada e poção de cura maior.
+
 ## Comandos
 
 Acentos e maiúsculas não importam, e quase todo comando tem atalhos. Digite `ajuda` no jogo para ver a lista completa.
@@ -119,7 +154,7 @@ Acentos e maiúsculas não importam, e quase todo comando tem atalhos. Digite `a
 | `olhar` / `examinar` | descreve o lugar / procura detalhes, pistas e segredos |
 | `falar [nome]` | conversa com quem estiver no local (marcados com `!` no mapa) |
 | `mapa` | mapa completo com coordenadas e legenda |
-| `entrar` / `sair` | atravessa entradas e passagens |
+| `entrar` / `sair` / `navegar` | atravessa entradas e passagens (de barco, no píer) |
 | `descansar` / `esperar [h]` | dorme (na estalagem, até o amanhecer) / deixa o tempo passar |
 | `cacar` | procura uma presa na região (20 minutos) |
 | `equipar [item]` / `remover [item]` | veste ou tira equipamento, mostrando o que muda |
@@ -129,6 +164,9 @@ Acentos e maiúsculas não importam, e quase todo comando tem atalhos. Digite `a
 | `minerar` `pescar` `colher` `coletar` | coleta no local (`minerar cobre 10`, `pescar tudo`); sem quantidade, tenta 5 itens |
 | `forjar` `cozinhar` `costurar` `preparar` `fabricar` | produz numa oficina ou com a ferramenta certa (`forjar barra tudo`) |
 | `receitas [perícia]` | livro de ofício: pontos de coleta, receitas, ingredientes e o que dá para fazer agora |
+| `missoes` | missões em andamento (etapa, progresso e recompensa), tarefas aceitas e missões concluídas |
+| `talentos` | árvores de talento: veja e gaste os pontos ganhos a partir do nível 10 |
+| `avisos` | quadro de avisos da Praça do Poço: aceite e entregue as tarefas do dia |
 | `ficha` `mochila` `pericias` `habilidades` `diario` `bestiario` | telas do personagem |
 | `salvar` `opcoes` `ajuda` `menu` | sistema |
 
@@ -158,8 +196,10 @@ rpg/
   combat.py              motor de combate: turnos, habilidades, efeitos, selos, críticos e armadura
   battle_ui.py           tela de combate: encontro, barra de ações, reflexos e resultados
   monsters.py            fábrica de monstros, XP por abate, cores de dificuldade, saque e encontros
-  shop.py                comércio: preços, compra, venda e sucata
-  conditions.py          condições usadas por diálogos e tabelas de encontros
+  shop.py                comércio: preços, compra, venda, sucata e estoque que cresce com a história
+  conditions.py          condições declarativas usadas por diálogos, encontros, baús, lojas e missões
+  quests.py              missões (etapas, objetivos, recompensas) e o quadro de avisos
+  talents.py             árvores de talento: pontos, tiers, bônus e habilidades concedidas
   crafting.py            coleta e ofícios: pontos de coleta, receitas, estações, ferramentas e XP das perícias
   world.py               mapas em coordenadas, terrenos, regiões, locais, passagens, pathfinding
   time_system.py         relógio, períodos do dia, clima e fases da lua
@@ -170,9 +210,11 @@ rpg/
   commands.py            registro de comandos, apelidos, sugestões e ajuda automática
   screens.py, mapview.py telas e mapas em arte ASCII
   character_creation.py  criação de personagem e prólogo
-  data/                  o "banco de dados": classes, aparência, itens, terrenos, perícias, NPCs, monstros, lojas,
-                         pontos de coleta (gathering.py) e receitas (recipes.py)
-    maps/                um módulo por mapa (vale_primordia.py, gruta_veu_prata.py, toca_dos_lobos.py)
+  data/                  o "banco de dados": classes (com as árvores de talento), aparência, itens, terrenos,
+                         perícias, NPCs, monstros, lojas, pontos de coleta (gathering.py), receitas (recipes.py)
+                         e missões e tarefas do quadro (quests.py)
+    maps/                um módulo por mapa: vale_primordia, gruta_veu_prata, toca_dos_lobos, mina_ferro_velho,
+                         ilhota_garca, santuario_profano, rota_mercadores e camara_vigia
 tests/                   testes automatizados (unittest, sem dependências)
 ```
 
@@ -185,9 +227,12 @@ Os módulos de `rpg/data` contêm **apenas dados**. Os módulos de regra funcion
 - **Nova loja:** crie a entrada em `rpg/data/shops.py` e dê `"shop": "<id>"` a um NPC, com um nó de diálogo que tenha o efeito `open_shop`.
 - **Novo ponto de coleta:** crie o tipo em `rpg/data/gathering.py` (perícia, nível, item, XP, ferramenta, isca, chance e recuperação) e ponha `{"node": "<id>"}` em `resources` de um local. Um `if` faz o ponto aparecer só depois de um segredo.
 - **Nova receita ou oficina:** acrescente a receita em `rpg/data/recipes.py` (perícia, nível, XP, ingredientes, estação, ferramenta, chance de queimar). Uma oficina nova é só um `stations` num local, com horário (`if`), combustível (`fuel`) ou cozinha melhor (`burn`), se quiser.
+- **Nova missão:** acrescente uma entrada em `rpg/data/quests.py` com as etapas (cada objetivo é um bloco de condições, mais caçadas com `kill`) e as recompensas. Ela começa sozinha (`start`) ou pelo efeito de diálogo `start_quest`.
+- **Nova tarefa do quadro:** acrescente uma entrada em `BOUNTIES`, no mesmo arquivo (caçada ou encomenda, recompensa e faixa de nível).
+- **Baú, NPC oculto ou estoque que muda:** um `chest` num local (chave, gazua ou condição), uma regra de agenda com `if` (e `map`, se o NPC muda de mapa) ou um item de loja no formato `{"item": ..., "if": ...}`.
 - **Novo comando:** use o decorador `@command(...)` em `rpg/commands.py`. Ele já aparece na ajuda.
 
-Os testes em `tests/test_world.py` validam todo o banco de dados: coordenadas válidas, locais alcançáveis, passagens com destino, diálogos sem nós quebrados, marcadores de texto conhecidos, monstros, tabelas de encontros, habilidades, itens, lojas, pontos de coleta e receitas. Um teste de "economia fechada" garante que todo ingrediente, isca e ferramenta pode ser obtido em algum lugar do jogo.
+Os testes em `tests/test_world.py` validam todo o banco de dados: coordenadas válidas, locais alcançáveis, passagens com destino, diálogos sem nós quebrados, marcadores de texto conhecidos, monstros, tabelas de encontros, habilidades, itens, lojas, pontos de coleta e receitas. Um teste de "economia fechada" garante que todo ingrediente, isca e ferramenta pode ser obtido em algum lugar do jogo. Em `tests/test_quests.py`, outro teste confere que toda flag, pista, local, item e missão citados numa condição existem e podem ser alcançados: um erro de digitação ali deixaria uma missão impossível de concluir.
 
 ## Saves
 
@@ -199,7 +244,7 @@ Os saves ficam em `saves/<nome>-<id>.json` (a pasta pode ser trocada pela variá
 python -m unittest
 ```
 
-São 157 testes:
+São 192 testes:
 
 - curvas de XP do WoW e do OSRS;
 - atributos e equipamento de todas as classes;
@@ -209,7 +254,11 @@ São 157 testes:
 - vitória, derrota, encontros aleatórios e fixos, caçada, equipamento, consumíveis e comércio;
 - coleta (chance, ferramentas, iscas, esgotamento e recuperação, achados raros), receitas (estações, horários, combustível, comida queimada, ferro que falha), bônus temporários, bolsas, frascos e venenos em combate, mestres dos ofícios e segredos de perícia;
 - a tela de combate com entradas simuladas;
-- saves, incluindo a recuperação pela cópia de segurança, o bestiário, os pontos de coleta e os bônus ativos;
+- talentos (pontos, tiers, bônus no herói e no combate, habilidades concedidas e a prece de esquecimento);
+- missões (início, etapas, caçadas, entregas, recompensas por classe, espera por espaço na mochila) e o quadro de avisos;
+- baús, segredos condicionais, o barco, a mina e o Rei do Lago;
+- a história principal inteira, do mural da gruta ao desfecho, e as principais missões secundárias, de ponta a ponta;
+- saves, incluindo a recuperação pela cópia de segurança, o bestiário, os pontos de coleta, os bônus ativos, as missões, o quadro e os talentos;
 - uma partida completa executando o `main.py` com entradas roteirizadas.
 
 ## Roteiro
@@ -226,7 +275,13 @@ São 157 testes:
   - oficinas, ferramentas, iscas, receitas e mestres;
   - comidas, elixires, venenos, frascos de arremesso e bolsas que alimentam o combate;
   - segredos revelados por nível de perícia.
-- [ ] **Etapa 4:**
-  - missões a partir das pistas do diário;
-  - as três luas, a Mina de Ferro-Velho (com o ferro bom e o aço), o Bando do Corvo e a ilhota do lago;
-  - baús trancados, NPCs ocultos, novas cidades e progressão de longo prazo.
+- [x] **Etapa 4:** missões, segredos e progressão de longo prazo:
+  - talentos a partir do nível 10;
+  - missões com etapas e o quadro de avisos diário;
+  - a história das três luas, a Mina de Ferro-Velho, o Bando do Corvo, a ilhota do lago e o santuário do culto;
+  - baús trancados, NPCs ocultos e lojas que crescem com a história.
+- [ ] **Próximos passos:**
+  - Pedravale, a cidade mineira além do Passo do Norte (onde outro gigante dorme sob as montanhas);
+  - Alvorada, a capital, quando a ponte do Rio Largo for reconstruída;
+  - o Fundo-Fundo, o lar dos kobolds sob a mina;
+  - níveis acima de 13, novas habilidades e os tiers mais altos dos talentos.

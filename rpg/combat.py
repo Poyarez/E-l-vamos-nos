@@ -211,17 +211,27 @@ class Hero(Combatant):
             return 0.0
         return sum(self.player.stat(stat) * factor for stat, factor in factors.items()) + self.level * 1.5
 
+    def talent(self, kind: str, key: Optional[str] = None) -> float:
+        return self.player.talent_bonus(kind, key)
+
     @property
     def crit_chance(self) -> float:
-        return 0.05 + self.player.stat("agilidade") / 2000
+        return 0.05 + self.player.stat("agilidade") / 2000 + self.talent("crit")
 
     @property
     def spell_crit_chance(self) -> float:
-        return 0.05 + self.player.stat("intelecto") / 3000
+        return 0.05 + self.player.stat("intelecto") / 3000 + self.talent("spell_crit")
 
     @property
     def dodge(self) -> float:
-        return min(0.75, 0.05 + self.player.stat("agilidade") / 2000 + self.modifier("dodge"))
+        return min(0.75, 0.05 + self.player.stat("agilidade") / 2000 + self.modifier("dodge") + self.talent("dodge"))
+
+    def damage_bonus(self, element: str, ability_id: Optional[str] = None) -> float:
+        """Multiplicador de dano dos talentos para um elemento (e uma habilidade, se houver)."""
+        bonus = self.talent("damage_pct", element)
+        if ability_id:
+            bonus += self.talent("ability_pct", ability_id)
+        return 1 + bonus
 
     def gear(self, slot: str) -> Optional[Dict[str, Any]]:
         stack = self.player.equipment.get(slot)
@@ -249,7 +259,7 @@ class Hero(Combatant):
     def mana_regen(self) -> int:
         if self.resource_id != "mana":
             return 0
-        return int(round(self.player.stat("espirito") * 0.2 + 2))
+        return int(round((self.player.stat("espirito") * 0.2 + 2) * (1 + self.talent("mana_regen_pct"))))
 
 
 class Monster(Combatant):
@@ -341,7 +351,7 @@ class Battle:
         if ready > self.round:
             remaining = ready - self.round
             return False, f"{name} está em recarga ({remaining} {'turno' if remaining == 1 else 'turnos'})."
-        cost = ability.get("cost", 0)
+        cost = hero.player.ability_cost(ability)
         if hero.resource < cost:
             resource = hero.player.resource_data["name"]
             return False, f"{resource} insuficiente para {name} ({hero.resource}/{cost})."
@@ -381,13 +391,15 @@ class Battle:
             return self._invalid("Alvo inválido.")
         hero = self.hero
         self._header("Ataque")
-        dealt = self._hero_hit(target, hero.weapon_roll(self.rng), "fisico", False, timing, "Seu golpe")
+        bonus = hero.damage_bonus("fisico")
+        dealt = self._hero_hit(target, hero.weapon_roll(self.rng) * bonus, "fisico", False, timing, "Seu golpe")
         self._rage_from_damage(dealt, dealing=True)
         self._weapon_coating(target, dealt)
         if hero.weapon("secundaria"):
             target = target if target.alive else self._target(None)
             if target is not None:
-                offhand = hero.weapon_roll(self.rng, offhand=True) * OFFHAND_FACTOR
+                offhand = (hero.weapon_roll(self.rng, offhand=True) * OFFHAND_FACTOR * bonus
+                           * (1 + hero.talent("offhand_pct")))
                 dealt = self._hero_hit(target, offhand, "fisico", False, timing, "Mão secundária")
                 self._rage_from_damage(dealt, dealing=True)
                 self._weapon_coating(target, dealt)
@@ -408,9 +420,10 @@ class Battle:
         usable, reason = self.ability_status(ability, target)
         if not usable:
             return self._invalid(reason)
-        hero.resource -= ability.get("cost", 0)
-        if ability.get("cooldown"):
-            hero.cooldowns[ability["id"]] = self.round + ability["cooldown"] + 1
+        hero.resource -= hero.player.ability_cost(ability)
+        cooldown = hero.player.ability_cooldown(ability)
+        if cooldown:
+            hero.cooldowns[ability["id"]] = self.round + cooldown + 1
         self._header(ability["name"])
         if mode == "self":
             targets: List[Combatant] = [hero]
@@ -507,32 +520,33 @@ class Battle:
         spell = element != "fisico"
         name = ability["name"]
         enemies = [t for t in targets if isinstance(t, Monster)]
+        bonus = hero.damage_bonus(element, ability["id"])
 
         if kind == "damage":
             for target in enemies:
                 for _ in range(spec.get("hits", 1)):
                     if not target.alive:
                         break
-                    dealt = self._hero_hit(target, self._power(spec), element, spell, timing, name)
+                    dealt = self._hero_hit(target, self._power(spec) * bonus, element, spell, timing, name)
                     self._hits[id(target)] = self._hits.get(id(target), False) or dealt is not None
                     if spec.get("scale") == "weapon":
                         self._weapon_coating(target, dealt)
         elif kind == "finisher":
             target = enemies[0]
-            amount = sum(self._power(spec) for _ in range(hero.combo))
+            amount = sum(self._power(spec) for _ in range(hero.combo)) * bonus
             if self._hero_hit(target, amount, element, spell, timing, f"{name} ({hero.combo} combo)") is not None:
                 hero.combo = 0
         elif kind == "execute":
             target = enemies[0]
             extra = hero.resource
             hero.resource = 0
-            amount = self.rng.uniform(*spec["base"]) + extra * spec.get("per_rage", 0)
+            amount = (self.rng.uniform(*spec["base"]) + extra * spec.get("per_rage", 0)) * bonus
             self._hero_hit(target, amount, element, spell, timing, name)
         elif kind == "dot":
             for target in enemies:
                 if target.alive and self._landed(target, spell, name):
-                    amount = self._power(spec) * element_multiplier(element, target.weaknesses, target.resistances,
-                                                                    target.immunities)
+                    amount = self._power(spec) * bonus * element_multiplier(element, target.weaknesses,
+                                                                            target.resistances, target.immunities)
                     self._add_effect(target, Effect(spec["id"], spec["name"], "dot", spec["turns"], amount,
                                                     element=element))
                     self._say(f"{spec['name']}: {target.name} sofrerá dano por {spec['turns']} turnos.")
@@ -569,7 +583,7 @@ class Battle:
                 hero.combo = min(MAX_COMBO, hero.combo + spec.get("value", 1))
                 self._say(f"Pontos de combo: {combo_display(hero.combo)}")
         elif kind == "heal":
-            amount = self._power(spec)
+            amount = self._power(spec) * (1 + hero.talent("heal_pct"))
             if self.rng.random() < hero.spell_crit_chance:
                 amount *= SPELL_CRIT_MULTIPLIER
             if timing == TIMING_PERFECT:
@@ -578,10 +592,11 @@ class Battle:
             perfect = " No tempo certo!" if timing == TIMING_PERFECT else ""
             self._say(ui.style(f"Você recupera {healed} de vida.{perfect}", "bright_green"))
         elif kind == "hot":
-            self._add_effect(hero, Effect(spec["id"], spec["name"], "hot", spec["turns"], self._power(spec)))
+            amount = self._power(spec) * (1 + hero.talent("heal_pct"))
+            self._add_effect(hero, Effect(spec["id"], spec["name"], "hot", spec["turns"], amount))
             self._say(f"{spec['name']}: você se cura a cada turno, por {spec['turns']} turnos.")
         elif kind == "shield":
-            amount = self._power(spec)
+            amount = self._power(spec) * (1 + hero.talent("shield_pct"))
             self._add_effect(hero, Effect(spec["id"], spec["name"], "shield", spec["turns"], amount))
             self._say(f"{spec['name']}: absorve até {int(amount)} de dano.")
         elif kind == "buff":
@@ -593,6 +608,10 @@ class Battle:
         elif kind == "rage":
             hero.resource += spec["value"]
             self._say(f"+{spec['value']} de Raiva.")
+        elif kind == "resource":
+            before = hero.resource
+            hero.resource += spec["value"]
+            self._say(f"+{hero.resource - before} de {hero.player.resource_data['name']}.")
         elif kind == "stealth":
             self._add_effect(hero, Effect("furtividade", "Furtividade", "stealth", 1))
             hero.crit_next = True
@@ -614,7 +633,7 @@ class Battle:
 
     def _roll_hit(self, target: Monster, spell: bool) -> bool:
         chance = (SPELL_HIT_CHANCE if spell else HIT_CHANCE) - 0.02 * max(0, target.level - self.hero.level)
-        chance += self.hero.modifier("hit")
+        chance += self.hero.modifier("hit") + self.hero.talent("hit")
         if not spell:
             chance -= target.dodge
         return self.rng.random() < chance
@@ -679,8 +698,8 @@ class Battle:
         if dealt is None or buff is None or not target.alive:
             return
         coating = buff["coating"]
-        self._hero_hit(target, self.rng.uniform(*coating["damage"]), coating["element"], True, None, buff["name"],
-                       proc=True)
+        amount = self.rng.uniform(*coating["damage"]) * (1 + self.hero.talent("coating_pct"))
+        self._hero_hit(target, amount, coating["element"], True, None, buff["name"], proc=True)
 
     def _break_lock(self, enemy: Monster, element: str) -> None:
         charge = enemy.charging
@@ -702,7 +721,7 @@ class Battle:
         hero = self.hero
         if not amount or hero.resource_id != "raiva":
             return
-        factor = 9.0 if dealing else 2.5
+        factor = (9.0 if dealing else 2.5) * (1 + hero.talent("rage_pct"))
         hero.resource += factor * amount / rage_factor(hero.level)
 
     # ------------------------------------------------------------------ dano, cura e efeitos

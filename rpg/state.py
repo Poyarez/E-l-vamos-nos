@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 from . import world
 from .data.monsters import MONSTERS
+from .data.quests import BOUNTIES, QUESTS
 from .player import Player
 from .time_system import GameClock
 
@@ -50,6 +51,8 @@ class GameState:
         self.met: Set[str] = set()             # NPCs com quem já conversou
         self.bestiary: Dict[str, Dict[str, Any]] = {}   # criatura -> abates, fatos e saques conhecidos
         self.nodes: Dict[str, Dict[str, int]] = {}      # "local:ponto" -> o que resta e desde quando (coleta)
+        self.quests: Dict[str, Dict[str, Any]] = {}     # missão -> etapa, contagem de abates, concluída?
+        self.bounties: Dict[str, Any] = {}              # quadro de avisos: dia, ofertas, aceitas e feitas
         self.stats: Dict[str, int] = {"passos": 0}
         self.play_seconds = 0.0
 
@@ -118,6 +121,10 @@ class GameState:
             "met": sorted(self.met),
             "bestiary": {template_id: dict(entry) for template_id, entry in self.bestiary.items()},
             "nodes": {key: dict(entry) for key, entry in self.nodes.items()},
+            "quests": {quest_id: dict(entry) for quest_id, entry in self.quests.items()},
+            "bounties": {"day": self.bounties.get("day"), "offers": list(self.bounties.get("offers", [])),
+                         "done": list(self.bounties.get("done", [])),
+                         "active": {key: dict(value) for key, value in self.bounties.get("active", {}).items()}},
             "stats": dict(self.stats),
             "play_seconds": round(self.play_seconds, 1),
         }
@@ -150,6 +157,15 @@ class GameState:
                           for template_id, entry in data.get("bestiary", {}).items() if template_id in MONSTERS}
         state.nodes = {key: {"left": int(entry.get("left", 0)), "time": int(entry.get("time", 0))}
                        for key, entry in data.get("nodes", {}).items()}
+        state.quests = {quest_id: {"stage": int(entry.get("stage", 0)), "kills": int(entry.get("kills", 0)),
+                                   "done": bool(entry.get("done", False)), "day": int(entry.get("day", 1))}
+                        for quest_id, entry in data.get("quests", {}).items() if quest_id in QUESTS}
+        saved_board = data.get("bounties") or {}
+        state.bounties = {"day": saved_board.get("day"),
+                          "offers": [b for b in saved_board.get("offers", []) if b in BOUNTIES],
+                          "done": [b for b in saved_board.get("done", []) if b in BOUNTIES],
+                          "active": {b: {"kills": int(v.get("kills", 0))}
+                                     for b, v in saved_board.get("active", {}).items() if b in BOUNTIES}}
         state.stats.update({key: int(value) for key, value in data.get("stats", {}).items()})
         state.play_seconds = float(data.get("play_seconds", 0.0))
         return state

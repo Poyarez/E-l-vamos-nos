@@ -790,6 +790,344 @@ ITEMS = {
             "em seu interior — como se faltassem outras duas."
         ),
     },
+    # ================================================================== Etapa 4
+    # ------------------------------------------------------------------ metalurgia: aço e carvão
+    "carvao": {
+        "name": "Carvão Mineral", "type": "material", "quality": "comum", "value": 4, "stack": 50,
+        "description": "Pedra negra que suja os dedos e queima quente como o inferno. Ferro + carvão = aço.",
+    },
+    "barra_aco": {
+        "name": "Barra de Aço", "type": "material", "quality": "comum", "value": 20, "stack": 50,
+        "description": "Ferro casado com carvão no fogo mais quente da fornalha. Duro, flexível e caro.",
+    },
+    "pregos_bronze": {
+        "name": "Pregos de Bronze", "type": "material", "quality": "comum", "value": 1, "stack": 50,
+        "description": "Pregos que não enferrujam, os favoritos de quem constrói perto da água.",
+    },
+    "adaga_aco": {
+        "name": "Adaga de Aço", "type": "arma", "slot": "arma", "subtype": "adaga", "quality": "comum",
+        "damage": [8, 13], "stats": {"agilidade": 2}, "value": 70, "stack": 1,
+        "description": "A lâmina faz um som limpo ao sair da bainha, como uma nota de sino.",
+    },
+    "maca_aco": {
+        "name": "Maça de Aço", "type": "arma", "slot": "arma", "subtype": "maca", "quality": "comum",
+        "damage": [8, 14], "stats": {"espirito": 3}, "value": 78, "stack": 1,
+        "description": "Flanges de aço polido e um sol nascente cinzelado no pomo.",
+    },
+    "espada_aco": {
+        "name": "Espada de Aço", "type": "arma", "slot": "arma", "subtype": "espada", "quality": "comum",
+        "damage": [9, 16], "stats": {"forca": 2}, "value": 82, "stack": 1,
+        "description": "Aço temperado em óleo, com o fio que só a paciência dá.",
+    },
+    "machado_aco": {
+        "name": "Machado de Aço", "type": "arma", "slot": "arma", "subtype": "machado", "quality": "comum",
+        "damage": [10, 17], "stats": {"forca": 2}, "value": 85, "stack": 1,
+        "description": "Pesado na cabeça e leve no cabo: o machado que todo lenhador sonha ter.",
+    },
+    "elmo_aco": {
+        "name": "Elmo de Aço", "type": "armadura", "slot": "cabeca", "subtype": "malha", "quality": "comum",
+        "armor": 32, "stats": {"vigor": 1}, "value": 64, "stack": 1,
+        "description": "Um elmo de aço com protetor de nariz. Esquenta no sol, mas segura uma clava.",
+    },
+    "botas_aco": {
+        "name": "Botas de Aço", "type": "armadura", "slot": "pes", "subtype": "malha", "quality": "comum",
+        "armor": 24, "stats": {"vigor": 1}, "value": 56, "stack": 1,
+        "description": "Escamas de aço sobre couro grosso. Cada passo soa como uma decisão.",
+    },
+    "escudo_aco": {
+        "name": "Escudo de Aço", "type": "escudo", "slot": "secundaria", "subtype": "escudo", "quality": "comum",
+        "armor": 44, "stats": {"vigor": 1}, "value": 96, "stack": 1,
+        "description": "Um escudo redondo de aço batido, com bossa no centro. Flechas ricocheteiam nele.",
+    },
+    "cota_aco": {
+        "name": "Cota de Malha de Aço", "type": "armadura", "slot": "peito", "subtype": "malha",
+        "quality": "comum", "armor": 74, "stats": {"vigor": 2}, "value": 130, "stack": 1, "dyeable": True,
+        "description": "Anéis de aço miúdos e rebitados, um a um. Uma armadura para a vida inteira.",
+    },
+    "perneiras_aco": {
+        "name": "Perneiras de Aço", "type": "armadura", "slot": "pernas", "subtype": "malha",
+        "quality": "comum", "armor": 50, "stats": {"vigor": 1}, "value": 104, "stack": 1,
+        "description": "Placas de aço articuladas nos joelhos. Ajoelhar para rezar ficou mais difícil.",
+    },
+    "picareta_aco": {
+        "name": "Picareta de Aço", "type": "ferramenta", "tool": "picareta", "power": 0.22, "quality": "incomum",
+        "value": 150, "stack": 1,
+        "description": "Aço temperado na ponta e freixo no cabo. Arranca carvão como quem tira pão do forno. "
+                       "(+22% de chance na mineração)",
+    },
+    # ------------------------------------------------------------------ coleta e produção da Etapa 4
+    "piche": {
+        "name": "Pote de Piche", "type": "material", "quality": "comum", "value": 8, "stack": 20,
+        "description": "Breu de flor-de-breu cozido até virar cola negra. Veda qualquer coisa — e gruda em tudo.",
+    },
+    "remendo_lona": {
+        "name": "Remendo de Lona", "type": "material", "quality": "comum", "value": 10, "stack": 10,
+        "description": "Um retalho de lona grossa, tecido com fio de linho bem apertado. Serve para velas e cascos.",
+    },
+    "tecido_negro": {
+        "name": "Tecido Negro", "type": "material", "quality": "comum", "value": 6, "stack": 50,
+        "description": "Retalhos das capas do culto: lã fina, tingida de preto, com fios prateados na barra.",
+    },
+    "poeira_lunar": {
+        "name": "Poeira Lunar", "type": "material", "quality": "incomum", "value": 12, "stack": 50,
+        "description": "Um pó prateado e frio que brilha no escuro. Fica nos dedos de quem toca os ecos.",
+    },
+    "carpa_prateada": {
+        "name": "Carpa Prateada Crua", "type": "material", "quality": "comum", "value": 12, "stack": 20,
+        "description": "Uma carpa gorda de escamas prateadas, do poço fundo da ilhota.",
+    },
+    "carpa_assada": {
+        "name": "Carpa Prateada Assada", "type": "consumivel", "quality": "comum", "value": 24, "stack": 20,
+        "use": {"heal_pct": 65, "combat": False, "minutes": 10,
+                "verb": "A carne da carpa é branca, gorda e cheira a lago limpo.",
+                "buff": {"id": "bem_alimentado", "name": "Bem alimentado", "group": "comida", "minutes": 120,
+                         "stats": {"vigor": 3, "espirito": 3}}},
+        "description": "Restaura 65% da vida fora de combate. Bem alimentado: +3 de Vigor e +3 de Espírito por "
+                       "2 horas.",
+    },
+    "rei_do_lago": {
+        "name": "Rei do Lago", "type": "diverso", "quality": "raro", "value": 150, "stack": 5,
+        "description": ("Um peixe do tamanho de um bezerro, de escamas azul-prateadas e uma barbatana dorsal que "
+                        "parece mesmo uma coroa. Anselmo precisa ver isto."),
+    },
+    "vela_kobold": {
+        "name": "Vela de Kobold", "type": "consumivel", "quality": "comum", "value": 6, "stack": 20,
+        "use": {"combat": False, "minutes": 1,
+                "verb": "Você acende o toco de vela e o prende no chapéu, como fazem os kobolds.",
+                "buff": {"id": "vela_kobold", "name": "Vela acesa", "group": "luz", "minutes": 90, "vision": 1}},
+        "description": "Cera amarela e pavio grosso, feita para durar. Acesa: +1 de raio de visão por 1h30.",
+    },
+    "pocao_cura_maior": {
+        "name": "Poção de Cura Maior", "type": "consumivel", "quality": "incomum", "value": 120, "stack": 5,
+        "use": {"heal": [240, 300], "verb": "A poção prateada desce fria e fecha até as feridas antigas."},
+        "description": "Vermelho-escura com reflexos de prata. Restaura 240–300 de vida.",
+    },
+    "vestes_acolito": {
+        "name": "Vestes de Acólito", "type": "armadura", "slot": "peito", "subtype": "tecido", "quality": "incomum",
+        "armor": 14, "stats": {"intelecto": 3, "espirito": 3, "vigor": 1}, "value": 140, "stack": 1,
+        "description": ("Tecido negro do culto, recortado de novo e sem a lua cortada no peito. Agora é só uma "
+                        "boa veste."),
+    },
+    "capuz_negro": {
+        "name": "Capuz Negro", "type": "armadura", "slot": "cabeca", "subtype": "tecido", "quality": "incomum",
+        "armor": 10, "stats": {"intelecto": 2, "espirito": 2, "vigor": 1}, "value": 120, "stack": 1,
+        "description": "Fundo o bastante para esconder o rosto e quente o bastante para as noites nas ruínas.",
+    },
+    # ------------------------------------------------------------------ saques comuns e sucata
+    "garra_toupeira": {
+        "name": "Garra de Toupeira-de-Ferro", "type": "lixo", "quality": "pobre", "value": 7, "stack": 20,
+        "description": "Uma garra curva, dura como ferro de verdade. Os curtidores usam para raspar couro.",
+    },
+    "fragmento_runico": {
+        "name": "Fragmento Rúnico", "type": "lixo", "quality": "pobre", "value": 9, "stack": 20,
+        "description": "Um caco de pedra branca com metade de uma runa. Colecionadores de Alvorada pagam por isso.",
+    },
+    "presa_sombria": {
+        "name": "Presa Sombria", "type": "lixo", "quality": "pobre", "value": 10, "stack": 20,
+        "description": "Um dente negro que solta um fio de fumaça violeta quando ninguém está olhando.",
+    },
+    "ponta_flecha": {
+        "name": "Pontas de Flecha de Ferro", "type": "lixo", "quality": "pobre", "value": 4, "stack": 20,
+        "description": "Ferro bom, forjado com capricho. Alguém com mãos de ferreiro fez isto — e não por gosto.",
+    },
+    "bolsa_roubada": {
+        "name": "Bolsa Roubada", "type": "lixo", "quality": "pobre", "value": 25, "stack": 5,
+        "description": ("Uma bolsinha de couro com as iniciais de outra pessoa. Dentro, algumas moedas — vale o "
+                        "que pesa."),
+    },
+    # ------------------------------------------------------------------ saques raros das criaturas
+    "anel_geomante": {
+        "name": "Anel do Geomante", "type": "joia", "slot": "anel", "quality": "incomum",
+        "stats": {"intelecto": 2, "espirito": 2, "vigor": 1}, "value": 260, "stack": 1,
+        "description": "Uma pedrinha lisa amarrada num aro de cobre. Quando você fica parado, ela zumbe.",
+    },
+    "luvas_toupeira": {
+        "name": "Luvas de Couro de Toupeira", "type": "armadura", "slot": "maos", "subtype": "couro",
+        "quality": "incomum", "armor": 18, "stats": {"forca": 2, "agilidade": 2}, "value": 240, "stack": 1,
+        "description": "Couro duro como ferro, com as garras ainda nas pontas dos dedos.",
+    },
+    "amuleto_lua_cortada": {
+        "name": "Amuleto da Lua Cortada", "type": "joia", "slot": "pescoco", "quality": "incomum",
+        "stats": {"intelecto": 3, "espirito": 1, "vigor": 1}, "value": 280, "stack": 1,
+        "description": "Prata negra em forma de lua partida. Pesa mais do que deveria, e esfria quando a lua sobe.",
+    },
+    "capa_negra": {
+        "name": "Capa Negra de Guarda", "type": "armadura", "slot": "costas", "quality": "incomum",
+        "armor": 16, "stats": {"forca": 2, "vigor": 2}, "value": 270, "stack": 1,
+        "description": "Lã pesada, forrada de couro. Feita para esconder uma cota de malha — e quem a veste.",
+    },
+    "tiara_veltharas": {
+        "name": "Tiara de Vel'Tharas", "type": "armadura", "slot": "cabeca", "subtype": "tecido", "quality": "raro",
+        "armor": 12, "stats": {"intelecto": 3, "espirito": 3, "vigor": 1}, "value": 420, "stack": 1,
+        "description": "Um fio de prata antiga com uma pedra-da-lua do tamanho de uma lágrima. Os ecos a usavam.",
+    },
+    "luvas_arqueiro": {
+        "name": "Luvas de Arqueiro", "type": "armadura", "slot": "maos", "subtype": "couro", "quality": "incomum",
+        "armor": 18, "stats": {"agilidade": 3, "vigor": 1}, "value": 260, "stack": 1,
+        "description": "Couro fino nos dedos e grosso na palma. Cheiram a pena queimada.",
+    },
+    "ombreiras_brutamontes": {
+        "name": "Ombreiras do Brutamontes", "type": "armadura", "slot": "ombros", "subtype": "malha",
+        "quality": "incomum", "armor": 30, "stats": {"forca": 2, "vigor": 2}, "value": 280, "stack": 1,
+        "description": "Duas placas de ferro amassadas, com pregos de enfeite. Largas como um portão.",
+    },
+    "botas_batedor": {
+        "name": "Botas de Batedor", "type": "armadura", "slot": "pes", "subtype": "couro", "quality": "incomum",
+        "armor": 24, "stats": {"agilidade": 3, "vigor": 1}, "value": 260, "stack": 1,
+        "description": "Solado macio, que não faz barulho nem em cascalho. Os batedores do Corvo juram por elas.",
+    },
+    # ------------------------------------------------------------------ chefes da Etapa 4
+    "machado_capataz": {
+        "name": "Machado do Capataz", "type": "arma", "slot": "arma", "subtype": "machado", "quality": "raro",
+        "damage": [11, 19], "stats": {"forca": 3, "vigor": 3}, "value": 900, "stack": 1,
+        "description": "Ainda morno da forja violeta. Na lâmina, riscos que contam os dias do cativeiro de alguém.",
+    },
+    "botas_capataz": {
+        "name": "Botas do Capataz", "type": "armadura", "slot": "pes", "subtype": "malha", "quality": "raro",
+        "armor": 34, "stats": {"forca": 2, "vigor": 3}, "value": 850, "stack": 1,
+        "description": "Botas de ferro com biqueira de aço, feitas para chutar kobolds. Agora chutam coisa pior.",
+    },
+    "cinto_capataz": {
+        "name": "Cinto do Capataz", "type": "armadura", "slot": "cintura", "subtype": "couro", "quality": "raro",
+        "armor": 22, "stats": {"agilidade": 3, "vigor": 2}, "value": 820, "stack": 1,
+        "description": "Couro grosso com fivela de ferro e argolas para chaves — todas vazias, agora.",
+    },
+    "adaga_corvo": {
+        "name": "Bico do Corvo", "type": "arma", "slot": "arma", "subtype": "adaga", "quality": "raro",
+        "damage": [9, 15], "stats": {"agilidade": 4, "vigor": 2}, "value": 950, "stack": 1,
+        "description": "Uma adaga curva e negra como um bico. O cabo é enrolado em penas trançadas.",
+    },
+    "gibao_corvo": {
+        "name": "Gibão do Corvo-Negro", "type": "armadura", "slot": "peito", "subtype": "couro", "quality": "raro",
+        "armor": 48, "stats": {"agilidade": 4, "vigor": 2}, "value": 950, "stack": 1,
+        "description": "Couro negro costurado com penas sobrepostas, como uma asa fechada.",
+    },
+    "espada_corvo": {
+        "name": "Sabre de Ulric", "type": "arma", "slot": "arma", "subtype": "espada", "quality": "raro",
+        "damage": [11, 18], "stats": {"forca": 3, "agilidade": 2}, "value": 980, "stack": 1,
+        "description": "Um dos dois sabres curvos do chefe do Bando. O outro, dizem, está no fundo do Rio Largo.",
+    },
+    "capuz_corvo": {
+        "name": "Capuz do Corvo-Negro", "type": "armadura", "slot": "cabeca", "subtype": "couro", "quality": "raro",
+        "armor": 30, "stats": {"agilidade": 3, "vigor": 2}, "value": 900, "stack": 1,
+        "description": "Um capuz com um bico de couro sobre os olhos. Quem o usa enxerga longe e é visto pouco.",
+    },
+    "cajado_lua_cortada": {
+        "name": "Cajado da Lua Cortada", "type": "arma", "slot": "arma", "subtype": "cajado", "two_handed": True,
+        "quality": "raro", "damage": [9, 16], "stats": {"intelecto": 6, "espirito": 3, "vigor": 2}, "value": 1200,
+        "stack": 1,
+        "description": "Ébano com um crescente de prata partido no topo. Ainda sussurra o nome de Morwen.",
+    },
+    "manto_senhora": {
+        "name": "Manto da Senhora", "type": "armadura", "slot": "costas", "quality": "raro", "armor": 24,
+        "stats": {"intelecto": 3, "espirito": 3, "vigor": 2}, "value": 1100, "stack": 1,
+        "description": "Veludo negro bordado com todas as fases da lua — menos uma, rasgada a faca.",
+    },
+    "anel_lua_nova": {
+        "name": "Anel da Lua Nova", "type": "joia", "slot": "anel", "quality": "raro",
+        "stats": {"forca": 3, "agilidade": 3, "vigor": 2}, "value": 1050, "stack": 1,
+        "description": "Um aro de ferro negro sem pedra nenhuma: a lua nova é a que não se vê.",
+    },
+    "adaga_eclipse": {
+        "name": "Adaga do Eclipse", "type": "arma", "slot": "arma", "subtype": "adaga", "quality": "raro",
+        "damage": [7, 12], "stats": {"intelecto": 4, "espirito": 3}, "value": 1000, "stack": 1,
+        "description": "Uma adaga ritual de lâmina escura, que escurece ainda mais quando a lua some.",
+    },
+    "lagrima_vigia": {
+        "name": "Lágrima do Vigia", "type": "joia", "slot": "anel", "quality": "epico",
+        "stats": {"forca": 3, "agilidade": 3, "intelecto": 3, "espirito": 3, "vigor": 3}, "value": 3500, "stack": 1,
+        "description": ("Uma gota de pedra-da-lua presa num aro de luar sólido. O Vigia chorou uma única vez em "
+                        "trezentos anos — e foi quando acordou."),
+    },
+    # ------------------------------------------------------------------ recompensas de missões
+    "escudo_davi": {
+        "name": "Escudo do Aprendiz", "type": "escudo", "slot": "secundaria", "subtype": "escudo",
+        "quality": "raro", "armor": 46, "stats": {"vigor": 3, "forca": 1}, "value": 400, "stack": 1,
+        "description": "Forjado por Davi na primeira semana de volta à forja. No verso, gravado: \"obrigado\".",
+    },
+    "cajado_aco": {
+        "name": "Cajado com Ponteira de Aço", "type": "arma", "slot": "arma", "subtype": "cajado", "two_handed": True,
+        "quality": "raro", "damage": [7, 13], "stats": {"intelecto": 4, "espirito": 2, "vigor": 2}, "value": 400,
+        "stack": 1,
+        "description": ("Freixo escuro com ponteira e anéis de aço. Davi jura que não sabe nada de magia. O cajado "
+                        "discorda."),
+    },
+    "maca_davi": {
+        "name": "Maça do Aprendiz", "type": "arma", "slot": "arma", "subtype": "maca", "quality": "raro",
+        "damage": [9, 15], "stats": {"espirito": 3, "intelecto": 2, "vigor": 1}, "value": 400, "stack": 1,
+        "description": "Uma maça de aço com um sol cinzelado por mãos ainda inseguras — e muito caprichosas.",
+    },
+    "adaga_davi": {
+        "name": "Adaga do Aprendiz", "type": "arma", "slot": "arma", "subtype": "adaga", "quality": "raro",
+        "damage": [8, 13], "stats": {"agilidade": 3, "vigor": 2}, "value": 400, "stack": 1,
+        "description": "Equilibrada para a mão de quem sabe usá-la. Davi testou o fio cortando um fio de cabelo.",
+    },
+    "anel_guarda": {
+        "name": "Anel da Guarda do Vale", "type": "joia", "slot": "anel", "quality": "raro", "value": 600, "stack": 1,
+        "stats": {"vigor": 3, "forca": 1, "agilidade": 1, "intelecto": 1, "espirito": 1},
+        "description": ("Bronze gasto com o brasão do vale — o sol atrás da montanha. Renna só deu três destes na "
+                        "vida."),
+    },
+    "capa_guarda": {
+        "name": "Capa da Guarda", "type": "armadura", "slot": "costas", "quality": "incomum", "armor": 18,
+        "stats": {"vigor": 3, "forca": 1, "agilidade": 1}, "value": 300, "stack": 1,
+        "description": "Azul-escura, com o brasão do vale bordado nas costas. Tomé tem uma igual — de brinquedo.",
+    },
+    "simbolo_aurora": {
+        "name": "Símbolo da Aurora", "type": "joia", "slot": "pescoco", "quality": "incomum",
+        "stats": {"espirito": 3, "vigor": 2, "intelecto": 1}, "value": 260, "stack": 1,
+        "description": "Um sol de latão polido num cordão de linho. Esquenta um pouco ao amanhecer.",
+    },
+    "vara_anselmo": {
+        "name": "Vara do Anselmo", "type": "ferramenta", "tool": "vara", "power": 0.15, "quality": "raro",
+        "value": 300, "stack": 1,
+        "description": "Bambu curado por quarenta anos e uma linha que já segurou um rei. (+15% de chance na pesca)",
+    },
+    "manto_vigias": {
+        "name": "Manto dos Vigias da Lua", "type": "armadura", "slot": "costas", "quality": "epico", "armor": 30,
+        "stats": {"vigor": 4, "forca": 2, "agilidade": 2, "intelecto": 2, "espirito": 2}, "value": 3000, "stack": 1,
+        "description": ("O manto cinza-prateado dos antigos Vigias, guardado por Ysolde a vida inteira para "
+                        "\"quem um dia merecer\". Sob a lua, ele brilha de leve."),
+    },
+    # ------------------------------------------------------------------ missão: as três luas e o vale
+    "lua_cheia": {
+        "name": "Lua Cheia", "type": "missao", "quality": "raro", "value": 0, "stack": 1,
+        "description": ("Um disco de pedra-da-lua do tamanho da palma da mão, perfeitamente redondo. Brilha como a "
+                        "lua cheia — e, de perto, você ouve uma nota longa e grave."),
+    },
+    "metades_lua_minguante": {
+        "name": "Metades da Lua Minguante", "type": "missao", "quality": "raro", "value": 0, "stack": 1,
+        "description": ("As duas metades de um crescente de pedra-da-lua, partido com violência. A luz delas pisca, "
+                        "fraca, como um coração doente. Talvez um bom ferreiro consiga juntá-las."),
+    },
+    "lua_minguante": {
+        "name": "Lua Minguante", "type": "missao", "quality": "raro", "value": 0, "stack": 1,
+        "description": ("O crescente minguante, unido de novo por um fio de prata. A cicatriz brilha mais que o "
+                        "resto da pedra."),
+    },
+    "chave_lua_cortada": {
+        "name": "Chave da Lua Cortada", "type": "missao", "quality": "comum", "value": 0, "stack": 1,
+        "description": ("Uma chave de pedra negra em forma de lua partida, morna ao toque. Não há fechadura no vale "
+                        "com esse formato... a não ser, talvez, nas ruínas."),
+    },
+    "chave_capataz": {
+        "name": "Chave do Capataz", "type": "missao", "quality": "comum", "value": 0, "stack": 1,
+        "description": "Uma chave de ferro pesada, presa num aro com a lua cortada. Abre algum cofre na mina.",
+    },
+    "carta_capataz": {
+        "name": "Carta do Capataz", "type": "missao", "quality": "comum", "value": 0, "stack": 1,
+        "description": ("\"Gorran: mande as pontas de flecha a Ulric, no Desfiladeiro das Viúvas, toda lua nova. "
+                        "O vale precisa continuar isolado até a noite sem lua. O aprendiz não sai da forja. "
+                        "— M.\""),
+    },
+    "chave_corvo": {
+        "name": "Chave do Corvo", "type": "missao", "quality": "comum", "value": 0, "stack": 1,
+        "description": "Uma chave de bronze com uma pena negra amarrada. Ulric a carregava no pescoço.",
+    },
+    "fardo_zahir": {
+        "name": "Fardo de Seda de Zahir", "type": "missao", "quality": "comum", "value": 0, "stack": 1,
+        "description": "Um fardo de seda de Qadira com o selo de cera de Zahir ibn Kadir. Ainda intacto.",
+    },
 }
 
 #: Itens que todo herói carrega no início da jornada (além dos itens da classe).

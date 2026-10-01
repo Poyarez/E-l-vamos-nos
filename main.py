@@ -59,8 +59,10 @@ def game_loop(session: GameSession) -> None:
             commands.cmd_menu(session, [])   # Ctrl+C volta ao menu (oferecendo salvar)
             continue
         commands.dispatch(session, raw)
+        session.update_quests()
         if session.pending_battle is not None and session.running:
             battle_ui.run(session)
+            session.update_quests()
         if session.pending_autosave and session.running:
             autosave(session)
     session.sync_play_time()

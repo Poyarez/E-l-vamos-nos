@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, 
 from . import ui
 from .conditions import as_list, conditions_met, item_pairs
 from .data.npcs import NPCS
-from .utils import normalize
+from .utils import format_money, normalize
 
 if TYPE_CHECKING:  # evita importação circular em tempo de execução
     from .player import Player
@@ -23,7 +23,8 @@ if TYPE_CHECKING:  # evita importação circular em tempo de execução
 
 Coord = Tuple[int, int]
 
-EFFECT_KEYS = {"set_flag", "journal", "xp", "give_item", "take_item", "give_copper", "restore", "open_shop"}
+EFFECT_KEYS = {"set_flag", "journal", "xp", "give_item", "take_item", "give_copper", "take_copper", "restore",
+               "open_shop", "start_quest", "reset_talents"}
 
 _NARRATION_RE = re.compile(r"\*(.+?)\*")
 
@@ -41,12 +42,28 @@ class NPC:
     dialogue: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     shop: Optional[str] = None       # loja aberta pelo comando 'comerciar'
 
-    def position(self, period: str) -> Optional[Coord]:
-        """Onde o NPC está neste período do dia (``None`` = fora do mapa)."""
+    def location(self, period: str, state: Optional["GameState"] = None) -> Optional[Tuple[str, Coord]]:
+        """Mapa e coordenadas do NPC neste período do dia (``None`` = fora de cena).
+
+        Regras com ``if`` só valem quando as condições batem (NPCs ocultos, que aparecem
+        depois de algum acontecimento ou só em certas noites); sem ``state``, são ignoradas.
+        Uma regra pode levar o NPC a outro mapa com ``"map"``.
+        """
         for rule in self.schedule:
-            if "periods" not in rule or period in rule["periods"]:
-                return (rule["x"], rule["y"])
+            if "periods" in rule and period not in rule["periods"]:
+                continue
+            if rule.get("if") and (state is None or not conditions_met(rule["if"], state)):
+                continue
+            return rule.get("map", self.map_id), (rule["x"], rule["y"])
         return None
+
+    def position(self, period: str, state: Optional["GameState"] = None,
+                 map_id: Optional[str] = None) -> Optional[Coord]:
+        """Coordenadas do NPC (só se ele estiver no mapa ``map_id``, quando informado)."""
+        found = self.location(period, state)
+        if found is None or (map_id is not None and found[0] != map_id):
+            return None
+        return found[1]
 
 
 _cache: Dict[str, NPC] = {}
@@ -68,14 +85,14 @@ def all_npcs() -> List[NPC]:
 
 def npcs_at(state: "GameState", map_id: str, x: int, y: int) -> List[NPC]:
     period = state.clock.period
-    return [npc for npc in all_npcs() if npc.map_id == map_id and npc.position(period) == (x, y)]
+    return [npc for npc in all_npcs() if npc.position(period, state, map_id) == (x, y)]
 
 
 def npc_positions(state: "GameState", map_id: str) -> Dict[Coord, List[NPC]]:
     positions: Dict[Coord, List[NPC]] = {}
     period = state.clock.period
     for npc in all_npcs():
-        pos = npc.position(period) if npc.map_id == map_id else None
+        pos = npc.position(period, state, map_id)
         if pos is not None:
             positions.setdefault(pos, []).append(npc)
     return positions
@@ -99,6 +116,17 @@ def apply_effects(effects: Optional[Mapping[str, Any]], session: "GameSession") 
         session.player.inventory.remove(item_id, quantity)
     if "give_copper" in effects:
         session.give_copper(int(effects["give_copper"]))
+    if "take_copper" in effects:
+        amount = min(session.player.copper, int(effects["take_copper"]))
+        session.player.copper -= amount
+        session.notify(ui.style(f"Você paga {format_money(amount)}.", "gray"))
+    if effects.get("reset_talents"):
+        refunded = session.player.reset_talents()
+        points = "1 ponto volta" if refunded == 1 else f"{refunded} pontos voltam"
+        session.notify(ui.style(f"Seus talentos foram esquecidos: {points} para você gastar de novo.",
+                                "bright_cyan"))
+    if "start_quest" in effects:
+        session.start_quest(effects["start_quest"])
     if "xp" in effects:
         session.notify(ui.style(f"{ui.sym('star')} Conhecimento adquirido! (+{effects['xp']} XP)", "bright_magenta"))
         session.gain_xp(int(effects["xp"]), "conhecimento")

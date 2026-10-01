@@ -113,6 +113,7 @@ class Landmark:
     stations: Tuple[Dict[str, Any], ...] = ()    # oficinas: fornalha, bigorna, fogo, roca, caldeirão
     secret: Optional[Dict[str, Any]] = None      # revelado ao examinar (pode exigir nível de perícia)
     loot: Optional[Dict[str, Any]] = None        # recompensa única ao examinar
+    chest: Optional[Dict[str, Any]] = None       # baú trancado: chave ou arrombamento (ladinos)
     encounter: Optional[Dict[str, Any]] = None   # luta fixa ao se aproximar (até ser vencida)
 
     @property

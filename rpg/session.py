@@ -18,8 +18,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from . import crafting, monsters, save_system, ui, world
+from . import crafting, monsters, quests, save_system, ui, world
 from .combat import OUTCOME_DEFEAT, OUTCOME_VICTORY, Battle
+from .conditions import conditions_met, item_pairs
 from .config import Settings
 from .data.gathering import GATHER_VERBS
 from .data.recipes import STATIONS
@@ -48,6 +49,7 @@ BLOCKED_TEXT = {
     "parede_gruta": "Rocha maciça bloqueia o caminho.",
     "lago_subterraneo": "A água negra do lago subterrâneo é funda e gelada demais.",
     "porta_selada": "A porta de pedra não se move nem um milímetro.",
+    "fogo_violeta": "As chamas violetas não esquentam nada — e é justamente por isso que você não chega perto.",
 }
 
 # eventos que interrompem uma caminhada de vários passos
@@ -77,6 +79,7 @@ class LocationView:
     danger: Optional[Tuple[int, int]] = None
     stations: List[str] = field(default_factory=list)
     actions: List[str] = field(default_factory=list)   # comandos de ofício úteis aqui (minerar, forjar...)
+    board: str = ""                                    # resumo do quadro de avisos (na Praça do Poço)
 
 
 @dataclass
@@ -123,6 +126,7 @@ class GameSession:
         self.encounter_grace = 0
         self.previous: Optional[Tuple[str, int, int]] = None
         self.suppressed: Set[str] = set()       # encontros fixos recusados (até o herói se afastar)
+        self.reward_warnings: Set[str] = set()  # missões esperando espaço na mochila (já avisadas)
         self._timer = time.monotonic()
         self._region_id: Optional[str] = None
 
@@ -232,6 +236,17 @@ class GameSession:
             self.notify(ui.style(f"{ui.sym('up')} NÍVEL {level_up.level}! Você se sente mais forte.",
                                  "bright_yellow bold"))
         self.dirty = True
+
+    def start_quest(self, quest_id: str) -> None:
+        if quests.start(self.state, quest_id):
+            quest = quests.get_quest(quest_id)
+            self.notify(ui.style(f"{ui.sym('star')} Nova missão: {quest['name']}", "bright_yellow bold"))
+            self.notify(quest["stages"][0]["text"])
+            self.dirty = True
+
+    def update_quests(self) -> None:
+        """Avança as missões (chamado depois de cada ação do jogador)."""
+        quests.update(self)
 
     def add_journal(self, entry_id: str, title: str, text: str, category: str = "pista") -> None:
         if self.state.add_journal(entry_id, title, text, category):
@@ -490,7 +505,7 @@ class GameSession:
         return True
 
     def use_verb(self, verb: str) -> bool:
-        """``entrar``/``sair``: atravessa a passagem deste tile que aceita o verbo."""
+        """``entrar``/``sair``/``navegar``: atravessa a passagem deste tile que aceita o verbo."""
         for portal in self.map.portals_at(*self.state.pos):
             if portal.verb == verb and portal.is_known(self.state.flags):
                 self.use_portal(portal)
@@ -529,6 +544,8 @@ class GameSession:
         for landmark in self.map.landmarks.values():
             encounter = landmark.encounter
             if not encounter or self.state.has_flag(encounter["flag"]):
+                continue
+            if not conditions_met(encounter.get("if"), self.state):
                 continue
             near = max(abs(landmark.x - x), abs(landmark.y - y)) <= encounter.get("radius", 0)
             if not near:
@@ -615,11 +632,18 @@ class GameSession:
                     if leftover:
                         report.lost_items.append((item_id, leftover))
                 state.record_kill(enemy.template_id, [item_id for item_id, _q in loot])
+                quests.record_kill(state, enemy.template_id)
             player.copper += report.copper
             encounter = request.encounter or {}
             if encounter.get("flag"):
                 state.flags[encounter["flag"]] = True
                 report.text = encounter.get("victory", "")
+                for item_id, quantity in item_pairs(encounter.get("items")):
+                    leftover = player.inventory.add(item_id, quantity)
+                    if quantity - leftover:
+                        report.items.append((item_id, quantity - leftover))
+                    if leftover:
+                        report.lost_items.append((item_id, leftover))
                 journal = encounter.get("journal")
                 if journal:
                     self.add_journal(journal["id"], journal["title"], journal["text"], "segredo")
@@ -660,9 +684,11 @@ class GameSession:
             return [f"Você examina os arredores ({terrain.name.lower()}) com atenção, mas não encontra nada "
                     "fora do comum."]
         secret = landmark.secret
-        skilled = bool(secret) and all(self.player.skills.level(skill_id) >= level
-                                       for skill_id, level in secret.get("skill", {}).items())
-        if secret and skilled and not state.has_flag(secret["flag"]):
+        hidden = bool(secret) and not state.has_flag(secret["flag"])
+        skilled = hidden and all(self.player.skills.level(skill_id) >= level
+                                 for skill_id, level in secret.get("skill", {}).items())
+        allowed = hidden and conditions_met(secret.get("if"), state)
+        if hidden and skilled and allowed:
             state.flags[secret["flag"]] = True
             self.notify(ui.style(f"{ui.sym('star')} Segredo descoberto! (+{secret.get('xp', 0)} XP)",
                                  "bright_magenta bold"))
@@ -671,6 +697,9 @@ class GameSession:
             if journal:
                 self.add_journal(secret["flag"], journal["title"], journal["text"], "segredo")
             return [secret["text"]]
+        chest = landmark.chest
+        if chest and not state.has_flag(chest["flag"]):
+            return self._open_chest(landmark, chest)
         loot = landmark.loot
         if loot and not state.has_flag(loot["flag"]):
             state.flags[loot["flag"]] = True
@@ -683,10 +712,43 @@ class GameSession:
             self.gain_xp(loot.get("xp", 0), "tesouro")
             return [loot["text"]]
         texts = [landmark.examine or landmark.description]
-        if secret and not skilled and not state.has_flag(secret["flag"]) and secret.get("hint"):
-            needs = ", ".join(f"{crafting.skill_name(skill_id)} {level}" for skill_id, level in secret["skill"].items())
-            texts.append(ui.style(f"{secret['hint']} ({needs})", "gray"))
+        if hidden and secret.get("hint"):
+            needs = ""
+            if not skilled:
+                needs = " (" + ", ".join(f"{crafting.skill_name(skill_id)} {level}"
+                                         for skill_id, level in secret["skill"].items()) + ")"
+            texts.append(ui.style(secret["hint"] + needs, "gray"))
         return texts
+
+    def _open_chest(self, landmark: world.Landmark, chest: Dict[str, Any]) -> List[str]:
+        """Baú trancado: abre com a chave certa, ou um ladino experiente arromba."""
+        state, player = self.state, self.player
+        key = chest.get("key")
+        how = None
+        if "if" in chest and conditions_met(chest["if"], state):
+            how = chest.get("opens", "O fecho cede sozinho, como se reconhecesse você.")
+        elif key and player.inventory.count(key):
+            if chest.get("consume_key", True):
+                player.inventory.remove(key, 1)
+            how = f"Você usa {item_name(key, colored=False)} na fechadura. Clique."
+        elif chest.get("pick") and player.class_id == "ladino" and player.level >= chest["pick"]:
+            self.advance_time(10)
+            how = "Você trabalha a fechadura com uma gazua improvisada e, depois de alguns minutos, ela cede."
+        if how is None:
+            hints = [f"falta {item_name(key, colored=False)}"] if key else []
+            if chest.get("pick"):
+                hints.append(f"um ladino de nível {chest['pick']} conseguiria arrombar")
+            return [landmark.examine or landmark.description,
+                    ui.style(chest.get("locked", "Está trancado.") + (f" ({'; '.join(hints)})" if hints else ""),
+                             "gray")]
+        state.flags[chest["flag"]] = True
+        self.notify(ui.style(f"{ui.sym('star')} Baú aberto! (+{chest.get('xp', 0)} XP)", "bright_yellow bold"))
+        for item_id, quantity in chest.get("items", []):
+            self.give_item(item_id, quantity)
+        if chest.get("copper"):
+            self.give_copper(chest["copper"])
+        self.gain_xp(chest.get("xp", 0), "tesouro")
+        return [how, chest["text"]]
 
     def npcs_here(self) -> List[NPC]:
         return npcs_at(self.state, self.state.map_id, *self.state.pos)
@@ -758,9 +820,17 @@ class GameSession:
             name = station.get("name", crafting.station_name(station["id"]))
             open_now = crafting.station_at(landmark, station["id"], state)[0] is not None
             stations.append(name if open_now else name + " " + ui.style("[fechada]", "gray"))
+        board = ""
+        if landmark and landmark.id == quests.BOARD_LANDMARK:
+            free = sum(1 for bounty_id in quests.offers(state) if quests.bounty_status(state, bounty_id) == "livre")
+            ready = sum(1 for bounty_id in quests.active_bounties(state) if quests.bounty_ready(state, bounty_id))
+            board = f"{free} {'tarefa nova' if free == 1 else 'tarefas novas'} hoje"
+            if ready:
+                board += f", {ready} pronta{'s' if ready > 1 else ''} para entregar"
+            board += " ('avisos')."
         return LocationView(title, subtitle, paragraphs, self.npcs_here(), resources, exits, passages,
                             bool(landmark and landmark.rest), self.danger(), stations,
-                            list(dict.fromkeys(actions)))
+                            list(dict.fromkeys(actions)), board)
 
     def _senses(self) -> List[str]:
         """Dicas sobre locais próximos: pistas dos não descobertos e direções dos conhecidos."""

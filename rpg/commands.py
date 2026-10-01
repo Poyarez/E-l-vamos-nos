@@ -13,7 +13,7 @@ import difflib
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import crafting, screens, shop, ui, world
+from . import crafting, quests, screens, shop, talents, ui, world
 from .config import Settings
 from .data.items import SLOTS
 from .data.recipes import RECIPES, STATIONS
@@ -164,6 +164,12 @@ def cmd_enter(session: GameSession, args: List[str]) -> None:
 def cmd_exit(session: GameSession, args: List[str]) -> None:
     if not session.use_verb("sair"):
         ui.echo(ui.style("  Não há saída aqui. (Para voltar ao menu principal, use 'menu'.)", "gray"))
+
+
+@command("navegar", "remar", "barco", "sail", help="Atravessa a água de barco, quando há um barco à mão.")
+def cmd_sail(session: GameSession, args: List[str]) -> None:
+    if not session.use_verb("navegar"):
+        ui.echo(ui.style("  Não há barco aqui. (Os barcos ficam nos píeres e nas praias.)", "gray"))
 
 
 @command("falar", "f", "conversar", "talk", usage="falar [nome]", help="Conversa com alguém que esteja aqui.")
@@ -611,6 +617,122 @@ def cmd_abilities(session: GameSession, args: List[str]) -> None:
          category="Personagem")
 def cmd_journal(session: GameSession, args: List[str]) -> None:
     _full_screen(session, screens.journal_screen)
+
+
+@command("missoes", "missao", "quests", "quest", "objetivos",
+         help="Missões em andamento (com a etapa atual e o progresso), tarefas aceitas e missões concluídas.",
+         category="Personagem")
+def cmd_quests(session: GameSession, args: List[str]) -> None:
+    _full_screen(session, screens.quest_log_screen)
+
+
+@command("talentos", "talento", "arvores", "talents",
+         help="Árvores de talento da classe: veja e gaste os pontos ganhos a partir do nível 10.",
+         category="Personagem")
+def cmd_talents(session: GameSession, args: List[str]) -> None:
+    player = session.player
+    message = ""
+    while True:
+        screens.talents_screen(session)
+        if message:
+            ui.echo_lines(ui.wrap(message, screens.screen_width() - 4, "  "))
+            ui.echo()
+            message = ""
+        catalog = talents.all_talents(player.class_id)
+        learnable = [talent_id for talent_id in catalog
+                     if talents.learn_problem(player.class_id, player.level, player.talents, talent_id) is None]
+        if not learnable:
+            ui.pause()
+            break
+        labels = []
+        for talent_id in learnable:
+            tree_index, talent = catalog[talent_id]
+            tree = talents.trees(player.class_id)[tree_index]["name"]
+            rank = player.talents.get(talent_id, 0)
+            labels.append(f"{talent['name']} {rank}/{talent['ranks']} " + ui.style(f"({tree})", "gray"))
+        details = [talents.describe(player.class_id, catalog[talent_id][1]) for talent_id in learnable]
+        choice = ui.choose(labels, prompt="Aprender", cancel="Voltar", details=details)
+        if choice is None:
+            break
+        talent_id = learnable[choice]
+        before = {ability["id"] for ability in player.abilities()}
+        player.learn_talent(talent_id)
+        session.dirty = True
+        talent = catalog[talent_id][1]
+        message = ui.style(f"{ui.sym('star')} {talent['name']} agora está em "
+                           f"{player.talents[talent_id]}/{talent['ranks']}.", "bright_green")
+        for ability in player.abilities():
+            if ability["id"] not in before:
+                message += " " + ui.style(f"Nova habilidade: {ability['name']}!", "bright_cyan bold")
+    session.needs_redraw = True
+
+
+@command("avisos", "quadro", "tarefas", "aviso", "board",
+         help="Quadro de avisos da Praça do Poço: aceite tarefas do dia (caçadas e encomendas) e entregue-as lá.",
+         category="Personagem")
+def cmd_board(session: GameSession, args: List[str]) -> None:
+    state = session.state
+    landmark = session.map.landmark_at(*state.pos)
+    at_board = landmark is not None and landmark.id == quests.BOARD_LANDMARK
+    width = screens.screen_width() - 6
+    if not at_board:
+        active = quests.active_bounties(state)
+        if not active:
+            ui.echo(ui.style("  Você não tem tarefas aceitas. O quadro de avisos fica na Praça do Poço, na vila.",
+                             "gray"))
+            return
+        ui.echo()
+        for bounty_id in active:
+            ui.echo_lines(screens.bounty_lines(session, bounty_id, width))
+        ui.echo(ui.style("  Entregue as tarefas no quadro da Praça do Poço.", "gray"))
+        return
+    message = ""
+    while True:
+        screens.section(f"QUADRO DE AVISOS  {ui.sym('dot')}  Dia {state.clock.day}")
+        shown = list(dict.fromkeys(quests.offers(state) + quests.active_bounties(state)))
+        for bounty_id in shown:
+            ui.echo_lines(["  " + row for row in screens.bounty_lines(session, bounty_id, width)])
+            ui.echo()
+        if not shown:
+            ui.echo(ui.style("  O quadro está vazio hoje. Volte amanhã.", "gray"))
+            ui.echo()
+        if message:
+            ui.echo_lines(ui.wrap(message, width, "  "))
+            ui.echo()
+            message = ""
+        actions: List[Tuple[str, str]] = []
+        labels: List[str] = []
+        for bounty_id in shown:
+            status = quests.bounty_status(state, bounty_id)
+            name = quests.BOUNTIES[bounty_id]["name"]
+            if status == "pronta":
+                actions.append(("entregar", bounty_id))
+                labels.append(ui.style(f"Entregar: {name}", "bright_green"))
+            elif status == "livre":
+                actions.append(("aceitar", bounty_id))
+                labels.append(f"Aceitar: {name}")
+            elif status == "aceita":
+                actions.append(("desistir", bounty_id))
+                labels.append(ui.style(f"Desistir: {name}", "gray"))
+        if not actions:
+            ui.pause()
+            break
+        choice = ui.choose(labels, prompt="Quadro", cancel="Sair")
+        if choice is None:
+            break
+        action, bounty_id = actions[choice]
+        name = quests.BOUNTIES[bounty_id]["name"]
+        if action == "aceitar":
+            problem = quests.accept_bounty(state, bounty_id)
+            message = ui.style(problem, "red") if problem else ui.style(f"Tarefa aceita: {name}.", "bright_cyan")
+        elif action == "entregar":
+            quests.turn_in_bounty(session, bounty_id)
+            message = "\n".join(session.pop_messages())
+        elif ui.confirm(f"Desistir de \"{name}\"? O progresso será perdido.", default=False):
+            quests.abandon_bounty(state, bounty_id)
+            message = ui.style(f"Você risca \"{name}\" da sua lista.", "gray")
+        session.dirty = True
+    session.needs_redraw = True
 
 
 # --------------------------------------------------------------------------- sistema

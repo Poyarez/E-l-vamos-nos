@@ -276,4 +276,69 @@ TERRAIN = {
         "name": "Porta selada", "color": "bright_magenta", "passable": False, "cost": 0, "vision": 0,
         "day": ["Uma porta de pedra sem fechadura nem dobradiças."],
     },
+    # ------------------------------------------------------------------ Mina de Ferro-Velho
+    "chao_mina": {
+        "name": "Galeria da mina", "color": "yellow", "passable": True, "cost": 10, "vision": 0,
+        "day": [
+            "Vigas de madeira enegrecida escoram o teto baixo. Pó de ferro tinge tudo de vermelho.",
+            "O chão de pedra batida guarda pegadas pequenas, de pés descalços com garras.",
+            "Uma lanterna de mineiro, esmagada, ainda pende de um prego na viga.",
+            "Marcas de picareta riscam as paredes em todas as direções, como uma escrita frenética.",
+            "Cotocos de vela, grudados nas pedras com a própria cera, marcam o caminho.",
+        ],
+    },
+    "trilhos": {
+        "name": "Trilhos de vagonete", "color": "white", "passable": True, "cost": 8, "vision": 0,
+        "day": [
+            "Trilhos de ferro enferrujado correm pela galeria, ainda firmes nos dormentes.",
+            "Um vagonete tombado ocupa meio trilho, cheio de pedras e de ossos de rato.",
+            "Os trilhos rangem sob suas botas. Lá na frente, algo pequeno foge correndo.",
+        ],
+    },
+    "entulho": {
+        "name": "Entulho", "color": "gray", "passable": True, "cost": 14, "vision": 0,
+        "day": [
+            "Pedras soltas do último desabamento: é preciso escalar com cuidado.",
+            "O teto cedeu aqui. Você passa curvado por baixo de uma viga rachada.",
+        ],
+    },
+    "fogo_violeta": {
+        "name": "Fogo violeta", "color": "bright_magenta", "passable": False, "cost": 0, "vision": 1,
+        "day": ["Chamas violetas brotam das frestas da rocha, sem fumaça e sem cheiro de lenha."],
+    },
+    # ------------------------------------------------------------------ santuários de Vel'Tharas
+    "lajes": {
+        "name": "Lajes brancas", "color": "bright_white", "passable": True, "cost": 10, "vision": 0,
+        "day": [
+            "Lajes de pedra branca, lisas como osso polido, encaixadas sem argamassa.",
+            "Luas em todas as fases foram gravadas nas lajes, formando um caminho.",
+            "O ar aqui embaixo é morno e cheira a pedra e a tempestade.",
+            "Seus passos ecoam longe demais, como se a sala fosse maior do que parece.",
+        ],
+    },
+    # ------------------------------------------------------------------ lago e estrada do sul
+    "areia": {
+        "name": "Praia de areia", "color": "bright_yellow", "passable": True, "cost": 11, "vision": 0,
+        "day": [
+            "Areia grossa e clara, cheia de conchinhas e de pegadas de garça.",
+            "A água do lago lambe a areia em ondinhas preguiçosas.",
+            "Um tronco liso de tanto ser lavado pelo lago serve de banco natural.",
+        ],
+        "night": [
+            "A areia guarda o calor do dia. O lago, negro, reflete a lua.",
+            "Pequenos caranguejos correm de lado ao ouvir seus passos na areia.",
+        ],
+    },
+    "barracas": {
+        "name": "Acampamento", "color": "red", "passable": True, "cost": 10, "vision": 0,
+        "day": [
+            "Barracas de lona remendada, fogueiras de cinzas mornas e caixotes roubados por toda parte.",
+            "Um varal exibe capas, botas e chapéus de gente que certamente não os deu de presente.",
+            "Penas negras de corvo enfeitam as estacas das barracas.",
+        ],
+        "night": [
+            "Fogueiras crepitam entre as barracas; vozes roucas cantam e brigam ao mesmo tempo.",
+            "Sombras se movem atrás da lona das barracas, à luz das fogueiras.",
+        ],
+    },
 }

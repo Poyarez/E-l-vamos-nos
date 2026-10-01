@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Mapping, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Mapping, Optional, Tuple
 
 from . import ui
 from .data.appearance import ARMOR_COLORS
@@ -60,8 +60,17 @@ class ItemStack:
         return cls(str(data["id"]), max(1, int(data.get("qty", 1))), data.get("dye"))
 
 
+def is_quest_item(item_id: str) -> bool:
+    """Itens de missão vão num bolso à parte: não ocupam espaço e nunca ficam para trás."""
+    return get_item(item_id)["type"] == "missao"
+
+
 class Inventory:
-    """Mochila com número limitado de espaços; itens empilháveis dividem um espaço."""
+    """Mochila com número limitado de espaços; itens empilháveis dividem um espaço.
+
+    Itens de missão não contam (ver ``is_quest_item``): uma mochila cheia nunca pode
+    travar a história.
+    """
 
     def __init__(self, capacity: int = DEFAULT_BAG_SLOTS, stacks: Optional[List[ItemStack]] = None) -> None:
         self.capacity = capacity
@@ -74,8 +83,12 @@ class Inventory:
         return len(self.stacks)
 
     @property
+    def used_slots(self) -> int:
+        return sum(1 for stack in self.stacks if not is_quest_item(stack.item_id))
+
+    @property
     def free_slots(self) -> int:
-        return self.capacity - len(self.stacks)
+        return self.capacity - self.used_slots
 
     def count(self, item_id: str) -> int:
         return sum(stack.quantity for stack in self.stacks if stack.item_id == item_id)
@@ -91,11 +104,16 @@ class Inventory:
                 moved = min(max_stack - stack.quantity, remaining)
                 stack.quantity += moved
                 remaining -= moved
-        while remaining > 0 and self.free_slots > 0:
+        while remaining > 0 and (self.free_slots > 0 or is_quest_item(item_id)):
             moved = min(max_stack, remaining)
             self.stacks.append(ItemStack(item_id, moved, dye))
             remaining -= moved
         return remaining
+
+    def room_for(self, pairs: List[Tuple[str, int]]) -> bool:
+        """Cabem todos estes itens? (simula sem mexer na mochila)"""
+        trial = Inventory(self.capacity, [ItemStack(s.item_id, s.quantity, s.dye) for s in self.stacks])
+        return all(trial.add(item_id, quantity) == 0 for item_id, quantity in pairs)
 
     def take(self, stack: ItemStack, quantity: int = 1) -> None:
         """Retira unidades de uma pilha específica (preservando a tinta das demais)."""

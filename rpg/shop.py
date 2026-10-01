@@ -1,7 +1,9 @@
 """Comércio: comprar e vender com os mercadores do vale.
 
 O preço de compra é o valor do item vezes o ``markup`` da loja; a venda paga o valor do
-item (como os vendedores do WoW). Itens de missão não podem ser vendidos.
+item (como os vendedores do WoW). Itens de missão não podem ser vendidos. O estoque pode
+crescer com a história: entradas ``{"item": ..., "if": {...}}`` só aparecem quando as
+condições batem (a rota reaberta, um aprendiz resgatado...).
 """
 
 from __future__ import annotations
@@ -9,6 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from . import screens, ui
+from .conditions import conditions_met
 from .data.shops import SHOPS
 from .items import ItemStack, get_item, item_name, item_summary
 from .utils import format_money
@@ -16,10 +19,22 @@ from .utils import format_money
 if TYPE_CHECKING:
     from .player import Player
     from .session import GameSession
+    from .state import GameState
 
 
 def get_shop(shop_id: str) -> Dict[str, Any]:
     return SHOPS[shop_id]
+
+
+def stock(shop_id: str, state: Optional["GameState"] = None) -> List[str]:
+    """Itens à venda agora (sem ``state``, só o estoque fixo)."""
+    items = []
+    for entry in get_shop(shop_id)["stock"]:
+        if isinstance(entry, str):
+            items.append(entry)
+        elif state is not None and conditions_met(entry.get("if"), state):
+            items.append(entry["item"])
+    return items
 
 
 def buy_price(shop_id: str, item_id: str) -> int:
@@ -31,9 +46,10 @@ def can_sell(item_id: str) -> bool:
     return item["type"] != "missao" and item["value"] > 0
 
 
-def buy(player: "Player", shop_id: str, item_id: str, quantity: int = 1) -> int:
+def buy(player: "Player", shop_id: str, item_id: str, quantity: int = 1,
+        state: Optional["GameState"] = None) -> int:
     """Compra itens; devolve o total pago. Levanta ``ValueError`` se não der."""
-    if item_id not in get_shop(shop_id)["stock"]:
+    if item_id not in stock(shop_id, state):
         raise ValueError("Esse item não está à venda aqui.")
     total = buy_price(shop_id, item_id) * quantity
     if total > player.copper:
@@ -103,7 +119,7 @@ def run(session: "GameSession", shop_id: str) -> None:
             session.needs_redraw = True
             return
         if choice == 0:
-            message = _buy_menu(player, shop_id)
+            message = _buy_menu(session, shop_id)
         elif choice == 1:
             message = _sell_menu(player)
         else:
@@ -112,16 +128,17 @@ def run(session: "GameSession", shop_id: str) -> None:
         session.dirty = True
 
 
-def _buy_menu(player: "Player", shop_id: str) -> str:
-    stock = get_shop(shop_id)["stock"]
+def _buy_menu(session: "GameSession", shop_id: str) -> str:
+    player = session.player
+    items = stock(shop_id, session.state)
     labels = [f"{item_name(item_id)} — {ui.style(format_money(buy_price(shop_id, item_id)), 'bright_yellow')}"
-              for item_id in stock]
+              for item_id in items]
     details = [(item_summary(item_id) + ". " if get_item(item_id).get("slot") or get_item(item_id).get("tool") else "")
-               + get_item(item_id)["description"] for item_id in stock]
+               + get_item(item_id)["description"] for item_id in items]
     choice = ui.choose(labels, prompt="Comprar", cancel="Voltar", details=details)
     if choice is None:
         return ""
-    item_id = stock[choice]
+    item_id = items[choice]
     affordable = player.copper // buy_price(shop_id, item_id)
     if affordable <= 0:
         return ui.style("Você não tem dinheiro para isso.", "red")
@@ -129,7 +146,7 @@ def _buy_menu(player: "Player", shop_id: str) -> str:
     if quantity is None:
         return ""
     try:
-        paid = buy(player, shop_id, item_id, quantity)
+        paid = buy(player, shop_id, item_id, quantity, session.state)
     except ValueError as error:
         return ui.style(str(error), "red")
     return ui.style(f"Você compra {item_name(item_id, colored=False)} x{quantity} por {format_money(paid)}.",

@@ -1,11 +1,11 @@
 """Telas do jogo: título, exploração (HUD + minimapa + descrição), ficha, mochila, perícias,
-grimório, mapa completo, diário e comemoração de nível."""
+grimório, talentos, missões, quadro de avisos, mapa completo, diário e comemoração de nível."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from . import crafting, mapview, ui, world
+from . import crafting, mapview, quests, talents, ui, world
 from .combat import Hero, armor_mitigation, describe_knowledge, element_label
 from .conditions import conditions_met
 from .config import GAME_SUBTITLE, GAME_VERSION
@@ -138,6 +138,8 @@ def location_panel(view: "LocationView", width: int, player_level: int = 1) -> L
     if view.actions:
         verbs = " ou ".join(f"'{verb}'" for verb in view.actions)
         rows.append(ui.style(f"  (use {verbs})", "gray"))
+    if view.board:
+        rows.extend(ui.wrap(ui.style("Quadro de avisos: ", "bright_yellow") + view.board, width))
     for passage in view.passages:
         rows.extend(ui.wrap(ui.style("Passagem: ", "bright_cyan") + passage, width))
     if view.can_rest:
@@ -243,9 +245,16 @@ def character_sheet(session: "GameSession") -> None:
         ui.echo()
         ui.echo_lines("  " + ui.truncate(row, screen_width() - 4) for row in right)
     ui.echo()
-    trees = f" {ui.sym('dot')} ".join(tree["name"] for tree in player.class_data["talent_trees"])
-    points = (f"{player.talent_points} disponível(is)" if player.level >= TALENT_START_LEVEL
-              else f"a partir do nível {TALENT_START_LEVEL}")
+    trees = f" {ui.sym('dot')} ".join(
+        f"{tree['name']} {talents.points_in_tree(player.class_id, player.talents, index)}"
+        for index, tree in enumerate(talents.trees(player.class_id)))
+    if player.level < TALENT_START_LEVEL:
+        points = f"a partir do nível {TALENT_START_LEVEL}"
+    elif player.talent_points:
+        free = player.talent_points
+        points = f"{free} {'ponto livre' if free == 1 else 'pontos livres'} — use 'talentos'"
+    else:
+        points = "nenhum ponto livre"
     ui.echo(f"  {ui.style('Talentos:', 'bold')} {trees}  " + ui.style(f"({points})", "gray"))
     ui.echo(f"  {ui.style('Dinheiro:', 'bold')} {ui.style(format_money(player.copper), 'bright_yellow')}")
     for buff in player.buffs:
@@ -263,7 +272,7 @@ def character_sheet(session: "GameSession") -> None:
 def inventory_screen(session: "GameSession") -> None:
     player = session.player
     inventory = player.inventory
-    section(f"MOCHILA  ({len(inventory)}/{inventory.capacity} espaços)")
+    section(f"MOCHILA  ({inventory.used_slots}/{inventory.capacity} espaços)")
     width = screen_width() - 10
     if not len(inventory):
         ui.echo("  Sua mochila está vazia.")
@@ -404,21 +413,140 @@ def abilities_screen(session: "GameSession") -> None:
                           width, "  "))
     ui.echo()
     known = player.abilities()
+    catalog = talents.all_talents(player.class_id)
     for ability in player.abilities(include_locked=True):
         unlocked = ability in known
         slot = known.index(ability) + 1 if unlocked else None
-        tag = ui.style(f"[{slot}]", "bright_yellow") if slot else ui.style(f"nv {ability['level']:>2}", "gray")
-        cost = f"{ability['cost']} {resource['name']}" if ability["cost"] else "sem custo"
-        cooldown = f"recarga {ability['cooldown']} turnos" if ability["cooldown"] else "sem recarga"
+        if slot:
+            tag = ui.style(f"[{slot}]", "bright_yellow")
+        elif ability.get("talent"):
+            tag = ui.style("tal.", "magenta")
+        else:
+            tag = ui.style(f"nv {ability['level']:>2}", "gray")
+        price, wait = player.ability_cost(ability), player.ability_cooldown(ability)
+        cost = f"{price} {resource['name']}" if price else "sem custo"
+        cooldown = f"recarga {wait} {'turno' if wait == 1 else 'turnos'}" if wait else "sem recarga"
         name = ui.style(ability["name"], "bold") if unlocked else ui.style(ability["name"], "gray")
         ui.echo(f"  {tag} {name}  " + ui.style(f"({ability['kind']} {ui.sym('dot')} ", "gray")
                 + element_label(ability["element"]) + ui.style(f" {ui.sym('dot')} {cost} {ui.sym('dot')} {cooldown})", "gray"))
-        ui.echo_lines(ui.wrap(ui.style(ability["description"], "italic" if unlocked else "gray"), width, "        "))
+        description = ability["description"]
+        if ability.get("talent") and not unlocked:
+            tree_index, talent = catalog[ability["talent"]]
+            tree = talents.trees(player.class_id)[tree_index]["name"]
+            description += f" (Talento: {talent['name']}, último da árvore {tree}.)"
+        ui.echo_lines(ui.wrap(ui.style(description, "italic" if unlocked else "gray"), width, "        "))
     ui.echo()
     ui.echo_lines(ui.wrap(ui.style(
-        "Os números entre colchetes são a sua barra de ações. Novas habilidades são aprendidas ao subir de nível.",
-        "gray"), width, "  "))
+        "Os números entre colchetes são a sua barra de ações. Novas habilidades são aprendidas ao subir de nível; "
+        "as marcadas com 'tal.' vêm do último talento de cada árvore (comando 'talentos').", "gray"), width, "  "))
     ui.echo()
+
+
+# --------------------------------------------------------------------------- talentos
+
+def talent_line(player: Player, tree_index: int, talent: Dict[str, Any]) -> str:
+    """Uma linha da árvore: posto atual, nome, tier e o que o talento faz."""
+    rank = player.talents.get(talent["id"], 0)
+    problem = talents.learn_problem(player.class_id, player.level, player.talents, talent["id"])
+    maxed = rank >= talent["ranks"]
+    tier_locked = talents.points_in_tree(player.class_id, player.talents, tree_index) < \
+        talents.TIER_REQUIREMENTS[talent["tier"]]
+    color = "bright_green" if maxed else "bright_white" if rank else "gray" if tier_locked else "white"
+    marker = ui.sym("check") if maxed else ui.sym("star") if not problem else ui.sym("dot")
+    name = ui.style(f"{marker} {talent['name']} {rank}/{talent['ranks']}", color + (" bold" if rank else ""))
+    return name + ui.style(f"  (tier {talent['tier']}) ", "gray") + talents.describe(player.class_id, talent)
+
+
+def talents_screen(session: "GameSession") -> None:
+    player = session.player
+    free = player.talent_points
+    if player.level < TALENT_START_LEVEL:
+        status = f"abrem no nível {TALENT_START_LEVEL}"
+    else:
+        status = f"{free} {'ponto livre' if free == 1 else 'pontos livres'}"
+    section(f"TALENTOS DE {player.class_name.upper()}  {ui.sym('dot')}  {status}")
+    width = screen_width() - 8
+    for index, tree in enumerate(talents.trees(player.class_id)):
+        spent = talents.points_in_tree(player.class_id, player.talents, index)
+        ui.echo("  " + ui.style(tree["name"].upper(), "bold bright_yellow")
+                + ui.style(f"  {ui.sym('dot')}  {spent} {'ponto' if spent == 1 else 'pontos'}", "gray"))
+        ui.echo_lines(ui.wrap(ui.style(tree["description"], "italic gray"), width, "    "))
+        for talent in tree["talents"]:
+            ui.echo_lines(ui.wrap(talent_line(player, index, talent), width, "    "))
+        ui.echo()
+    requirements = ", ".join(f"tier {tier}: {needed}" for tier, needed in talents.TIER_REQUIREMENTS.items() if needed)
+    ui.echo_lines(ui.wrap(ui.style(
+        f"Cada nível a partir do {TALENT_START_LEVEL} dá um ponto de talento. Para abrir os tiers mais altos de uma "
+        f"árvore, gaste pontos nela ({requirements}). O último talento de cada árvore ensina uma habilidade nova. "
+        "A Irmã Celeste, na capela, sabe uma prece que faz esquecer os talentos.", "gray"), width, "  "))
+    ui.echo()
+
+
+# --------------------------------------------------------------------------- missões e quadro de avisos
+
+def quest_log_screen(session: "GameSession") -> None:
+    state, player = session.state, session.player
+    active, done = quests.active(state), quests.completed(state)
+    section(f"MISSÕES  {ui.sym('dot')}  {len(active)} em andamento  {ui.sym('dot')}  {len(done)} concluídas")
+    width = screen_width() - 8
+    if not active and not done:
+        ui.echo_lines(ui.wrap("Nenhuma missão por enquanto. Converse com os moradores: muitos precisam de ajuda — "
+                              "e o quadro de avisos da Praça do Poço sempre tem tarefas.", width, "  "))
+        ui.echo()
+    for quest_id in active:
+        quest = quests.get_quest(quest_id)
+        data = quests.entry(state, quest_id)
+        principal = quest["category"] == "principal"
+        color = "bright_yellow" if principal else "bright_cyan"
+        ui.echo(f"  {ui.style(ui.sym('star') + ' ' + quest['name'], color + ' bold')}  "
+                + ui.style(f"({quests.CATEGORIES[quest['category']]} {ui.sym('dot')} {quest['giver']})", "gray"))
+        ui.echo_lines(ui.wrap(ui.style(quest["summary"], "italic gray"), width, "     "))
+        stage = quests.current_stage(quest_id, data)
+        if stage:
+            step = f"Etapa {data['stage'] + 1}/{len(quest['stages'])}: "
+            ui.echo_lines(ui.wrap(ui.style(step, "bold") + stage["text"], width, "     "))
+        progress = quests.progress_text(state, quest_id)
+        if progress:
+            ui.echo_lines(ui.wrap(ui.style("Progresso: ", "bright_green") + progress, width, "     "))
+        rewards = quests.quest_reward_text(quest_id, player.class_id)
+        if rewards:
+            ui.echo_lines(ui.wrap(ui.style("Recompensa: ", "gray") + rewards, width, "     "))
+        ui.echo()
+    bounties = quests.active_bounties(state)
+    if bounties:
+        ui.echo("  " + ui.style("TAREFAS DO QUADRO DE AVISOS", "bold"))
+        for bounty_id in bounties:
+            ready = quests.bounty_ready(state, bounty_id)
+            mark = ui.style(ui.sym("check") + " pronta para entregar", "bright_green") if ready else \
+                quests.bounty_progress(state, bounty_id)
+            ui.echo_lines(ui.wrap(f"{ui.sym('dot')} {quests.BOUNTIES[bounty_id]['name']}: {mark}", width, "    "))
+        ui.echo_lines(ui.wrap(ui.style("Entregue as tarefas no quadro da Praça do Poço ('avisos').", "gray"),
+                              width, "    "))
+        ui.echo()
+    if done:
+        names = [quests.get_quest(quest_id)["name"] for quest_id in done]
+        ui.echo("  " + ui.style("CONCLUÍDAS", "bold"))
+        ui.echo_lines(ui.wrap(ui.style(f" {ui.sym('dot')} ".join(names), "gray"), width, "    "))
+        ui.echo()
+
+
+def bounty_lines(session: "GameSession", bounty_id: str, width: int) -> List[str]:
+    """Um aviso do quadro: nome, situação, recado, objetivo e recompensa."""
+    state = session.state
+    bounty = quests.BOUNTIES[bounty_id]
+    status = quests.bounty_status(state, bounty_id)
+    labels = {"livre": ui.style("disponível", "bright_white"), "aceita": ui.style("aceita", "bright_cyan"),
+              "pronta": ui.style("pronta para entregar!", "bright_green bold"), "feita": ui.style("cumprida", "gray")}
+    rows = [ui.style(bounty["name"], "bold") + "  " + ui.style("[", "gray") + labels[status] + ui.style("]", "gray")]
+    rows += ui.wrap(ui.style(bounty["description"], "italic"), width, "  ")
+    goal = "; ".join(quests.describe_goal(bounty["goal"]))
+    if status in ("aceita", "pronta"):
+        goal += ui.style(f"  ({quests.bounty_progress(state, bounty_id)})", "bright_cyan")
+    rows += ui.wrap(ui.style("Tarefa: ", "gray") + goal, width, "  ")
+    rows += ui.wrap(ui.style("Paga: ", "gray") + ui.style(quests.bounty_reward_text(bounty_id), "bright_yellow"),
+                    width, "  ")
+    return rows
+
 
 
 def map_screen(session: "GameSession") -> None:

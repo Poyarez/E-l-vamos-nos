@@ -13,26 +13,27 @@ from collections import deque
 from rpg import crafting, npcs, world
 from rpg.character_creation import build_player
 from rpg.combat import ELEMENTS, MAX_ENEMIES
-from rpg.conditions import CONDITION_KEYS, as_list
+from rpg.conditions import CONDITION_KEYS, as_list, item_pairs
 from rpg.data.classes import CLASSES, STATS
 from rpg.data.gathering import NODES
 from rpg.data.items import ITEM_TYPES, ITEMS, SLOTS, STARTING_ITEMS, SUBTYPES
 from rpg.data.monsters import FAMILIES, MONSTERS
 from rpg.data.npcs import NPCS
+from rpg.data.quests import BOUNTIES, QUESTS
 from rpg.data.recipes import BURNT_ITEM, RECIPES, STATIONS
 from rpg.data.shops import SHOPS
 from rpg.data.terrain import TERRAIN
 from rpg.npcs import EFFECT_KEYS
 from rpg.skills import SKILLS
 from rpg.time_system import PERIODS
-from tests.helpers import DRAFT
+from tests.helpers import DRAFT, make_session, set_hour
 
 PERIOD_IDS = {period_id for period_id, _hour, _name in PERIODS}
 KNOWN_PLACEHOLDERS = {"nome", "tratamento", "Tratamento", "bem_vindo", "Bem_vindo", "classe", "Classe"}
 
 # o que o motor de combate (rpg.combat) sabe resolver
 HERO_EFFECTS = {"damage", "finisher", "execute", "dot", "debuff", "stun", "freeze", "fear", "interrupt", "combo",
-                "heal", "hot", "shield", "buff", "rage", "stealth"}
+                "heal", "hot", "shield", "buff", "rage", "resource", "stealth"}
 MONSTER_EFFECTS = {"dot", "stun", "freeze", "fear", "debuff", "drain_mana", "heal_self", "buff_self"}
 REQUIREMENTS = {"first_round", "shield", "dagger", "combo", "target_below"}
 MODIFIED_STATS = {"ap", "armor", "dodge", "hit", "damage_dealt", "damage_taken", "max_hp"}
@@ -107,7 +108,7 @@ class MapIntegrityTest(unittest.TestCase):
                     if portal.direction:
                         self.assertIn(portal.direction, world.DIRECTIONS)
                     if portal.verb:
-                        self.assertIn(portal.verb, ("entrar", "sair"))
+                        self.assertIn(portal.verb, ("entrar", "sair", "navegar"))
                     if portal.target:
                         target_map, x, y = portal.target
                         self.assertTrue(world.get_map(target_map).passable(x, y), portal.id)
@@ -160,10 +161,11 @@ class NpcDataTest(unittest.TestCase):
         all_landmarks = {lm for map_id in world.map_ids() for lm in world.get_map(map_id).landmarks}
         for npc in npcs.all_npcs():
             with self.subTest(npc=npc.id):
-                game_map = world.get_map(npc.map_id)
                 for rule in npc.schedule:
+                    game_map = world.get_map(rule.get("map", npc.map_id))
                     self.assertTrue(game_map.passable(rule["x"], rule["y"]))
                     self.assertLessEqual(set(rule.get("periods", PERIOD_IDS)), PERIOD_IDS)
+                    self.assertLessEqual(set(rule.get("if", {})), CONDITION_KEYS)
                 self.assertIn("inicio", npc.dialogue)
                 visited, queue = set(), deque(["inicio"])
                 while queue:
@@ -199,8 +201,29 @@ class NpcDataTest(unittest.TestCase):
                 self.assertEqual(visited, set(npc.dialogue), "há nós de diálogo inalcançáveis")
 
     def test_every_npc_is_somewhere_during_the_day(self):
+        # NPCs ocultos (todas as regras com "if") só aparecem depois de algum acontecimento
         for npc_id in NPCS:
-            self.assertIsNotNone(npcs.get_npc(npc_id).position("manha"), npc_id)
+            npc = npcs.get_npc(npc_id)
+            if all(rule.get("if") for rule in npc.schedule):
+                continue
+            self.assertIsNotNone(npc.position("manha"), npc_id)
+
+    def test_hidden_npcs_appear_when_their_conditions_hold(self):
+        session = make_session()
+        state = session.state
+        set_hour(session, 22)
+        self.assertNotIn("kael", [npc.id for npc in npcs.npcs_at(state, "vale_primordia", 37, 11)])
+        state.flags["bau_gruta_aberto"] = True
+        self.assertIn("kael", [npc.id for npc in npcs.npcs_at(state, "vale_primordia", 37, 11)])
+        set_hour(session, 10)
+        self.assertNotIn("kael", [npc.id for npc in npcs.npcs_at(state, "vale_primordia", 37, 11)])
+        # Davi muda de mapa: acorrentado na mina, depois na forja da vila
+        state.flags["gorran_derrotado"] = True
+        self.assertIn("davi", [npc.id for npc in npcs.npcs_at(state, "mina_ferro_velho", 27, 10)])
+        self.assertNotIn("davi", [npc.id for npc in npcs.npcs_at(state, "vale_primordia", 27, 10)])
+        state.flags["davi_resgatado"] = True
+        self.assertEqual(npcs.npcs_at(state, "mina_ferro_velho", 27, 10), [])
+        self.assertIn("davi", [npc.id for npc in npcs.npcs_at(state, "vale_primordia", 28, 16)])
 
     def test_dialogue_text_formats_for_every_gender(self):
         for gender in ("masculino", "feminino", "nao_binario"):
@@ -319,7 +342,11 @@ class CombatDataTest(unittest.TestCase):
             with self.subTest(shop=shop_id):
                 self.assertGreater(data["markup"], 0)
                 self.assertTrue(data["stock"])
-                for item_id in data["stock"]:
+                for entry in data["stock"]:
+                    item_id = entry if isinstance(entry, str) else entry["item"]
+                    if not isinstance(entry, str):
+                        self.assertTrue(entry["if"])
+                        self.assertLessEqual(set(entry["if"]), CONDITION_KEYS)
                     self.assertIn(item_id, ITEMS)
                     self.assertGreater(ITEMS[item_id]["value"], 0)
         for npc in npcs.all_npcs():
@@ -363,11 +390,11 @@ class CombatDataTest(unittest.TestCase):
 
 
 def obtainable_items():
-    """Tudo o que o jogador consegue obter: coleta, receitas, lojas, saques, baús, NPCs e itens iniciais."""
+    """Tudo o que o jogador consegue obter: coleta, receitas, lojas, saques, baús, NPCs, missões e itens iniciais."""
     sources = {node["item"] for node in NODES.values()}
-    sources |= {rare for node in NODES.values() for rare, _chance in node.get("rare", [])}
+    sources |= {rare[0] for node in NODES.values() for rare in node.get("rare", [])}
     sources |= {recipe["output"][0] for recipe in RECIPES.values()} | {BURNT_ITEM}
-    sources |= {item_id for shop in SHOPS.values() for item_id in shop["stock"]}
+    sources |= {entry if isinstance(entry, str) else entry["item"] for shop in SHOPS.values() for entry in shop["stock"]}
     for monster in MONSTERS.values():
         for entry in monster.get("loot", []):
             sources |= set(entry.get("one_of") or [entry["item"]])
@@ -375,13 +402,20 @@ def obtainable_items():
     sources |= {item_id for data in CLASSES.values() for item_id, _quantity in data["starting_items"]}
     for map_id in world.map_ids():
         for landmark in world.get_map(map_id).landmarks.values():
-            if landmark.loot:
-                sources |= {item_id for item_id, _quantity in landmark.loot.get("items", [])}
+            for found in (landmark.loot, landmark.chest, landmark.encounter):
+                if found:
+                    sources |= {item_id for item_id, _quantity in item_pairs(found.get("items"))}
     for npc in npcs.all_npcs():
         for node in npc.dialogue.values():
-            give = node.get("effects", {}).get("give_item")
-            if give:
-                sources |= {item_id for item_id, _quantity in (give if isinstance(give[0], list) else [give])}
+            for effects in [node.get("effects", {})] + [option.get("effects", {}) for option in node.get("options", [])]:
+                sources |= {item_id for item_id, _quantity in item_pairs(effects.get("give_item"))}
+    for quest in QUESTS.values():
+        rewards = quest.get("rewards", {})
+        sources |= {item_id for item_id, _quantity in item_pairs(rewards.get("items"))}
+        for pairs in rewards.get("class_items", {}).values():
+            sources |= {item_id for item_id, _quantity in item_pairs(pairs)}
+    for bounty in BOUNTIES.values():
+        sources |= {item_id for item_id, _quantity in item_pairs(bounty["reward"].get("items"))}
     return sources
 
 
@@ -401,9 +435,11 @@ class CraftingDataTest(unittest.TestCase):
                     self.assertIn(data["tool"], crafting.TOOL_NAMES)
                 if data.get("bait"):
                     self.assertIn(data["bait"], ITEMS)
-                for rare_id, chance in data.get("rare", []):
-                    self.assertIn(rare_id, ITEMS)
-                    self.assertTrue(0 < chance < 0.2)
+                for rare in data.get("rare", []):
+                    self.assertIn(rare[0], ITEMS)
+                    self.assertTrue(0 < rare[1] < 0.2)
+                    if len(rare) > 2:
+                        self.assertTrue(data["level"] < rare[2] <= 99)
                 self.assertLessEqual(set(data.get("if", {})), CONDITION_KEYS)
                 if data.get("if"):
                     self.assertTrue(data.get("closed"))
