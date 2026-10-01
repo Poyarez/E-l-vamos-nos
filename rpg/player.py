@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from .data.appearance import ALIGNMENTS, ARMOR_COLORS, FEATURES, GENDERS, HAIR_COLORS, HAIR_STYLES
 from .data.classes import CLASSES, RESOURCES, STATS, TALENT_START_LEVEL
-from .data.items import ITEMS, STARTING_COPPER, STARTING_ITEMS
+from .data.items import ITEMS, STARTING_COPPER, STARTING_ITEMS, SUBTYPES
 from .items import Inventory, ItemStack, get_item
 from .skills import SkillSet
 from .utils import capitalize_first
@@ -206,6 +206,79 @@ class Player:
         """Vida cheia; recurso no estado de descanso (Raiva zera, Mana e Energia enchem)."""
         self.hp = self.max_hp
         self.resource = self.max_resource if self.resource_data["starts_full"] else 0
+
+    def clamp_vitals(self) -> None:
+        """Ajusta vida e recurso aos máximos atuais (depois de trocar equipamento ou de uma luta)."""
+        self.hp = max(0, min(self.hp, self.max_hp))
+        self.resource = max(0, min(self.resource, self.max_resource))
+
+    def regenerate(self, minutes: int) -> None:
+        """Recuperação natural fora de combate, guiada pelo Espírito. A Raiva esfria; a Energia volta."""
+        if minutes <= 0:
+            return
+        spirit = self.stat("espirito")
+        if self.hp < self.max_hp:
+            self.hp = min(self.max_hp, self.hp + max(1, round(self.max_hp * (0.004 + spirit / 25000) * minutes)))
+        if self.resource_id == "mana":
+            gain = max(1, round(self.max_resource * (0.005 + spirit / 20000) * minutes))
+            self.resource = min(self.max_resource, self.resource + gain)
+        elif self.resource_id == "energia":
+            self.resource = self.max_resource
+        else:
+            self.resource = max(0, self.resource - 2 * minutes)
+
+    # ------------------------------------------------------------------ equipamento
+
+    def equip_problem(self, item_id: str) -> Optional[str]:
+        """Por que este item não pode ser equipado agora (``None`` se pode)."""
+        data = get_item(item_id)
+        slot = data.get("slot")
+        if not slot:
+            return f"{data['name']} não é um equipamento."
+        skills = self.class_data["proficiencies"]
+        subtype = data.get("subtype")
+        if data["type"] == "arma" and subtype not in skills["weapons"]:
+            return f"Sua classe não sabe usar armas do tipo {SUBTYPES[subtype].lower()}."
+        if data["type"] == "escudo" and not skills["shield"]:
+            return "Sua classe não sabe usar escudos."
+        if data["type"] == "armadura" and subtype and subtype not in skills["armor"]:
+            return f"Sua classe não pode vestir armadura de {SUBTYPES[subtype].lower()}."
+        if slot == "secundaria" and data["type"] == "arma" and not skills["dual_wield"]:
+            return "Sua classe não sabe lutar com duas armas."
+        main = self.equipment.get("arma")
+        if slot == "secundaria" and main is not None and main.data.get("two_handed"):
+            return f"{main.data['name']} exige as duas mãos."
+        return None
+
+    def equip(self, stack: ItemStack) -> List[ItemStack]:
+        """Equipa uma pilha da mochila e devolve o que saiu do lugar. Levanta ``ValueError`` se não der."""
+        problem = self.equip_problem(stack.item_id)
+        if problem:
+            raise ValueError(problem)
+        item_id, dye, data = stack.item_id, stack.dye, stack.data
+        slot = data["slot"]
+        slots = [slot] + (["secundaria"] if data.get("two_handed") else [])
+        displaced = [name for name in slots if name in self.equipment]
+        free = self.inventory.free_slots + (1 if stack.quantity == 1 else 0)
+        if len(displaced) > free:
+            raise ValueError("Não há espaço na mochila para guardar o que você está usando.")
+        self.inventory.take(stack)
+        removed = [self.equipment.pop(name) for name in displaced]
+        for old in removed:
+            self.inventory.add(old.item_id, 1, old.dye)
+        self.equipment[slot] = ItemStack(item_id, 1, dye)
+        self.clamp_vitals()
+        return removed
+
+    def unequip(self, slot: str) -> ItemStack:
+        if slot not in self.equipment:
+            raise ValueError("Não há nada equipado aí.")
+        if self.inventory.free_slots <= 0:
+            raise ValueError("Sua mochila está cheia.")
+        stack = self.equipment.pop(slot)
+        self.inventory.add(stack.item_id, 1, stack.dye)
+        self.clamp_vitals()
+        return stack
 
     # ------------------------------------------------------------------ texto
 

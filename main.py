@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-from rpg import character_creation, commands, save_system, screens, ui
+from rpg import battle_ui, character_creation, commands, save_system, screens, ui
 from rpg.config import GAME_TITLE, GAME_VERSION, Settings
 from rpg.save_system import SaveError, SaveInfo
 from rpg.session import GameSession
@@ -59,6 +59,8 @@ def game_loop(session: GameSession) -> None:
             commands.cmd_menu(session, [])   # Ctrl+C volta ao menu (oferecendo salvar)
             continue
         commands.dispatch(session, raw)
+        if session.pending_battle is not None and session.running:
+            battle_ui.run(session)
         if session.pending_autosave and session.running:
             autosave(session)
     session.sync_play_time()

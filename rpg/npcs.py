@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from . import ui
-from .data.appearance import ALIGNMENTS
+from .conditions import as_list, conditions_met
 from .data.npcs import NPCS
 from .utils import normalize
 
@@ -23,9 +23,7 @@ if TYPE_CHECKING:  # evita importação circular em tempo de execução
 
 Coord = Tuple[int, int]
 
-CONDITION_KEYS = {"flag", "not_flag", "journal", "discovered", "class", "moral", "law", "period", "night",
-                  "met", "min_level"}
-EFFECT_KEYS = {"set_flag", "journal", "xp", "give_item", "give_copper", "restore"}
+EFFECT_KEYS = {"set_flag", "journal", "xp", "give_item", "take_item", "give_copper", "restore", "open_shop"}
 
 _NARRATION_RE = re.compile(r"\*(.+?)\*")
 
@@ -41,6 +39,7 @@ class NPC:
     map_id: str
     schedule: List[Dict[str, Any]] = field(default_factory=list)
     dialogue: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    shop: Optional[str] = None       # loja aberta pelo comando 'comerciar'
 
     def position(self, period: str) -> Optional[Coord]:
         """Onde o NPC está neste período do dia (``None`` = fora do mapa)."""
@@ -59,7 +58,7 @@ def get_npc(npc_id: str) -> NPC:
         data = NPCS[npc_id]
         _cache[npc_id] = NPC(npc_id, data["name"], data["short"], data["title"], data["color"],
                              data["description"], data["map"], list(data.get("schedule", [])),
-                             dict(data["dialogue"]))
+                             dict(data["dialogue"]), data.get("shop"))
     return _cache[npc_id]
 
 
@@ -84,60 +83,22 @@ def npc_positions(state: "GameState", map_id: str) -> Dict[Coord, List[NPC]]:
 
 # --------------------------------------------------------------------------- condições e efeitos
 
-def _as_list(value: Any) -> List[Any]:
-    return list(value) if isinstance(value, (list, tuple)) else [value]
-
-
-def conditions_met(conditions: Optional[Mapping[str, Any]], state: "GameState", met: bool = False) -> bool:
-    """Avalia um bloco ``if``. ``met`` indica se o herói já conhecia o NPC antes desta conversa."""
-    if not conditions:
-        return True
-    player = state.player
-    alignment = ALIGNMENTS[player.alignment]
-    for key, value in conditions.items():
-        if key == "flag":
-            ok = all(state.has_flag(flag) for flag in _as_list(value))
-        elif key == "not_flag":
-            ok = not any(state.has_flag(flag) for flag in _as_list(value))
-        elif key == "journal":
-            known = {entry.id for entry in state.journal}
-            ok = all(entry_id in known for entry_id in _as_list(value))
-        elif key == "discovered":
-            ok = all(landmark in state.discovered for landmark in _as_list(value))
-        elif key == "class":
-            ok = player.class_id in _as_list(value)
-        elif key == "moral":
-            ok = alignment["moral"] in _as_list(value)
-        elif key == "law":
-            ok = alignment["law"] in _as_list(value)
-        elif key == "period":
-            ok = state.clock.period in _as_list(value)
-        elif key == "night":
-            ok = state.clock.is_night == bool(value)
-        elif key == "met":
-            ok = met == bool(value)
-        elif key == "min_level":
-            ok = player.level >= int(value)
-        else:
-            raise KeyError(f"Condição de diálogo desconhecida: {key!r}")
-        if not ok:
-            return False
-    return True
-
-
 def apply_effects(effects: Optional[Mapping[str, Any]], session: "GameSession") -> None:
     if not effects:
         return
     unknown = set(effects) - EFFECT_KEYS
     if unknown:
         raise KeyError(f"Efeito de diálogo desconhecido: {sorted(unknown)}")
-    for flag in _as_list(effects.get("set_flag", [])):
+    for flag in as_list(effects.get("set_flag", [])):
         session.state.flags[flag] = True
-    for entry in _as_list(effects.get("journal", [])):
+    for entry in as_list(effects.get("journal", [])):
         session.add_journal(entry["id"], entry["title"], entry["text"])
     if "give_item" in effects:
         item_id, quantity = effects["give_item"]
         session.give_item(item_id, quantity)
+    if "take_item" in effects:
+        item_id, quantity = effects["take_item"]
+        session.player.inventory.remove(item_id, quantity)
     if "give_copper" in effects:
         session.give_copper(int(effects["give_copper"]))
     if "xp" in effects:
@@ -146,6 +107,8 @@ def apply_effects(effects: Optional[Mapping[str, Any]], session: "GameSession") 
     if effects.get("restore"):
         session.player.restore()
         session.notify(ui.style("Sua vida e seu vigor foram restaurados.", "bright_green"))
+    if effects.get("open_shop"):
+        session.pending_shop = True
 
 
 # --------------------------------------------------------------------------- texto

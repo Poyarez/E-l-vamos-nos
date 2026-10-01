@@ -87,6 +87,7 @@ class Region:
     day: Tuple[str, ...] = ()
     night: Tuple[str, ...] = ()
     xp: int = 30
+    encounters: Optional[Dict[str, Any]] = None   # monstros que podem aparecer (ver rpg.monsters)
 
     def contains(self, x: int, y: int) -> bool:
         return any(x1 <= x <= x2 and y1 <= y <= y2 for x1, y1, x2, y2 in self.rects)
@@ -111,6 +112,7 @@ class Landmark:
     resources: Tuple[Dict[str, Any], ...] = ()   # pontos de coleta
     secret: Optional[Dict[str, Any]] = None      # revelado ao examinar
     loot: Optional[Dict[str, Any]] = None        # recompensa única ao examinar
+    encounter: Optional[Dict[str, Any]] = None   # luta fixa ao se aproximar (até ser vencida)
 
     @property
     def pos(self) -> Coord:
@@ -128,18 +130,23 @@ class Portal:
     target: Optional[Tuple[str, int, int]] = None   # (mapa, x, y)
     direction: Optional[str] = None
     verb: Optional[str] = None                      # "entrar" ou "sair"
-    locked_text: str = ""                           # preenchido = bloqueada
+    locked: bool = False                            # bloqueada (até que ``unlock_flag`` seja ativada)
     unlock_flag: Optional[str] = None               # flag que desbloqueia a passagem
+    min_level: int = 0                              # nível mínimo para atravessar
+    locked_text: str = ""                           # mensagem quando bloqueada
     requires_flag: Optional[str] = None             # a passagem só existe com esta flag
     travel_text: str = ""
 
     def is_known(self, flags: Mapping[str, Any]) -> bool:
         return self.requires_flag is None or bool(flags.get(self.requires_flag))
 
-    def is_locked(self, flags: Mapping[str, Any]) -> bool:
-        if not self.locked_text:
-            return False
-        return not (self.unlock_flag and flags.get(self.unlock_flag))
+    def is_locked(self, flags: Mapping[str, Any], level: int = 1) -> bool:
+        if self.unlock_flag:
+            if not flags.get(self.unlock_flag):
+                return True
+        elif self.locked:
+            return True
+        return level < self.min_level
 
 
 class GameMap:
@@ -164,7 +171,8 @@ class GameMap:
             raise ValueError(f"Mapa {self.id}: caracteres sem legenda: {sorted(unknown)}")
         self.start: Coord = tuple(data["start"])  # type: ignore[assignment]
         self.regions = [Region(r["id"], r["name"], tuple(tuple(rect) for rect in r["rects"]), r.get("intro", ""),
-                               tuple(r.get("day", ())), tuple(r.get("night", ())), r.get("xp", 30))
+                               tuple(r.get("day", ())), tuple(r.get("night", ())), r.get("xp", 30),
+                               r.get("encounters"))
                         for r in data.get("regions", [])]
         self.landmarks: Dict[str, Landmark] = {}
         for entry in data.get("landmarks", []):

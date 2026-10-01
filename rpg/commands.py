@@ -13,12 +13,14 @@ import difflib
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import screens, ui, world
+from . import screens, shop, ui, world
 from .config import Settings
+from .data.items import SLOTS
+from .items import ItemStack
 from .npcs import choose_npc, run_dialogue
 from .save_system import SaveError
 from .session import GameSession
-from .utils import normalize
+from .utils import capitalize_first, normalize
 
 Handler = Callable[[GameSession, List[str]], None]
 
@@ -37,7 +39,7 @@ class Command:
 
 COMMANDS: Dict[str, Command] = {}
 _LOOKUP: Dict[str, Command] = {}
-CATEGORIES = ("Exploração", "Personagem", "Sistema")
+CATEGORIES = ("Exploração", "Combate e itens", "Personagem", "Sistema")
 
 
 def command(name: str, *aliases: str, help: str, usage: str = "", category: str = "Exploração"):
@@ -178,6 +180,10 @@ def cmd_talk(session: GameSession, args: List[str]) -> None:
         npc = candidates[choice]
     run_dialogue(session, npc)
     session.needs_redraw = True
+    if session.pending_shop:
+        session.pending_shop = False
+        if npc.shop:
+            shop.run(session, npc.shop)
 
 
 @command("descansar", "dormir", "rest", "acampar",
@@ -197,6 +203,152 @@ def cmd_time(session: GameSession, args: List[str]) -> None:
     clock = session.clock
     ui.echo(f"  Dia {clock.day}, {clock.time_str} ({clock.period_name}). Clima: {clock.weather['name']}. "
             f"Lua: {clock.moon_phase}. Raio de visão: {session.vision_radius()}.")
+
+
+# --------------------------------------------------------------------------- combate e itens
+
+@command("cacar", "caca", "hunt", help="Procura uma presa na região atual (20 minutos). Bom para ganhar experiência.",
+         category="Combate e itens")
+def cmd_hunt(session: GameSession, args: List[str]) -> None:
+    if not session.hunt():
+        _print_messages(session)
+
+
+@command("equipar", "eq", "vestir", "empunhar", "equip", usage="equipar [item]",
+         help="Equipa uma arma, armadura ou joia da mochila (o que estava no lugar volta para a mochila).",
+         category="Combate e itens")
+def cmd_equip(session: GameSession, args: List[str]) -> None:
+    player = session.player
+    gear = [stack for stack in player.inventory if stack.data.get("slot")]
+    stack = _choose_stack(gear, " ".join(args), "equipar", "Você não tem nada para equipar na mochila.")
+    if stack is None:
+        return
+    before = (player.armor, player.max_hp, player.max_resource)
+    name = stack.name()
+    try:
+        removed = player.equip(stack)
+    except ValueError as error:
+        ui.echo(ui.style(f"  {error}", "bright_red"))
+        return
+    ui.echo(f"  Você equipa {name}.")
+    for old in removed:
+        ui.echo(ui.style(f"  {old.name(colored=False)} volta para a mochila.", "gray"))
+    _show_changes(session, before)
+    session.dirty = True
+
+
+@command("remover", "desequipar", "tirar", usage="remover [item]", help="Tira uma peça equipada e a guarda na mochila.",
+         category="Combate e itens")
+def cmd_unequip(session: GameSession, args: List[str]) -> None:
+    player = session.player
+    worn = list(player.equipment.items())
+    if not worn:
+        ui.echo(ui.style("  Você não está usando nada.", "gray"))
+        return
+    key = normalize(" ".join(args))
+    matches = [(slot, stack) for slot, stack in worn
+               if key and (key in normalize(stack.data["name"]) or key in normalize(SLOTS[slot]))]
+    if len(matches) != 1:
+        candidates = matches or worn
+        labels = [f"{SLOTS[slot]}: {stack.name()}" for slot, stack in candidates]
+        choice = ui.choose(labels, prompt="Remover", cancel="Cancelar")
+        if choice is None:
+            return
+        matches = [candidates[choice]]
+    slot, stack = matches[0]
+    before = (player.armor, player.max_hp, player.max_resource)
+    try:
+        player.unequip(slot)
+    except ValueError as error:
+        ui.echo(ui.style(f"  {error}", "bright_red"))
+        return
+    ui.echo(f"  Você guarda {stack.name()} na mochila.")
+    _show_changes(session, before)
+    session.dirty = True
+
+
+@command("usar", "u", "comer", "beber", "use", usage="usar [item]",
+         help="Come, bebe ou usa um item: pão e água restauram vida e mana fora de combate; poções, a qualquer hora.",
+         category="Combate e itens")
+def cmd_use(session: GameSession, args: List[str]) -> None:
+    usable = [stack for stack in session.player.inventory if stack.data.get("use")]
+    stack = _choose_stack(usable, " ".join(args), "usar", "Você não tem nada para usar.")
+    if stack is not None and session.use_item(stack):
+        _print_messages(session)
+
+
+@command("largar", "descartar", "jogar", "drop", usage="largar <item> [quantidade|tudo]",
+         help="Joga fora itens da mochila para abrir espaço (itens de missão não podem ser largados).",
+         category="Combate e itens")
+def cmd_drop(session: GameSession, args: List[str]) -> None:
+    quantity: Optional[int] = None          # sem número (ou "tudo"): a pilha inteira
+    if args and (args[-1].isdigit() or args[-1] in ("tudo", "todos", "todas")):
+        last = args.pop()
+        if last.isdigit():
+            quantity = int(last)
+            if quantity <= 0:
+                ui.echo(ui.style("  Quantidade inválida.", "gray"))
+                return
+    droppable = [stack for stack in session.player.inventory if stack.data["type"] != "missao"]
+    stack = _choose_stack(droppable, " ".join(args), "largar", "Não há nada que você possa largar.")
+    if stack is None:
+        return
+    amount = stack.quantity if quantity is None else min(quantity, stack.quantity)
+    if stack.data.get("value", 0) >= 50 and not ui.confirm(f"Largar {stack.name()} x{amount} de verdade?", False):
+        return
+    name = stack.name()
+    session.player.inventory.take(stack, amount)
+    ui.echo(f"  Você larga {name} x{amount}.")
+    session.dirty = True
+
+
+@command("comerciar", "loja", "negociar", "comprar", "vender", help="Compra e vende com um mercador que esteja aqui.",
+         category="Combate e itens")
+def cmd_trade(session: GameSession, args: List[str]) -> None:
+    merchants = [npc for npc in session.npcs_here() if npc.shop]
+    if not merchants:
+        ui.echo(ui.style("  Não há nenhum mercador aqui. (A Dona Graça atende no Mercado da Vila, de dia.)", "gray"))
+        return
+    shop.run(session, merchants[0].shop)
+
+
+@command("bestiario", "monstros", "b", help="Criaturas que você já enfrentou: fraquezas, abates e saques.",
+         category="Combate e itens")
+def cmd_bestiary(session: GameSession, args: List[str]) -> None:
+    _full_screen(session, screens.bestiary_screen)
+
+
+def _choose_stack(stacks: List[ItemStack], query: str, verb: str, empty: str) -> Optional[ItemStack]:
+    """Escolhe uma pilha da mochila pelo nome digitado (ou por um menu, se for ambíguo)."""
+    if not stacks:
+        ui.echo(ui.style(f"  {empty}", "gray"))
+        return None
+    key = normalize(query)
+    if key:
+        exact = [stack for stack in stacks if normalize(stack.data["name"]) == key]
+        matches = exact[:1] or [stack for stack in stacks if key in normalize(stack.data["name"])]
+        if not matches:
+            ui.echo(ui.style(f"  Você não tem nada chamado '{query}' para {verb}.", "gray"))
+            return None
+        if len(matches) == 1:
+            return matches[0]
+        stacks = matches
+    labels = [f"{stack.name()} x{stack.quantity}" for stack in stacks]
+    choice = ui.choose(labels, prompt=capitalize_first(verb), cancel="Cancelar")
+    return None if choice is None else stacks[choice]
+
+
+def _show_changes(session: GameSession, before: Tuple[float, int, int]) -> None:
+    player = session.player
+    after = (player.armor, player.max_hp, player.max_resource)
+    labels = ("Armadura", "Vida máxima", player.resource_data["name"] + " máxima")
+    changes = []
+    for label, old, new in zip(labels, before, after):
+        if new != old:
+            color = "bright_green" if new > old else "bright_red"
+            changes.append(f"{label} {int(old)} {ui.sym('arrow')} " + ui.style(str(int(new)), color))
+    if changes:
+        ui.echo("  " + "   ".join(changes))
 
 
 # --------------------------------------------------------------------------- personagem
@@ -281,6 +433,11 @@ def help_screen() -> None:
             ui.echo(f"    {ui.style(entry.usage, 'bright_white bold')}{aliases}")
             ui.echo_lines(ui.wrap(entry.help, width - 4, "        "))
         ui.echo()
+    ui.echo("  " + ui.style("Em combate", "bold bright_yellow"))
+    ui.echo_lines(ui.wrap(
+        "Use os números da barra de ações (1–9) para as habilidades, 'a' para atacar, 'd' para defender, 'i' para "
+        "itens, 'x' para analisar e 'f' para fugir. Digite '?' durante a luta para ver tudo.", width, "    "))
+    ui.echo()
     ui.echo_lines(ui.wrap(ui.style(
         "Dica: no mapa, '?' marca algo ainda não visitado e '!' marca pessoas — amarelo forte para quem você ainda "
         "não conhece. Examine os locais: muitos guardam pistas, e alguns, segredos.", "italic"), width, "  "))
@@ -294,6 +451,7 @@ def options_menu(settings: Settings) -> None:
         ("typewriter", "Narração letra a letra"),
         ("clear_screen", "Limpar a tela a cada passo"),
         ("autosave", "Salvamento automático (ao amanhecer e ao dormir)"),
+        ("timing", "Golpes e bloqueios no tempo certo (reflexos)"),
     ]
     while True:
         screens.section("OPÇÕES")

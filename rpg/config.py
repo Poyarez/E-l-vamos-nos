@@ -32,6 +32,7 @@ class Settings:
     typewriter: bool = True     # narração letra a letra
     clear_screen: bool = True   # redesenhar a tela a cada passo
     autosave: bool = True       # salvar ao amanhecer e ao dormir
+    timing: bool = True         # minijogo de reflexo para golpes e bloqueios perfeitos
 
     @classmethod
     def load(cls) -> "Settings":

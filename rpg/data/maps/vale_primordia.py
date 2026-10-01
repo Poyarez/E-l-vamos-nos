@@ -95,6 +95,15 @@ MAP = {
                     "Corvos levantam voo em bando, protestando contra a sua passagem."],
             "night": ["O vento faz o trigo sussurrar como uma multidão inquieta.",
                       "Uma lanterna solitária balança ao longe, perto do moinho."],
+            "encounters": {
+                "chance": 0.04, "night_bonus": 0.06,
+                "groups": [
+                    {"monsters": ["corvo_ladrao"], "weight": 4, "time": "dia"},
+                    {"monsters": ["javali_jovem"], "weight": 1},
+                    {"monsters": ["rato_gigante"], "weight": 4, "time": "noite"},
+                    {"monsters": ["rato_gigante", "rato_gigante"], "weight": 2, "time": "noite"},
+                ],
+            },
         },
         {
             "id": "lago_espelhado", "name": "Lago Espelhado", "rects": [(35, 21, 58, 28)], "xp": 30,
@@ -107,6 +116,29 @@ MAP = {
                       "Algo grande quebra a superfície do lago ao longe — e some."],
         },
         {
+            "id": "coracao_floresta", "name": "Coração da Floresta", "rects": [(1, 1, 9, 19)], "xp": 45,
+            "intro": ("Aqui a Floresta Sussurrante fica velha de verdade: troncos colossais, musgo até os joelhos "
+                      "e um silêncio que pesa. Os caçadores não passam do Carvalho Ancião — e os lobos sabem "
+                      "disso."),
+            "day": ["Um galho estala atrás de você. Quando você se vira, não há nada.",
+                    "Marcas de garras profundas riscam a casca de um tronco, na altura do seu rosto.",
+                    "A luz do dia chega aqui verde e fraca, filtrada por mil camadas de folhas."],
+            "night": ["Olhos azuis brilham entre as árvores e somem antes que você os conte.",
+                      "Os sussurros das copas parecem combinar algo entre si."],
+            "encounters": {
+                "chance": 0.11, "night_bonus": 0.06,
+                "groups": [
+                    {"monsters": ["lobo_cinzento"], "weight": 4},
+                    {"monsters": ["lobo_cinzento", "lobo_faminto"], "weight": 2},
+                    {"monsters": ["aranha_da_mata"], "weight": 3},
+                    {"monsters": ["aranha_da_mata", "aranha_da_mata"], "weight": 1},
+                    {"monsters": ["javali_espinhento"], "weight": 2},
+                    {"monsters": ["lobo_gelido"], "weight": 2, "if": {"not_flag": "presa_de_gelo_derrotado"}},
+                    {"monsters": ["espirito_sussurrante"], "weight": 3, "time": "noite"},
+                ],
+            },
+        },
+        {
             "id": "floresta_sussurrante", "name": "Floresta Sussurrante", "rects": [(1, 1, 19, 19)], "xp": 40,
             "intro": ("Uma floresta antiga e densa a oeste do vale. O nome vem do vento nas copas, que soa "
                       "como vozes — mas os caçadores juram que, às vezes, as vozes dizem nomes."),
@@ -115,6 +147,17 @@ MAP = {
                     "Um pica-pau martela um tronco em algum lugar próximo."],
             "night": ["Uivos distantes respondem uns aos outros pela floresta.",
                       "Os sussurros das copas ficam mais altos no escuro, mais insistentes."],
+            "encounters": {
+                "chance": 0.08, "night_bonus": 0.06,
+                "groups": [
+                    {"monsters": ["lobo_faminto"], "weight": 4},
+                    {"monsters": ["lobo_faminto", "lobo_faminto"], "weight": 2},
+                    {"monsters": ["lobo_cinzento"], "weight": 2, "levels": [3, 4]},
+                    {"monsters": ["javali_espinhento"], "weight": 2, "levels": [3, 4]},
+                    {"monsters": ["aranha_da_mata"], "weight": 2, "levels": [3, 4]},
+                    {"monsters": ["espirito_sussurrante"], "weight": 3, "time": "noite", "levels": [4, 5]},
+                ],
+            },
         },
         {
             "id": "pantano_lodo_negro", "name": "Pântano de Lodo-Negro", "rects": [(1, 20, 20, 28)], "xp": 40,
@@ -137,6 +180,13 @@ MAP = {
                     "Uma lontra desliza para dentro da água ao ouvir seus passos."],
             "night": ["O murmúrio do ribeirão é o único som da noite.",
                       "A água reflete a lua em fragmentos dançantes."],
+            "encounters": {
+                "chance": 0.05, "night_bonus": 0.02,
+                "groups": [
+                    {"monsters": ["lagarto_ribeirao"], "weight": 3},
+                    {"monsters": ["corvo_ladrao"], "weight": 1, "time": "dia"},
+                ],
+            },
         },
         {
             "id": "prados_do_norte", "name": "Prados do Norte", "rects": [(26, 0, 43, 10)], "xp": 30,
@@ -147,6 +197,14 @@ MAP = {
                     "Abelhas zumbem de flor em flor, carregadas de pólen."],
             "night": ["As estrelas parecem mais próximas aqui, quase ao alcance da mão.",
                       "O vento frio das montanhas faz você apertar a capa contra o corpo."],
+            "encounters": {
+                "chance": 0.05, "night_bonus": 0.03,
+                "groups": [
+                    {"monsters": ["corvo_ladrao"], "weight": 4},
+                    {"monsters": ["javali_jovem"], "weight": 3},
+                    {"monsters": ["corvo_ladrao", "corvo_ladrao"], "weight": 1},
+                ],
+            },
         },
         {
             "id": "caminho_do_sul", "name": "Caminho do Sul", "rects": [(21, 21, 34, 29)], "xp": 25,
@@ -156,6 +214,14 @@ MAP = {
                     "Um bando de pardais se banha na poeira da estrada."],
             "night": ["A estrada para o sul está deserta e silenciosa.",
                       "Ao longe, no Portão Sul, uma fogueira de vigia crepita."],
+            "encounters": {
+                "chance": 0.04, "night_bonus": 0.03,
+                "groups": [
+                    {"monsters": ["corvo_ladrao"], "weight": 2, "time": "dia"},
+                    {"monsters": ["javali_jovem"], "weight": 2},
+                    {"monsters": ["rato_gigante"], "weight": 2, "time": "noite"},
+                ],
+            },
         },
     ],
     # ------------------------------------------------------------------ locais notáveis
@@ -632,27 +698,33 @@ MAP = {
     "portals": [
         {
             "id": "passo_norte_saida", "x": 40, "y": 0, "direction": "n", "label": "Passo do Norte",
+            "locked": True,
             "locked_text": ("Você escala as primeiras pedras do deslizamento, mas logo percebe que é impossível: "
                             "os blocos são do tamanho de casas, e qualquer passo em falso provoca uma nova "
                             "avalanche. O caminho para Pedravale está fechado — por enquanto."),
         },
         {
             "id": "portao_sul_saida", "x": 30, "y": 29, "direction": "s", "label": "Rota dos Mercadores",
+            "locked": True,
             "locked_text": ("Um dos guardas ergue a lança e balança a cabeça: \"Ninguém passa, ordens da Capitã. O "
                             "Bando do Corvo está na estrada. Quando a rota for liberada, você será a primeira "
                             "pessoa a saber.\""),
         },
         {
             "id": "mina_entrada", "x": 53, "y": 12, "verb": "entrar", "label": "Mina de Ferro-Velho",
+            "locked": True,
             "locked_text": ("Você dá alguns passos para dentro da mina, e o cântico agudo lá no fundo para de "
                             "repente. Dezenas de olhinhos brilham na escuridão. Sem companhia, sem preparo e sem "
                             "saber o que enfrenta, avançar seria loucura. Melhor voltar com mais experiência."),
         },
         {
             "id": "toca_lobos_entrada", "x": 3, "y": 15, "verb": "entrar", "label": "Toca dos Lobos",
+            "target": ("toca_dos_lobos", 4, 13), "min_level": 4,
             "locked_text": ("Você se agacha para entrar e um rosnado grave vem do escuro. Dois olhos azuis como "
                             "gelo — muito acima de onde deveriam estar os olhos de um lobo — se acendem lá no "
-                            "fundo. Seu instinto grita para recuar. Agora não."),
+                            "fundo. Seu instinto grita para recuar. Ainda não. (Recomendado: nível 4 ou mais.)"),
+            "travel_text": ("Você se abaixa e entra na toca. O cheiro de fera e de carne velha é sufocante, e o ar "
+                            "fica mais frio a cada passo."),
         },
         {
             "id": "gruta_entrada", "x": 23, "y": 3, "verb": "entrar", "label": "Gruta atrás do Véu",

@@ -1,42 +1,9 @@
 """Regras da exploração: movimento, tempo, visão, descobertas, segredos, NPCs e comandos."""
 
-import contextlib
-import io
 import unittest
 
-from rpg import commands, npcs, ui
-from rpg.time_system import MINUTES_PER_DAY
-from tests.helpers import make_session
-
-
-def place(session, x, y, map_id=None):
-    """Teleporta o herói (para testar um ponto específico do mapa)."""
-    if map_id:
-        session.state.map_id = map_id
-    session.state.x, session.state.y = x, y
-    session.arrive()
-
-
-def set_hour(session, hour):
-    clock = session.clock
-    clock.minutes = (clock.day - 1) * MINUTES_PER_DAY + hour * 60
-
-
-class QuietTestCase(unittest.TestCase):
-    """Silencia a saída de texto e permite simular o que o jogador digita."""
-
-    def setUp(self):
-        self._stdout = contextlib.redirect_stdout(io.StringIO())
-        self.output = self._stdout.__enter__()
-        self._old_input = ui.input_func
-
-    def tearDown(self):
-        ui.input_func = self._old_input
-        self._stdout.__exit__(None, None, None)
-
-    def type_in(self, *answers):
-        queue = iter(answers)
-        ui.input_func = lambda _prompt: next(queue)
+from rpg import commands, npcs
+from tests.helpers import QuietTestCase, make_session, place, set_hour
 
 
 class MovementTest(QuietTestCase):

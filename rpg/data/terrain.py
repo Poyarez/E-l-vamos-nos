@@ -55,7 +55,7 @@ TERRAIN = {
         "name": "Floresta", "color": "green", "passable": True, "cost": 15, "vision": 0,
         "day": [
             "Carvalhos e faias formam um teto verde; a luz chega ao chão em fachos de poeira dourada.",
-            "Raízes retorcidas atravessam a trilha. Um esquilo o observa, desconfiado, de um galho.",
+            "Raízes retorcidas atravessam a trilha. Um esquilo observa você, desconfiado, de um galho.",
             "O chão é um tapete macio de folhas secas que estalam a cada passo.",
             "Cogumelos alaranjados crescem em um tronco caído, coberto de musgo.",
             "Pássaros invisíveis trocam cantos entre as copas. O ar é fresco e úmido.",
@@ -248,6 +248,28 @@ TERRAIN = {
         "day": [
             "Relevos cobrem cada palmo da rocha: luas, olhos e figuras de mãos dadas.",
             "Os entalhes são precisos como joalheria. Quem os fez tinha séculos de paciência.",
+        ],
+    },
+    "chao_toca": {
+        "name": "Chão da toca", "color": "yellow", "passable": True, "cost": 10, "vision": 0,
+        "day": [
+            "Terra batida e úmida, coberta de pegadas de lobo — dezenas, umas sobre as outras.",
+            "O chão está forrado de pelos e folhas secas arrastadas para dentro pelas feras.",
+            "Um fio de água escorre pela parede e some numa fresta do chão.",
+        ],
+    },
+    "ossos": {
+        "name": "Ossada", "color": "white", "passable": True, "cost": 12, "vision": 0,
+        "day": [
+            "Ossos estalam sob suas botas: costelas, crânios pequenos, um chifre de cervo partido.",
+            "Uma pilha de ossos roídos, alguns ainda com restos de carne.",
+        ],
+    },
+    "raizes": {
+        "name": "Raízes pendentes", "color": "green", "passable": True, "cost": 14, "vision": -1,
+        "day": [
+            "Raízes grossas pendem do teto como cortinas; é preciso afastá-las com as mãos para passar.",
+            "Raízes da floresta lá em cima atravessam o túnel, retorcidas como dedos.",
         ],
     },
     "porta_selada": {

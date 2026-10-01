@@ -1,13 +1,18 @@
-"""Itens: fábrica a partir de ``rpg.data.items``, pilhas de itens e a mochila."""
+"""Itens: fábrica a partir de ``rpg.data.items``, pilhas, mochila, consumíveis e descrições."""
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, List, Mapping, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Mapping, Optional
 
 from . import ui
 from .data.appearance import ARMOR_COLORS
-from .data.items import ITEMS, QUALITIES
+from .data.classes import STATS
+from .data.items import ITEM_TYPES, ITEMS, QUALITIES, SLOTS, SUBTYPES
+
+if TYPE_CHECKING:
+    from .player import Player
 
 DEFAULT_BAG_SLOTS = 16
 
@@ -91,6 +96,15 @@ class Inventory:
             remaining -= moved
         return remaining
 
+    def take(self, stack: ItemStack, quantity: int = 1) -> None:
+        """Retira unidades de uma pilha específica (preservando a tinta das demais)."""
+        stack.quantity -= quantity
+        if stack.quantity <= 0:
+            self.stacks.remove(stack)
+
+    def find(self, item_id: str) -> Optional[ItemStack]:
+        return next((stack for stack in self.stacks if stack.item_id == item_id), None)
+
     def remove(self, item_id: str, quantity: int = 1) -> bool:
         """Remove itens (das últimas pilhas para as primeiras). Falha se não houver o bastante."""
         if self.count(item_id) < quantity:
@@ -115,3 +129,49 @@ class Inventory:
         data = data or {}
         stacks = [ItemStack.from_dict(entry) for entry in data.get("items", []) if entry.get("id") in ITEMS]
         return cls(int(data.get("capacity", DEFAULT_BAG_SLOTS)), stacks)
+
+
+# --------------------------------------------------------------------------- uso e descrição
+
+def apply_consumable(player: "Player", item_id: str, rng: Optional[random.Random] = None,
+                     max_hp: Optional[int] = None) -> str:
+    """Consome uma unidade do item e aplica o efeito. Devolve a mensagem para o jogador."""
+    rng = rng or random.Random()
+    item = get_item(item_id)
+    use = item["use"]
+    player.inventory.remove(item_id, 1)
+    parts = [use.get("verb") or f"Você usa {item['name']}."]
+    cap = max_hp if max_hp is not None else player.max_hp
+    heal = (rng.randint(*use["heal"]) if "heal" in use else 0) + round(cap * use.get("heal_pct", 0) / 100)
+    if heal:
+        before = player.hp
+        player.hp = min(cap, player.hp + heal)
+        parts.append(f"+{player.hp - before} de vida.")
+    if player.resource_id == "mana":
+        mana = (rng.randint(*use["mana"]) if "mana" in use else 0)
+        mana += round(player.max_resource * use.get("mana_pct", 0) / 100)
+        if mana:
+            before = player.resource
+            player.resource = min(player.max_resource, player.resource + mana)
+            parts.append(f"+{player.resource - before} de mana.")
+    return " ".join(parts)
+
+
+def item_summary(item_id: str) -> str:
+    """Resumo técnico: "Cabeça · Couro · Armadura 24 · +2 AGI +1 VIG"."""
+    item = get_item(item_id)
+    parts = []
+    if item.get("slot"):
+        parts.append(SLOTS[item["slot"]])
+    if item.get("subtype"):
+        parts.append(SUBTYPES[item["subtype"]] + (" (duas mãos)" if item.get("two_handed") else ""))
+    elif not item.get("slot"):
+        parts.append(ITEM_TYPES.get(item["type"], item["type"]))
+    if item.get("damage"):
+        parts.append(f"Dano {item['damage'][0]}–{item['damage'][1]}")
+    if item.get("armor"):
+        parts.append(f"Armadura {item['armor']}")
+    stats = item.get("stats", {})
+    if stats:
+        parts.append(" ".join(f"+{value} {STATS[stat]['short']}" for stat, value in stats.items()))
+    return " · ".join(parts)

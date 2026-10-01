@@ -11,7 +11,8 @@ Estrutura de um nó:
   ``options`` — escolhas: ``{"text", "next", "if"}`` (``next: None`` encerra a conversa).
   ``next``    — sem opções: volta automaticamente para este nó.
   ``effects`` — ao exibir o nó: ``set_flag``, ``journal``, ``xp``, ``give_item``,
-                ``give_copper`` e ``restore``.
+                ``take_item``, ``give_copper``, ``restore`` e ``open_shop`` (abre a loja do NPC,
+                definida em ``shop``, assim que a conversa termina).
 
 Condições (``if``): ``flag``, ``not_flag``, ``journal``, ``discovered``, ``class``,
 ``moral``, ``law``, ``period``, ``night``, ``met`` e ``min_level``.
@@ -178,6 +179,12 @@ NPCS = {
                     {"text": "Quem é Tomé?", "next": "tome"},
                     {"text": "Vi a marca de uma bota humana na Toca dos Lobos.", "next": "toca",
                      "if": {"discovered": "toca_lobos"}},
+                    {"text": "Encontrei esta aljava na toca. Tem as iniciais R. V.", "next": "aljava",
+                     "if": {"flag": "toca_aljava", "not_flag": "renna_aljava"}},
+                    {"text": "O domador da toca usava esta coleira: uma lua cortada.", "next": "coleira",
+                     "if": {"flag": "varek_derrotado", "not_flag": "renna_viu_coleira"}},
+                    {"text": "O Alfa Branco está morto. A Toca dos Lobos está livre.", "next": "alfa",
+                     "if": {"flag": "presa_de_gelo_derrotado", "not_flag": "renna_recompensa_alfa"}},
                     {"text": "Até mais, capitã.", "next": None},
                 ],
             },
@@ -240,6 +247,105 @@ NPCS = {
                         "text": ("Junto às pegadas da fera branca havia a marca de uma bota humana. A Capitã Renna "
                                  "suspeita que alguém controla os lobos.")},
                 },
+                "next": "inicio",
+            },
+            "aljava": {
+                "text": [
+                    ("*Renna pega a aljava com as duas mãos. Por um longo momento, ela não diz nada. Quando "
+                     "fala, a voz falha.*"),
+                    ("Rurik. Meu irmão mais novo. Era um dos dois caçadores que não voltaram. Fui eu que ensinei "
+                     "ele a atirar..."),
+                    ("*Ela passa os dedos pelas penas azuis da última flecha e respira fundo, voltando a ser a "
+                     "capitã.* Obrigada, {nome}. Pelo menos agora eu sei. Pelo menos agora ele pode ter um túmulo."),
+                ],
+                "effects": {
+                    "take_item": ["aljava_gravada", 1],
+                    "set_flag": "renna_aljava",
+                    "xp": 150,
+                    "journal": {
+                        "id": "rurik_valbrand", "title": "Rurik Valbrand",
+                        "text": ("A aljava encontrada na Galeria dos Ossos pertencia a Rurik Valbrand, irmão da "
+                                 "Capitã Renna e um dos caçadores desaparecidos na Floresta Sussurrante.")},
+                },
+                "next": "inicio",
+            },
+            "coleira": {
+                "text": [
+                    ("*Renna examina a coleira e passa o polegar sobre a placa de prata. O rosto dela "
+                     "endurece.*"),
+                    ("A lua cortada. Já vi esse símbolo riscado nas pedras das ruínas e em árvores mortas. Achei "
+                     "que fosse coisa de moleque. Não é."),
+                    ("Alguém está domando as feras do vale, {tratamento} — e alguém está mandando nesse alguém. "
+                     "Fique de olhos abertos. E não confie em ninguém de capa negra."),
+                ],
+                "effects": {
+                    "set_flag": "renna_viu_coleira",
+                    "journal": {
+                        "id": "pista_culto", "title": "O culto da Lua Cortada",
+                        "text": ("Varek, o Domador, usava a lua cortada ao meio. A Capitã Renna acredita que há "
+                                 "alguém acima dele, comandando as feras do vale.")},
+                },
+                "next": "inicio",
+            },
+            "alfa": {
+                "text": [
+                    ("*Renna fica em silêncio por um longo instante. Depois, devagar, tira a mão do cabo da "
+                     "espada.*"),
+                    ("Presa-de-Gelo... morto. Por você. *Ela solta uma risada curta, incrédula.* Os caçadores vão "
+                     "poder voltar para a floresta. As crianças vão poder brincar perto da orla de novo."),
+                    ("Tome. É pouco, mas é o que o vale pode pagar. E saiba: de hoje em diante, a guarda de "
+                     "Primórdia confia em você."),
+                ],
+                "effects": {"set_flag": "renna_recompensa_alfa", "give_copper": 500, "xp": 250},
+                "next": "inicio",
+            },
+        },
+    },
+    # ================================================================== DONA GRAÇA, A QUITANDEIRA
+    "graca": {
+        "name": "Dona Graça",
+        "short": "Graça",
+        "title": "Quitandeira do Mercado",
+        "color": "bright_green",
+        "description": ("Uma senhora de lenço florido na cabeça, avental cheio de bolsos e o sorriso de quem já "
+                        "viu de tudo — e vendeu metade."),
+        "map": "vale_primordia",
+        "shop": "graca",
+        "schedule": [{"periods": ["manha", "tarde"], "x": 32, "y": 16}],
+        "dialogue": {
+            "inicio": {
+                "text": [
+                    {"if": {"met": False}, "text": "*Ela ajeita as maçãs na banca e abre um sorriso largo.*"},
+                    {"if": {"met": False}, "text": (
+                        "Freguesia nova! Graça, às suas ordens. Pão, água, poções, tochas... E compro o que você "
+                        "trouxer do mato, desde que esteja inteiro. Ou quase.")},
+                    {"if": {"met": True}, "text": "Voltou, {nome}! Trouxe peles? Dentes? Fofoca? Eu compro tudo."},
+                ],
+                "options": [
+                    {"text": "Quero negociar.", "next": "negociar"},
+                    {"text": "O que você compra?", "next": "compra"},
+                    {"text": "Como anda o mercado?", "next": "mercado"},
+                    {"text": "Até mais, Dona Graça.", "next": None},
+                ],
+            },
+            "negociar": {
+                "text": ["Pois não! Vamos ver o que temos hoje..."],
+                "effects": {"open_shop": True},
+            },
+            "compra": {
+                "text": [
+                    ("Peles, carnes, dentes, teias... tudo o que os bichos da floresta deixam para trás. Os "
+                     "curtidores e alquimistas de Alvorada pagam bem — quando a estrada está aberta. Até lá, eu "
+                     "estoco."),
+                    "*Ela baixa a voz.* E se achar alguma joia ou arma boa, pense duas vezes antes de vender. Lá fora, ela pode salvar a sua pele.",
+                ],
+                "next": "inicio",
+            },
+            "mercado": {
+                "text": [
+                    ("Fraco, {tratamento}. Sem as caravanas do sul, vendo pão para quem tem dinheiro e fiado para "
+                     "quem não tem. Se as coisas não melhorarem, só os lobos vão engordar neste inverno."),
+                ],
                 "next": "inicio",
             },
         },

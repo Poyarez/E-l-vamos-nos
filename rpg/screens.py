@@ -6,11 +6,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List
 
 from . import mapview, ui, world
-from .combat import element_label
+from .combat import Hero, armor_mitigation, describe_knowledge, element_label
 from .config import GAME_SUBTITLE, GAME_VERSION
 from .data.appearance import ALIGNMENTS
 from .data.classes import CLASSES, RESOURCES, STATS, TALENT_START_LEVEL
-from .data.items import ITEM_TYPES, SLOTS
+from .data.items import ITEM_TYPES, ITEMS, SLOTS
+from .data.monsters import FAMILIES, MONSTERS
+from .items import item_name, item_summary
+from .monsters import con_color, create_monster
 from .player import LevelUp, Player
 from .skills import SKILLS, level_progress
 from .utils import format_duration, format_money
@@ -109,7 +112,7 @@ def hud(session: "GameSession", width: int) -> List[str]:
 
 # --------------------------------------------------------------------------- exploração
 
-def location_panel(view: "LocationView", width: int) -> List[str]:
+def location_panel(view: "LocationView", width: int, player_level: int = 1) -> List[str]:
     rows = [ui.style(f"{ui.sym('diamond')} {view.title.upper()}", "bold bright_yellow"),
             ui.style("  " + view.subtitle, "gray"), ""]
     for paragraph in view.paragraphs:
@@ -126,6 +129,11 @@ def location_panel(view: "LocationView", width: int) -> List[str]:
         rows.extend(ui.wrap(ui.style("Passagem: ", "bright_cyan") + passage, width))
     if view.can_rest:
         rows.extend(ui.wrap(ui.style("Descanso: ", "bright_blue") + "dá para dormir aqui ('descansar').", width))
+    if view.danger:
+        low, high = view.danger
+        levels = f"nível {low}" if low == high else f"níveis {low}–{high}"
+        rows.extend(ui.wrap(ui.style("Perigo: ", "bright_red") + "criaturas de "
+                            + ui.style(levels, con_color(player_level, high)) + " por aqui.", width))
     exits = f" {ui.sym('dot')} ".join(view.exits) if view.exits else "nenhum"
     rows.extend(ui.wrap(ui.style("Caminhos: ", "bold") + exits, width))
     return rows
@@ -140,13 +148,13 @@ def render_location(session: "GameSession") -> None:
     map_width = mapview.minimap_width()
     markers = ui.style("@ você  ! pessoa  * local  ? novo", "gray")
     if width >= map_width + 42:
-        panel = location_panel(view, width - map_width - 3)
+        panel = location_panel(view, width - map_width - 3, session.player.level)
         ui.echo_lines(ui.side_by_side(map_rows + [" " + markers], panel, map_width, gap=2))
     else:
         ui.echo_lines(map_rows)
         ui.echo(" " + markers)
         ui.echo()
-        ui.echo_lines(location_panel(view, width - 2))
+        ui.echo_lines(location_panel(view, width - 2, session.player.level))
     show_messages(session)
 
 
@@ -194,8 +202,21 @@ def character_sheet(session: "GameSession") -> None:
         bonus = player.gear_bonus(stat)
         extra = ui.style(f" (+{bonus})", "bright_green") if bonus else ""
         left.append(f"{data['name']:<10} {player.stat(stat):>3}{extra}")
-    left += ["", hp_bar(player, 10), resource_bar(player, 10), xp_bar(player, 10), "",
-             f"Armadura   {player.armor:>3}"]
+    hero = Hero(player)
+    weapon = hero.weapon("arma")
+    low, high = weapon["damage"] if weapon else (1, 3)
+    bonus = hero.attack_power / 5
+    combat_stats = [("Armadura", f"{hero.armor:.0f}"),
+                    ("Redução física", f"{armor_mitigation(hero.armor, player.level):.0%}"),
+                    ("Dano da arma", f"{low + bonus:.0f}–{high + bonus:.0f}"),
+                    ("Poder de ataque", f"{hero.attack_power:.0f}"),
+                    ("Crítico", f"{hero.crit_chance:.1%}")]
+    if hero.spell_power:
+        combat_stats += [("Poder mágico", f"{hero.spell_power:.0f}"),
+                         ("Crítico mágico", f"{hero.spell_crit_chance:.1%}")]
+    combat_stats.append(("Esquiva", f"{hero.dodge:.1%}"))
+    left += ["", hp_bar(player, 10), resource_bar(player, 10), xp_bar(player, 10), ""]
+    left += [f"{label:<16}{value:>6}" for label, value in combat_stats]
 
     right = [ui.style("EQUIPAMENTO", "bold")]
     for slot, label in SLOTS.items():
@@ -233,10 +254,45 @@ def inventory_screen(session: "GameSession") -> None:
         quantity = ui.style(f" x{stack.quantity}", "bright_white") if stack.quantity > 1 else ""
         kind = ITEM_TYPES.get(stack.data["type"], stack.data["type"])
         ui.echo(f"  {ui.style(f'{number:>2}.', 'gray')} {stack.name()}{quantity}  " + ui.style(f"[{kind}]", "gray"))
+        if stack.data.get("slot"):
+            problem = player.equip_problem(stack.item_id)
+            note = ui.style(f"  ({problem})", "red") if problem else ui.style("  ('equipar' para usar)", "gray")
+            ui.echo_lines(ui.wrap(ui.style(item_summary(stack.item_id), "bright_white") + note, width, "      "))
         ui.echo_lines(ui.wrap(ui.style(stack.data["description"], "yellow italic"), width, "      "))
     ui.echo()
     ui.echo(f"  {ui.style('Bolsa:', 'bold')} {ui.style(format_money(player.copper), 'bright_yellow')}"
             + ui.style("   (o = ouro, p = prata, c = cobre)", "gray"))
+    ui.echo()
+
+
+def bestiary_screen(session: "GameSession") -> None:
+    state, player = session.state, session.player
+    section(f"BESTIÁRIO  {ui.sym('dot')}  {len(state.bestiary)} criaturas encontradas")
+    width = screen_width() - 6
+    if not state.bestiary:
+        ui.echo_lines(ui.wrap("Nenhuma criatura registrada ainda. As que você enfrentar aparecerão aqui, com as "
+                              "fraquezas que descobrir.", width, "  "))
+    for template_id in sorted(state.bestiary, key=lambda tid: MONSTERS[tid]["levels"][0]):
+        entry = state.bestiary[template_id]
+        data = MONSTERS[template_id]
+        low, high = data["levels"]
+        levels = f"nível {low}" if low == high else f"níveis {low}–{high}"
+        family = FAMILIES.get(data.get("family", ""), "")
+        kills = entry["kills"]
+        tally = "nenhum abate" if not kills else f"{kills} {'abate' if kills == 1 else 'abates'}"
+        ui.echo(f"  {ui.style(data['name'], 'bold')}  " + ui.style(levels, con_color(player.level, high))
+                + ui.style(f"  {ui.sym('dot')}  {family}  {ui.sym('dot')}  {tally}", "gray"))
+        facts = set(entry.get("facts", []))
+        sample = create_monster(template_id, low)
+        ui.echo_lines(ui.wrap(describe_knowledge(sample, facts)[0], width, "      "))
+        if entry.get("loot"):
+            names = ", ".join(item_name(item_id) for item_id in entry["loot"] if item_id in ITEMS)
+            ui.echo_lines(ui.wrap(ui.style("Saque visto: ", "gray") + names, width, "      "))
+        ui.echo_lines(ui.wrap(ui.style(data.get("description", ""), "italic"), width, "      "))
+        ui.echo()
+    ui.echo_lines(ui.wrap(ui.style(
+        "Descubra fraquezas acertando os elementos certos ou usando 'x' (analisar) durante a luta.", "gray"),
+        width, "  "))
     ui.echo()
 
 

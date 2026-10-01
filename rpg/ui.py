@@ -8,6 +8,7 @@ aceita cores, Unicode ou o efeito de máquina de escrever: basta usar ``style``,
 from __future__ import annotations
 
 import os
+import random
 import re
 import shutil
 import sys
@@ -37,7 +38,7 @@ _SYMBOLS = {
     "full": ("█", "#"), "empty": ("░", "."),
     "bullet": ("•", "*"), "diamond": ("◆", "*"), "star": ("✦", "*"), "star_off": ("✧", "-"), "arrow": ("»", ">"),
     "sun": ("☼", "*"), "moon": ("☾", "("), "dot": ("·", "."), "heart": ("♥", "+"),
-    "up": ("▲", "^"), "check": ("✔", "v"), "cross": ("✖", "x"), "ellipsis": ("…", "."),
+    "up": ("▲", "^"), "check": ("✔", "v"), "cross": ("✖", "x"), "ellipsis": ("…", "."), "sword": ("†", "+"),
 }
 
 
@@ -413,3 +414,89 @@ def choose(options: Sequence[str], prompt: str = "Escolha", cancel: Optional[str
             if len(matches) == 1:
                 return matches[0]
         echo(style("  Opção inválida. Digite o número de uma das opções.", "gray"))
+
+
+# --------------------------------------------------------------------------- reflexos
+
+#: Janela (em segundos, depois do sinal) para um golpe ou bloqueio perfeito.
+PERFECT_WINDOW = (0.08, 0.45)
+GOOD_WINDOW = 0.8
+
+
+def timed_press(intro: str, rng: Optional[random.Random] = None) -> Optional[str]:
+    """Minijogo de reflexo (estilo Sea of Stars): apertar Enter logo depois do sinal ✦.
+
+    Devolve ``"perfeito"``, ``"bom"``, ``"lento"`` ou ``"cedo"`` (Enter antes do sinal).
+    Sem um terminal interativo (entrada redirecionada, testes), devolve ``None``.
+    """
+    if not display.interactive:
+        return None
+    rng = rng or random.Random()
+    _flush_input()
+    sys.stdout.write("  " + intro + " ")
+    sys.stdout.flush()
+    if _input_ready(rng.uniform(0.7, 1.7)):
+        _read_line()
+        echo(style("  Cedo demais!", "gray"))
+        return "cedo"
+    sys.stdout.write(style(f"{sym('star')} AGORA!", "bright_yellow bold") + " ")
+    sys.stdout.flush()
+    start = time.monotonic()
+    _read_line()
+    elapsed = time.monotonic() - start
+    if elapsed < PERFECT_WINDOW[0]:
+        result = "cedo"
+    elif elapsed <= PERFECT_WINDOW[1]:
+        result = "perfeito"
+    elif elapsed <= GOOD_WINDOW:
+        result = "bom"
+    else:
+        result = "lento"
+    labels = {"perfeito": style("PERFEITO!", "bright_green bold"), "bom": "Bom.", "lento": style("Lento...", "gray"),
+              "cedo": style("Cedo demais!", "gray")}
+    echo(f"  {labels[result]} " + style(f"({elapsed:.2f}s)", "gray"))
+    return result
+
+
+def _read_line() -> str:
+    try:
+        return input_func("")
+    except EOFError:
+        raise InputClosed() from None
+
+
+def _input_ready(timeout: float) -> bool:
+    """Espera até ``timeout`` segundos; ``True`` se o jogador apertou Enter antes disso."""
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            deadline = time.monotonic() + timeout
+            while time.monotonic() < deadline:
+                if msvcrt.kbhit():  # type: ignore[attr-defined]
+                    return True
+                time.sleep(0.01)
+            return False
+        import select
+
+        ready, _w, _x = select.select([sys.stdin], [], [], timeout)
+        return bool(ready)
+    except (OSError, ValueError, ImportError):
+        time.sleep(timeout)
+        return False
+
+
+def _flush_input() -> None:
+    """Descarta teclas apertadas antes da hora (para ninguém "pré-apertar" o Enter)."""
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            while msvcrt.kbhit():  # type: ignore[attr-defined]
+                msvcrt.getwch()  # type: ignore[attr-defined]
+        else:
+            import termios
+
+            termios.tcflush(sys.stdin, termios.TCIFLUSH)
+    except (OSError, ValueError, ImportError):
+        pass
