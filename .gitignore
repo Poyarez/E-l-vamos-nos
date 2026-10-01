@@ -1,0 +1,13 @@
+# Saves e preferências do jogador
+saves/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Editores e sistema
+.vscode/
+.idea/
+.DS_Store

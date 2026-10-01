@@ -1,0 +1,462 @@
+"""Sessão de jogo: as regras da exploração.
+
+Movimento, visão (névoa de guerra), descobertas com experiência, passagem do tempo,
+passagens entre mapas, segredos, descanso e viagem rápida. Os comandos (``rpg.commands``)
+chamam estes métodos; as telas (``rpg.screens``) desenham o resultado.
+"""
+
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import List, Optional, Set, Tuple
+
+from . import save_system, ui, world
+from .config import Settings
+from .items import item_name
+from .npcs import NPC, npcs_at
+from .player import LevelUp
+from .skills import SKILLS
+from .state import GameState
+from .utils import format_money, stable_choice, stable_hash
+
+Coord = Tuple[int, int]
+
+PERIOD_MESSAGES = {
+    "madrugada": "A madrugada avança, fria e silenciosa.",
+    "amanhecer": "O céu clareia a leste: está amanhecendo.",
+    "manha": "O sol já vai alto. É manhã.",
+    "tarde": "O sol passa do meio do céu. É tarde.",
+    "entardecer": "O sol se põe atrás das montanhas, tingindo o vale de laranja.",
+    "noite": "A noite cai sobre o vale.",
+}
+
+BLOCKED_TEXT = {
+    "agua": "As águas são fundas e rápidas demais para atravessar aqui.",
+    "montanha": "Paredões de rocha bloqueiam o caminho.",
+    "cachoeira": "A cachoeira despenca sobre o penhasco; não há como seguir por aí.",
+    "parede_gruta": "Rocha maciça bloqueia o caminho.",
+    "lago_subterraneo": "A água negra do lago subterrâneo é funda e gelada demais.",
+    "porta_selada": "A porta de pedra não se move nem um milímetro.",
+}
+
+# eventos que interrompem uma caminhada de vários passos
+EVENT_DISCOVERY = "descoberta"
+EVENT_NPC = "npc"
+EVENT_PASSAGE = "passagem"
+
+
+@dataclass
+class LocationView:
+    """Tudo o que a tela de exploração precisa mostrar sobre o lugar atual."""
+
+    title: str
+    subtitle: str
+    paragraphs: List[str]
+    npcs: List[NPC] = field(default_factory=list)
+    resources: List[str] = field(default_factory=list)
+    exits: List[str] = field(default_factory=list)
+    passages: List[str] = field(default_factory=list)
+    can_rest: bool = False
+
+
+class GameSession:
+    def __init__(self, state: GameState, settings: Settings) -> None:
+        self.state = state
+        self.settings = settings
+        self.messages: List[str] = []
+        self.level_ups: List[LevelUp] = []
+        self.visible: Set[Coord] = set()
+        self.events: Set[str] = set()
+        self.needs_redraw = True
+        self.running = True
+        self.dirty = False
+        self.pending_autosave = False
+        self._timer = time.monotonic()
+        self._region_id: Optional[str] = None
+
+    # ------------------------------------------------------------------ atalhos
+
+    @property
+    def map(self) -> world.GameMap:
+        return world.get_map(self.state.map_id)
+
+    @property
+    def player(self):
+        return self.state.player
+
+    @property
+    def clock(self):
+        return self.state.clock
+
+    def notify(self, text: str) -> None:
+        self.messages.append(text)
+
+    def pop_messages(self) -> List[str]:
+        messages, self.messages = self.messages, []
+        return messages
+
+    # ------------------------------------------------------------------ início
+
+    def begin(self, new_game: bool = False) -> None:
+        """Prepara a sessão. Num jogo novo, o lugar de partida já conta como conhecido."""
+        if new_game:
+            region = self.map.region_at(*self.state.pos)
+            if region:
+                self.state.regions.add(region.id)
+            landmark = self.map.landmark_at(*self.state.pos)
+            if landmark:
+                self.state.discovered.add(landmark.id)
+        self.update_vision()
+        region = self.map.region_at(*self.state.pos)
+        self._region_id = region.id if region else None
+        self.needs_redraw = True
+
+    # ------------------------------------------------------------------ tempo
+
+    def advance_time(self, minutes: int) -> None:
+        change = self.clock.advance(minutes)
+        if change.dawns:
+            self.notify(ui.style(f"{ui.sym('sun')} Amanhece o Dia {self.clock.day}. "
+                                 f"Clima: {self.clock.weather['name']}.", "bright_yellow"))
+            if self.settings.autosave:
+                self.pending_autosave = True
+        elif change.period_changed and self.map.outdoor:
+            self.notify(ui.style(PERIOD_MESSAGES[change.period_changed], "gray italic"))
+        self.dirty = True
+
+    def wait(self, hours: int) -> None:
+        hours = max(1, min(24, hours))
+        self.advance_time(hours * 60)
+        self.update_vision()
+        self.notify(f"Você espera {hours} {'hora' if hours == 1 else 'horas'}. "
+                    f"Agora são {self.clock.time_str} ({self.clock.period_name}).")
+        self.needs_redraw = True
+
+    def rest(self) -> None:
+        landmark = self.map.landmark_at(*self.state.pos)
+        player = self.player
+        if landmark and landmark.rest:
+            if 7 <= self.clock.hour < 17:
+                self.advance_time(120)
+                self.notify("Ainda é dia claro. Você tira um cochilo de duas horas num quarto da estalagem.")
+            else:
+                self.advance_time(self.clock.minutes_until(7))
+                self.notify(f"Você dorme profundamente num quarto quente da estalagem e acorda com energia "
+                            f"renovada às {self.clock.time_str} do Dia {self.clock.day}.")
+                if self.settings.autosave:
+                    self.pending_autosave = True
+        else:
+            self.advance_time(60)
+            self.notify("Você encontra um canto abrigado e descansa por uma hora.")
+        player.restore()
+        self.update_vision()
+        self.needs_redraw = True
+
+    def sync_play_time(self) -> None:
+        now = time.monotonic()
+        self.state.play_seconds += now - self._timer
+        self._timer = now
+
+    # ------------------------------------------------------------------ progressão
+
+    def gain_xp(self, amount: int, reason: str = "") -> None:
+        if amount <= 0:
+            return
+        for level_up in self.player.gain_xp(amount):
+            self.level_ups.append(level_up)
+            self.notify(ui.style(f"{ui.sym('up')} NÍVEL {level_up.level}! Você se sente mais forte.",
+                                 "bright_yellow bold"))
+        self.dirty = True
+
+    def add_journal(self, entry_id: str, title: str, text: str, category: str = "pista") -> None:
+        if self.state.add_journal(entry_id, title, text, category):
+            self.notify(ui.style(f"{ui.sym('star')} Diário atualizado: {title}", "bright_cyan"))
+            self.dirty = True
+
+    def give_item(self, item_id: str, quantity: int = 1) -> None:
+        leftover = self.player.inventory.add(item_id, quantity)
+        received = quantity - leftover
+        if received:
+            self.notify(f"Recebido: {item_name(item_id)} x{received}")
+        if leftover:
+            self.notify(ui.style(f"Sua mochila está cheia: {item_name(item_id, colored=False)} x{leftover} "
+                                 "ficou para trás.", "red"))
+        self.dirty = True
+
+    def give_copper(self, amount: int) -> None:
+        self.player.copper += amount
+        self.notify(f"Recebido: {ui.style(format_money(amount), 'bright_yellow')}")
+        self.dirty = True
+
+    # ------------------------------------------------------------------ visão
+
+    def vision_radius(self) -> int:
+        game_map = self.map
+        if game_map.outdoor:
+            if self.clock.is_night:
+                radius = 1
+            elif self.clock.is_twilight:
+                radius = 2
+            else:
+                radius = 3
+            radius += self.clock.weather["vision"]
+        else:
+            radius = game_map.light
+        radius += game_map.terrain_at(*self.state.pos).vision
+        return max(1, radius)
+
+    def update_vision(self) -> None:
+        self.visible = set(self.map.tiles_in_radius(self.state.x, self.state.y, self.vision_radius()))
+        self.state.explored_on(self.state.map_id).update(self.visible)
+
+    def reveal(self, radius: int) -> None:
+        tiles = self.map.tiles_in_radius(self.state.x, self.state.y, radius)
+        self.state.explored_on(self.state.map_id).update(tiles)
+
+    # ------------------------------------------------------------------ movimento
+
+    def step(self, dx: int, dy: int) -> bool:
+        """Tenta dar um passo. Devolve ``True`` se o herói se moveu (inclusive para outro mapa)."""
+        x, y = self.state.pos
+        direction = next(key for key, (ddx, ddy, _n) in world.DIRECTIONS.items() if (ddx, ddy) == (dx, dy))
+        for portal in self.map.portals_at(x, y):
+            if portal.direction == direction and portal.is_known(self.state.flags):
+                return self.use_portal(portal)
+        nx, ny = x + dx, y + dy
+        if not self.map.in_bounds(nx, ny):
+            self.notify("Não há caminho nessa direção.")
+            return False
+        if not self.map.can_step(x, y, dx, dy):
+            target = self.map.terrain_at(nx, ny)
+            if target.passable:
+                self.notify("Não dá para cortar caminho nessa diagonal: siga pelos lados.")
+            else:
+                self.notify(BLOCKED_TEXT.get(target.id, "Não é possível seguir nessa direção."))
+            return False
+        self.state.x, self.state.y = nx, ny
+        self.state.stats["passos"] = self.state.stats.get("passos", 0) + 1
+        self.advance_time(self.map.terrain_at(nx, ny).cost)
+        self.arrive()
+        return True
+
+    def arrive(self) -> None:
+        """Chegou a um tile: atualiza a visão e registra descobertas e encontros."""
+        self.update_vision()
+        x, y = self.state.pos
+        game_map = self.map
+        region = game_map.region_at(x, y)
+        if region and region.id not in self.state.regions:
+            self.state.regions.add(region.id)
+            xp_text = f" (+{region.xp} XP)" if region.xp else ""
+            self.notify(ui.style(f"{ui.sym('diamond')} Nova área: {region.name}{xp_text}", "bright_magenta bold"))
+            if region.intro:
+                self.notify(ui.style(region.intro, "italic"))
+            self.gain_xp(region.xp, "exploração")
+            self.events.add(EVENT_DISCOVERY)
+        elif region and region.id != self._region_id:
+            self.notify(ui.style(f"Você entra em: {region.name}", "magenta"))
+        self._region_id = region.id if region else None
+        landmark = game_map.landmark_at(x, y)
+        if landmark and landmark.id not in self.state.discovered:
+            self.state.discovered.add(landmark.id)
+            xp_text = f" (+{landmark.xp} XP)" if landmark.xp else ""
+            self.notify(ui.style(f"{ui.sym('star')} Local descoberto: {landmark.name}{xp_text}", "bright_yellow bold"))
+            self.gain_xp(landmark.xp, "exploração")
+            if landmark.reveal:
+                self.reveal(landmark.reveal)
+                self.notify(ui.style("Do alto, você memoriza o terreno ao redor: seu mapa foi ampliado.", "bright_cyan"))
+            self.events.add(EVENT_DISCOVERY)
+        if npcs_at(self.state, self.state.map_id, x, y):
+            self.events.add(EVENT_NPC)
+        if any(p.is_known(self.state.flags) for p in game_map.portals_at(x, y)):
+            self.events.add(EVENT_PASSAGE)
+        self.dirty = True
+
+    def walk(self, direction: str, steps: int = 1) -> int:
+        """Anda até ``steps`` passos; para antes se algo interessante acontecer."""
+        dx, dy, _name = world.DIRECTIONS[direction]
+        moved = 0
+        self.events.clear()
+        start_map = self.state.map_id
+        for _ in range(max(1, steps)):
+            if not self.step(dx, dy):
+                break
+            moved += 1
+            if self.events or self.state.map_id != start_map:
+                break
+        if 1 < steps and 0 < moved < steps and self.events:
+            self.notify(ui.style(f"Você interrompe a caminhada após {moved} "
+                                 f"{'passo' if moved == 1 else 'passos'}.", "gray"))
+        self.needs_redraw = True
+        return moved
+
+    def travel_to(self, landmark: world.Landmark) -> bool:
+        """Viagem rápida até um local já descoberto, só por caminhos conhecidos."""
+        explored = self.state.explored_on(self.state.map_id)
+        path = self.map.find_path(self.state.pos, landmark.pos, allowed=lambda x, y: (x, y) in explored)
+        if path is None:
+            self.notify("Você não conhece um caminho até lá. Explore mais o mapa.")
+            return False
+        if not path:
+            self.notify("Você já está aqui.")
+            return False
+        start_minutes = self.clock.minutes
+        self.events.clear()
+        steps = 0
+        for nx, ny in path:
+            x, y = self.state.pos
+            if not self.step(nx - x, ny - y):
+                break
+            steps += 1
+            if EVENT_DISCOVERY in self.events and self.state.pos != landmark.pos:
+                self.notify(ui.style("Algo novo chama sua atenção no caminho, e você para.", "gray"))
+                break
+        elapsed = self.clock.minutes - start_minutes
+        self.notify(ui.style(f"Viagem: {steps} {'passo' if steps == 1 else 'passos'}, "
+                             f"{elapsed // 60}h{elapsed % 60:02d}min de caminhada.", "gray"))
+        self.needs_redraw = True
+        return self.state.pos == landmark.pos
+
+    def use_portal(self, portal: world.Portal) -> bool:
+        if portal.is_locked(self.state.flags):
+            self.notify(ui.style(portal.locked_text, "italic"))
+            return False
+        if portal.target is None:
+            self.notify("Esse caminho ainda não leva a lugar nenhum.")
+            return False
+        if portal.travel_text:
+            self.notify(ui.style(portal.travel_text, "italic"))
+        map_id, x, y = portal.target
+        self.state.map_id, self.state.x, self.state.y = map_id, x, y
+        self.advance_time(10)
+        self.arrive()
+        self.events.add(EVENT_PASSAGE)
+        self.needs_redraw = True
+        return True
+
+    def use_verb(self, verb: str) -> bool:
+        """``entrar``/``sair``: atravessa a passagem deste tile que aceita o verbo."""
+        for portal in self.map.portals_at(*self.state.pos):
+            if portal.verb == verb and portal.is_known(self.state.flags):
+                self.use_portal(portal)
+                return True
+        return False
+
+    # ------------------------------------------------------------------ interação
+
+    def examine(self) -> List[str]:
+        """Examina o lugar atual. Pode revelar segredos ou recompensas."""
+        landmark = self.map.landmark_at(*self.state.pos)
+        state = self.state
+        self.advance_time(5)
+        if landmark is None:
+            terrain = self.map.terrain_at(*state.pos)
+            return [f"Você examina os arredores ({terrain.name.lower()}) com atenção, mas não encontra nada "
+                    "fora do comum."]
+        secret = landmark.secret
+        if secret and not state.has_flag(secret["flag"]):
+            state.flags[secret["flag"]] = True
+            self.notify(ui.style(f"{ui.sym('star')} Segredo descoberto! (+{secret.get('xp', 0)} XP)",
+                                 "bright_magenta bold"))
+            self.gain_xp(secret.get("xp", 0), "segredo")
+            journal = secret.get("journal")
+            if journal:
+                self.add_journal(secret["flag"], journal["title"], journal["text"], "segredo")
+            return [secret["text"]]
+        loot = landmark.loot
+        if loot and not state.has_flag(loot["flag"]):
+            state.flags[loot["flag"]] = True
+            self.notify(ui.style(f"{ui.sym('star')} Tesouro encontrado! (+{loot.get('xp', 0)} XP)",
+                                 "bright_yellow bold"))
+            for item_id, quantity in loot.get("items", []):
+                self.give_item(item_id, quantity)
+            if loot.get("copper"):
+                self.give_copper(loot["copper"])
+            self.gain_xp(loot.get("xp", 0), "tesouro")
+            return [loot["text"]]
+        return [landmark.examine or landmark.description]
+
+    def npcs_here(self) -> List[NPC]:
+        return npcs_at(self.state, self.state.map_id, *self.state.pos)
+
+    def save(self) -> Path:
+        self.sync_play_time()
+        path = save_system.save_game(self.state)
+        self.dirty = False
+        self.pending_autosave = False
+        return path
+
+    # ------------------------------------------------------------------ descrição
+
+    def describe(self) -> LocationView:
+        state, game_map, clock = self.state, self.map, self.clock
+        x, y = state.pos
+        terrain = game_map.terrain_at(x, y)
+        region = game_map.region_at(x, y)
+        landmark = game_map.landmark_at(x, y)
+        night = game_map.outdoor and clock.is_night
+        region_name = region.name if region else game_map.name
+
+        if landmark:
+            title, subtitle = landmark.name, f"{region_name} {ui.sym('dot')} ({x}, {y})"
+            paragraphs = [landmark.night if night and landmark.night else landmark.description]
+        else:
+            title, subtitle = region_name, f"{terrain.name} {ui.sym('dot')} ({x}, {y})"
+            pool = terrain.night if night else terrain.day
+            paragraphs = [stable_choice(pool, game_map.id, x, y)]
+
+        ambient = (region.night if night else region.day) if region else ()
+        if ambient and stable_hash(game_map.id, x, y, clock.day, "ambiente") % 2 == 0:
+            paragraphs.append(stable_choice(ambient, game_map.id, x, y, clock.day))
+
+        if game_map.outdoor:
+            weather_id = clock.weather_id()
+            if weather_id in ("chuva", "neblina", "tempestade") or stable_hash(x, y, clock.day) % 3 == 0:
+                lines = clock.weather["night" if clock.is_night else "day"]
+                paragraphs.append(ui.style(stable_choice(lines, clock.day, x, y), "cyan"))
+
+        senses = self._senses()
+        if senses:
+            paragraphs.append(ui.style(" ".join(senses), "gray"))
+
+        exits = [key.upper() for key, (dx, dy, _n) in world.DIRECTIONS.items() if game_map.can_step(x, y, dx, dy)]
+        passages = []
+        for portal in game_map.portals_at(x, y):
+            if not portal.is_known(state.flags):
+                continue
+            how = f"'{portal.verb}'" if portal.verb else world.DIRECTIONS[portal.direction][2]
+            lock = " (bloqueado)" if portal.is_locked(state.flags) else ""
+            passages.append(f"{portal.label} {ui.sym('arrow')} {how}{lock}")
+            if portal.direction and portal.direction.upper() not in exits:
+                exits.append(portal.direction.upper())
+        resources = []
+        if landmark:
+            for node in landmark.resources:
+                resources.append(f"{node['name']} ({SKILLS[node['skill']]['name']} {node['level']})")
+        return LocationView(title, subtitle, paragraphs, self.npcs_here(), resources, exits, passages,
+                            bool(landmark and landmark.rest))
+
+    def _senses(self) -> List[str]:
+        """Dicas sobre locais próximos: pistas dos não descobertos e direções dos conhecidos."""
+        game_map, state = self.map, self.state
+        hints, nearby = [], []
+        for landmark in game_map.landmarks.values():
+            if landmark.pos == state.pos:
+                continue
+            distance = max(abs(landmark.x - state.x), abs(landmark.y - state.y))
+            direction = world.direction_between(state.pos, landmark.pos)
+            if direction is None:
+                continue
+            direction_name = world.DIRECTIONS[direction][2].lower()
+            if landmark.id in state.discovered:
+                if distance <= 3:
+                    nearby.append((distance, f"{landmark.name} ({direction.upper()})"))
+            elif landmark.hint and not landmark.hidden and distance <= 6:
+                hints.append(landmark.hint.format(direcao=direction_name))
+        texts = hints[:2]
+        if nearby:
+            nearby.sort()
+            texts.append("Por perto: " + ", ".join(name for _d, name in nearby[:4]) + ".")
+        return texts

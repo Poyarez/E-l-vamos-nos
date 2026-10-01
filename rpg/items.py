@@ -1,0 +1,117 @@
+"""Itens: fábrica a partir de ``rpg.data.items``, pilhas de itens e a mochila."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any, Dict, Iterator, List, Mapping, Optional
+
+from . import ui
+from .data.appearance import ARMOR_COLORS
+from .data.items import ITEMS, QUALITIES
+
+DEFAULT_BAG_SLOTS = 16
+
+
+def get_item(item_id: str) -> Dict[str, Any]:
+    try:
+        return ITEMS[item_id]
+    except KeyError:
+        raise KeyError(f"Item desconhecido: {item_id!r}") from None
+
+
+def item_name(item_id: str, dye: Optional[str] = None, colored: bool = True) -> str:
+    """Nome do item na cor da sua qualidade, com a tinta (se houver): "Manto (Azul real)"."""
+    item = get_item(item_id)
+    name = item["name"]
+    if dye in ARMOR_COLORS:
+        name += f" ({ARMOR_COLORS[dye]['name']})"
+    return ui.style(name, QUALITIES[item["quality"]]["color"]) if colored else name
+
+
+@dataclass
+class ItemStack:
+    """Uma pilha de itens iguais (mesmo id e mesma tinta)."""
+
+    item_id: str
+    quantity: int = 1
+    dye: Optional[str] = None
+
+    @property
+    def data(self) -> Dict[str, Any]:
+        return get_item(self.item_id)
+
+    def name(self, colored: bool = True) -> str:
+        return item_name(self.item_id, self.dye, colored)
+
+    def to_dict(self) -> Dict[str, Any]:
+        data: Dict[str, Any] = {"id": self.item_id, "qty": self.quantity}
+        if self.dye:
+            data["dye"] = self.dye
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "ItemStack":
+        return cls(str(data["id"]), max(1, int(data.get("qty", 1))), data.get("dye"))
+
+
+class Inventory:
+    """Mochila com número limitado de espaços; itens empilháveis dividem um espaço."""
+
+    def __init__(self, capacity: int = DEFAULT_BAG_SLOTS, stacks: Optional[List[ItemStack]] = None) -> None:
+        self.capacity = capacity
+        self.stacks: List[ItemStack] = list(stacks or [])
+
+    def __iter__(self) -> Iterator[ItemStack]:
+        return iter(self.stacks)
+
+    def __len__(self) -> int:
+        return len(self.stacks)
+
+    @property
+    def free_slots(self) -> int:
+        return self.capacity - len(self.stacks)
+
+    def count(self, item_id: str) -> int:
+        return sum(stack.quantity for stack in self.stacks if stack.item_id == item_id)
+
+    def add(self, item_id: str, quantity: int = 1, dye: Optional[str] = None) -> int:
+        """Guarda itens e devolve quantos NÃO couberam (0 = tudo guardado)."""
+        max_stack = get_item(item_id).get("stack", 1)
+        remaining = quantity
+        for stack in self.stacks:
+            if remaining <= 0:
+                break
+            if stack.item_id == item_id and stack.dye == dye and stack.quantity < max_stack:
+                moved = min(max_stack - stack.quantity, remaining)
+                stack.quantity += moved
+                remaining -= moved
+        while remaining > 0 and self.free_slots > 0:
+            moved = min(max_stack, remaining)
+            self.stacks.append(ItemStack(item_id, moved, dye))
+            remaining -= moved
+        return remaining
+
+    def remove(self, item_id: str, quantity: int = 1) -> bool:
+        """Remove itens (das últimas pilhas para as primeiras). Falha se não houver o bastante."""
+        if self.count(item_id) < quantity:
+            return False
+        for stack in reversed(list(self.stacks)):
+            if quantity <= 0:
+                break
+            if stack.item_id != item_id:
+                continue
+            taken = min(stack.quantity, quantity)
+            stack.quantity -= taken
+            quantity -= taken
+            if stack.quantity == 0:
+                self.stacks.remove(stack)
+        return True
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"capacity": self.capacity, "items": [stack.to_dict() for stack in self.stacks]}
+
+    @classmethod
+    def from_dict(cls, data: Optional[Mapping[str, Any]]) -> "Inventory":
+        data = data or {}
+        stacks = [ItemStack.from_dict(entry) for entry in data.get("items", []) if entry.get("id") in ITEMS]
+        return cls(int(data.get("capacity", DEFAULT_BAG_SLOTS)), stacks)
