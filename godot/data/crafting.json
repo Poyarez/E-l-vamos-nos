@@ -1,0 +1,2116 @@
+{
+ "skills": {
+  "mineracao": {
+   "name": "Mineração",
+   "kind": "coleta",
+   "color": "yellow",
+   "description": "Arranque minérios e gemas das rochas. Alimenta a Metalurgia."
+  },
+  "metalurgia": {
+   "name": "Metalurgia",
+   "kind": "produção",
+   "color": "bright_red",
+   "description": "Funda barras na fornalha e forje armas e armaduras na bigorna."
+  },
+  "pesca": {
+   "name": "Pesca",
+   "kind": "coleta",
+   "color": "bright_cyan",
+   "description": "Rios, lagos e mares escondem peixes cada vez mais raros. Alimenta a Culinária."
+  },
+  "culinaria": {
+   "name": "Culinária",
+   "kind": "produção",
+   "color": "bright_yellow",
+   "description": "Transforme peixes e carnes em pratos que restauram vida e concedem bônus."
+  },
+  "alfaiataria": {
+   "name": "Alfaiataria",
+   "kind": "produção",
+   "color": "magenta",
+   "description": "Costure linho, lã e seda em mantos, bolsas e vestes encantáveis."
+  },
+  "alquimia": {
+   "name": "Alquimia",
+   "kind": "produção",
+   "color": "bright_green",
+   "description": "Destile ervas e reagentes em poções, elixires e venenos."
+  }
+ },
+ "nodes": {
+  "veio_cobre": {
+   "name": "Veio de Cobre",
+   "skill": "mineracao",
+   "level": 1,
+   "item": "minerio_cobre",
+   "xp": 17.5,
+   "tool": "picareta",
+   "chance": 0.5,
+   "minutes": 3,
+   "amount": 8,
+   "respawn": 120,
+   "rare": [
+    [
+     "granada_bruta",
+     0.02
+    ]
+   ],
+   "verb": "Você golpeia a rocha esverdeada com a picareta."
+  },
+  "veio_estanho": {
+   "name": "Veio de Estanho",
+   "skill": "mineracao",
+   "level": 1,
+   "item": "minerio_estanho",
+   "xp": 17.5,
+   "tool": "picareta",
+   "chance": 0.5,
+   "minutes": 3,
+   "amount": 8,
+   "respawn": 120,
+   "rare": [
+    [
+     "granada_bruta",
+     0.02
+    ]
+   ],
+   "verb": "Você arranca lascas cinzentas do veio de estanho."
+  },
+  "veio_ferro": {
+   "name": "Veio de Ferro Raso",
+   "skill": "mineracao",
+   "level": 15,
+   "item": "minerio_ferro",
+   "xp": 35,
+   "tool": "picareta",
+   "chance": 0.42,
+   "minutes": 4,
+   "amount": 5,
+   "respawn": 240,
+   "rare": [
+    [
+     "granada_bruta",
+     0.03
+    ]
+   ],
+   "verb": "Você trabalha a rocha avermelhada, cuidando para não perder o veio fino."
+  },
+  "veio_prata": {
+   "name": "Veio de Prata",
+   "skill": "mineracao",
+   "level": 20,
+   "item": "minerio_prata",
+   "xp": 40,
+   "tool": "picareta",
+   "chance": 0.38,
+   "minutes": 4,
+   "amount": 5,
+   "respawn": 300,
+   "rare": [
+    [
+     "granada_bruta",
+     0.04
+    ]
+   ],
+   "verb": "A picareta tilinta contra a prata, e o eco corre a gruta inteira."
+  },
+  "veio_ferro_bom": {
+   "name": "Veio de Ferro",
+   "skill": "mineracao",
+   "level": 15,
+   "item": "minerio_ferro",
+   "xp": 35,
+   "tool": "picareta",
+   "chance": 0.48,
+   "minutes": 4,
+   "amount": 10,
+   "respawn": 180,
+   "rare": [
+    [
+     "granada_bruta",
+     0.03
+    ]
+   ],
+   "verb": "Você ataca o veio largo e vermelho que deu nome à mina."
+  },
+  "veio_carvao": {
+   "name": "Veio de Carvão",
+   "skill": "mineracao",
+   "level": 30,
+   "item": "carvao",
+   "xp": 50,
+   "tool": "picareta",
+   "chance": 0.42,
+   "minutes": 4,
+   "amount": 8,
+   "respawn": 240,
+   "rare": [
+    [
+     "granada_bruta",
+     0.02
+    ]
+   ],
+   "verb": "Pó negro sobe a cada golpe. Você tosse, mas o carvão vem."
+  },
+  "cristais_eco": {
+   "name": "Cristais-de-eco",
+   "skill": "mineracao",
+   "level": 40,
+   "item": "cristal_eco",
+   "xp": 80,
+   "tool": "picareta",
+   "chance": 0.25,
+   "minutes": 6,
+   "amount": 3,
+   "respawn": 720,
+   "verb": "Você bate de leve, no ponto certo, e o cristal canta ao se soltar."
+  },
+  "cardume_camaroes": {
+   "name": "Cardume de Camarões",
+   "skill": "pesca",
+   "level": 1,
+   "item": "camarao_cru",
+   "xp": 10,
+   "tool": "rede",
+   "chance": 0.55,
+   "minutes": 2,
+   "amount": 15,
+   "respawn": 90,
+   "rare": [
+    [
+     "bota_velha",
+     0.03
+    ]
+   ],
+   "verb": "Você lança a rede rente à margem."
+  },
+  "cardume_sardinhas": {
+   "name": "Cardume de Sardinhas",
+   "skill": "pesca",
+   "level": 5,
+   "item": "sardinha_crua",
+   "xp": 20,
+   "tool": "vara",
+   "bait": "isca_minhoca",
+   "chance": 0.5,
+   "minutes": 3,
+   "amount": 12,
+   "respawn": 120,
+   "rare": [
+    [
+     "bota_velha",
+     0.03
+    ]
+   ],
+   "verb": "Você espeta uma minhoca no anzol e lança a linha."
+  },
+  "cardume_trutas": {
+   "name": "Cardume de Trutas",
+   "skill": "pesca",
+   "level": 10,
+   "item": "truta_crua",
+   "xp": 50,
+   "tool": "vara",
+   "bait": "pena_corvo",
+   "chance": 0.45,
+   "minutes": 3,
+   "amount": 10,
+   "respawn": 150,
+   "verb": "Você amarra uma pena de corvo no anzol e faz a mosca dançar na correnteza."
+  },
+  "cardume_salmoes": {
+   "name": "Cardume de Salmões",
+   "skill": "pesca",
+   "level": 25,
+   "item": "salmao_cru",
+   "xp": 70,
+   "tool": "vara",
+   "bait": "pena_corvo",
+   "chance": 0.4,
+   "minutes": 4,
+   "amount": 8,
+   "respawn": 180,
+   "verb": "Você lança a mosca rio acima, onde os salmões saltam contra a corrente."
+  },
+  "cardume_peixe_cego": {
+   "name": "Peixes-cegos",
+   "skill": "pesca",
+   "level": 30,
+   "item": "peixe_cego_cru",
+   "xp": 85,
+   "tool": "vara",
+   "bait": "isca_minhoca",
+   "chance": 0.35,
+   "minutes": 4,
+   "amount": 6,
+   "respawn": 300,
+   "verb": "Você desce a linha devagar na água negra e imóvel do lago subterrâneo."
+  },
+  "poco_do_rei": {
+   "name": "Poço do Rei",
+   "skill": "pesca",
+   "level": 20,
+   "item": "carpa_prateada",
+   "xp": 60,
+   "tool": "vara",
+   "bait": "isca_minhoca",
+   "chance": 0.42,
+   "minutes": 4,
+   "amount": 8,
+   "respawn": 240,
+   "rare": [
+    [
+     "rei_do_lago",
+     0.04,
+     35
+    ],
+    [
+     "bota_velha",
+     0.02
+    ]
+   ],
+   "verb": "Você deixa a isca descer até o fundo do poço, onde a água fica escura e parada."
+  },
+  "ervas_pantano": {
+   "name": "Ervas do Pântano",
+   "skill": "alquimia",
+   "level": 1,
+   "item": "folha_charco",
+   "xp": 8,
+   "chance": 0.7,
+   "minutes": 2,
+   "amount": 8,
+   "respawn": 180,
+   "verb": "Você colhe folhas-de-charco com a lama até os tornozelos."
+  },
+  "cogumelos_lume": {
+   "name": "Cogumelos-lume",
+   "skill": "alquimia",
+   "level": 10,
+   "item": "cogumelo_lume",
+   "xp": 15,
+   "chance": 0.6,
+   "minutes": 2,
+   "amount": 6,
+   "respawn": 240,
+   "verb": "Você colhe os cogumelos com cuidado, sem quebrar os anéis."
+  },
+  "flor_de_breu": {
+   "name": "Flor-de-breu",
+   "skill": "alquimia",
+   "level": 15,
+   "item": "flor_breu",
+   "xp": 20,
+   "chance": 0.55,
+   "minutes": 3,
+   "amount": 5,
+   "respawn": 300,
+   "verb": "Você corta as flores negras, que deixam os dedos melados de piche."
+  },
+  "orquideas_termais": {
+   "name": "Orquídeas-das-termas",
+   "skill": "alquimia",
+   "level": 20,
+   "item": "orquidea_termal",
+   "xp": 28,
+   "chance": 0.5,
+   "minutes": 3,
+   "amount": 4,
+   "respawn": 360,
+   "verb": "Você se inclina sobre o vapor e colhe as orquídeas mornas."
+  },
+  "musgo_prateado": {
+   "name": "Musgo-prata",
+   "skill": "alquimia",
+   "level": 25,
+   "item": "musgo_prata",
+   "xp": 35,
+   "chance": 0.5,
+   "minutes": 3,
+   "amount": 4,
+   "respawn": 360,
+   "verb": "Você raspa o musgo das pedras molhadas, escorregando um pouco."
+  },
+  "lirios_da_lua": {
+   "name": "Lírios-da-lua",
+   "skill": "alquimia",
+   "level": 30,
+   "item": "lirio_lua",
+   "xp": 45,
+   "chance": 0.45,
+   "minutes": 4,
+   "amount": 3,
+   "respawn": 720,
+   "if": {
+    "night": true
+   },
+   "closed": "Os lírios-da-lua estão fechados. Eles só se abrem à noite.",
+   "verb": "Você colhe um lírio aberto, e um pouco do luar parece vir junto."
+  },
+  "linhal": {
+   "name": "Linhal",
+   "skill": "alfaiataria",
+   "level": 1,
+   "item": "linho",
+   "xp": 5,
+   "chance": 0.8,
+   "minutes": 2,
+   "amount": 12,
+   "respawn": 240,
+   "verb": "Você arranca os talos de linho pela raiz, como os Moreira ensinam."
+  },
+  "ovelhas": {
+   "name": "Ovelhas do Curral",
+   "skill": "alfaiataria",
+   "level": 8,
+   "item": "la_crua",
+   "xp": 12,
+   "tool": "tesoura",
+   "chance": 0.6,
+   "minutes": 4,
+   "amount": 4,
+   "respawn": 720,
+   "verb": "Você segura uma ovelha entre os joelhos e tosquia com cuidado."
+  }
+ },
+ "gather_verbs": {
+  "mineracao": "minerar",
+  "pesca": "pescar",
+  "alquimia": "colher",
+  "alfaiataria": "colher"
+ },
+ "recipes": {
+  "barra_bronze": {
+   "skill": "metalurgia",
+   "level": 1,
+   "xp": 6.2,
+   "station": "fornalha",
+   "minutes": 2,
+   "inputs": [
+    [
+     "minerio_cobre",
+     1
+    ],
+    [
+     "minerio_estanho",
+     1
+    ]
+   ],
+   "output": [
+    "barra_bronze",
+    1
+   ]
+  },
+  "barra_ferro": {
+   "skill": "metalurgia",
+   "level": 15,
+   "xp": 12.5,
+   "station": "fornalha",
+   "minutes": 3,
+   "inputs": [
+    [
+     "minerio_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "barra_ferro",
+    1
+   ],
+   "fail": [
+    0.5,
+    45
+   ]
+  },
+  "barra_prata": {
+   "skill": "metalurgia",
+   "level": 20,
+   "xp": 13.7,
+   "station": "fornalha",
+   "minutes": 3,
+   "inputs": [
+    [
+     "minerio_prata",
+     1
+    ]
+   ],
+   "output": [
+    "barra_prata",
+    1
+   ]
+  },
+  "barra_aco": {
+   "skill": "metalurgia",
+   "level": 30,
+   "xp": 17.5,
+   "station": "fornalha",
+   "minutes": 3,
+   "inputs": [
+    [
+     "minerio_ferro",
+     1
+    ],
+    [
+     "carvao",
+     2
+    ]
+   ],
+   "output": [
+    "barra_aco",
+    1
+   ]
+  },
+  "adaga_bronze": {
+   "skill": "metalurgia",
+   "level": 1,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "adaga_bronze",
+    1
+   ]
+  },
+  "machadinha_bronze": {
+   "skill": "metalurgia",
+   "level": 2,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "machadinha_bronze",
+    1
+   ]
+  },
+  "maca_bronze": {
+   "skill": "metalurgia",
+   "level": 3,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "maca_bronze",
+    1
+   ]
+  },
+  "pregos_bronze": {
+   "skill": "metalurgia",
+   "level": 4,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 3,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "pregos_bronze",
+    10
+   ]
+  },
+  "elmo_bronze": {
+   "skill": "metalurgia",
+   "level": 4,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "elmo_bronze",
+    1
+   ]
+  },
+  "espada_bronze": {
+   "skill": "metalurgia",
+   "level": 5,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "espada_bronze",
+    1
+   ]
+  },
+  "picareta_bronze": {
+   "skill": "metalurgia",
+   "level": 6,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 6,
+   "inputs": [
+    [
+     "barra_bronze",
+     2
+    ]
+   ],
+   "output": [
+    "picareta_bronze",
+    1
+   ]
+  },
+  "botas_bronze": {
+   "skill": "metalurgia",
+   "level": 7,
+   "xp": 12.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_bronze",
+     1
+    ]
+   ],
+   "output": [
+    "botas_bronze",
+    1
+   ]
+  },
+  "escudo_bronze": {
+   "skill": "metalurgia",
+   "level": 9,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 6,
+   "inputs": [
+    [
+     "barra_bronze",
+     2
+    ]
+   ],
+   "output": [
+    "escudo_bronze",
+    1
+   ]
+  },
+  "cota_bronze": {
+   "skill": "metalurgia",
+   "level": 12,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 10,
+   "inputs": [
+    [
+     "barra_bronze",
+     3
+    ]
+   ],
+   "output": [
+    "cota_bronze",
+    1
+   ]
+  },
+  "perneiras_bronze": {
+   "skill": "metalurgia",
+   "level": 16,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 8,
+   "inputs": [
+    [
+     "barra_bronze",
+     3
+    ]
+   ],
+   "output": [
+    "perneiras_bronze",
+    1
+   ]
+  },
+  "adaga_ferro": {
+   "skill": "metalurgia",
+   "level": 15,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "adaga_ferro",
+    1
+   ]
+  },
+  "maca_ferro": {
+   "skill": "metalurgia",
+   "level": 17,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "maca_ferro",
+    1
+   ]
+  },
+  "machado_ferro": {
+   "skill": "metalurgia",
+   "level": 17,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "machado_ferro",
+    1
+   ]
+  },
+  "elmo_ferro": {
+   "skill": "metalurgia",
+   "level": 18,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "elmo_ferro",
+    1
+   ]
+  },
+  "espada_ferro": {
+   "skill": "metalurgia",
+   "level": 19,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "espada_ferro",
+    1
+   ]
+  },
+  "picareta_ferro": {
+   "skill": "metalurgia",
+   "level": 20,
+   "xp": 50,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 6,
+   "inputs": [
+    [
+     "barra_ferro",
+     2
+    ]
+   ],
+   "output": [
+    "picareta_ferro",
+    1
+   ]
+  },
+  "botas_ferro": {
+   "skill": "metalurgia",
+   "level": 21,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 4,
+   "inputs": [
+    [
+     "barra_ferro",
+     1
+    ]
+   ],
+   "output": [
+    "botas_ferro",
+    1
+   ]
+  },
+  "escudo_ferro": {
+   "skill": "metalurgia",
+   "level": 24,
+   "xp": 50,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 6,
+   "inputs": [
+    [
+     "barra_ferro",
+     2
+    ]
+   ],
+   "output": [
+    "escudo_ferro",
+    1
+   ]
+  },
+  "cota_ferro": {
+   "skill": "metalurgia",
+   "level": 27,
+   "xp": 75,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 10,
+   "inputs": [
+    [
+     "barra_ferro",
+     3
+    ]
+   ],
+   "output": [
+    "cota_ferro",
+    1
+   ]
+  },
+  "perneiras_ferro": {
+   "skill": "metalurgia",
+   "level": 31,
+   "xp": 75,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 8,
+   "inputs": [
+    [
+     "barra_ferro",
+     3
+    ]
+   ],
+   "output": [
+    "perneiras_ferro",
+    1
+   ]
+  },
+  "adaga_aco": {
+   "skill": "metalurgia",
+   "level": 30,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 5,
+   "inputs": [
+    [
+     "barra_aco",
+     1
+    ]
+   ],
+   "output": [
+    "adaga_aco",
+    1
+   ]
+  },
+  "maca_aco": {
+   "skill": "metalurgia",
+   "level": 32,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 5,
+   "inputs": [
+    [
+     "barra_aco",
+     1
+    ]
+   ],
+   "output": [
+    "maca_aco",
+    1
+   ]
+  },
+  "machado_aco": {
+   "skill": "metalurgia",
+   "level": 33,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 5,
+   "inputs": [
+    [
+     "barra_aco",
+     1
+    ]
+   ],
+   "output": [
+    "machado_aco",
+    1
+   ]
+  },
+  "elmo_aco": {
+   "skill": "metalurgia",
+   "level": 34,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 5,
+   "inputs": [
+    [
+     "barra_aco",
+     1
+    ]
+   ],
+   "output": [
+    "elmo_aco",
+    1
+   ]
+  },
+  "espada_aco": {
+   "skill": "metalurgia",
+   "level": 35,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 5,
+   "inputs": [
+    [
+     "barra_aco",
+     1
+    ]
+   ],
+   "output": [
+    "espada_aco",
+    1
+   ]
+  },
+  "picareta_aco": {
+   "skill": "metalurgia",
+   "level": 35,
+   "xp": 75,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 7,
+   "inputs": [
+    [
+     "barra_aco",
+     2
+    ]
+   ],
+   "output": [
+    "picareta_aco",
+    1
+   ]
+  },
+  "botas_aco": {
+   "skill": "metalurgia",
+   "level": 36,
+   "xp": 37.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 5,
+   "inputs": [
+    [
+     "barra_aco",
+     1
+    ]
+   ],
+   "output": [
+    "botas_aco",
+    1
+   ]
+  },
+  "escudo_aco": {
+   "skill": "metalurgia",
+   "level": 38,
+   "xp": 75,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 7,
+   "inputs": [
+    [
+     "barra_aco",
+     2
+    ]
+   ],
+   "output": [
+    "escudo_aco",
+    1
+   ]
+  },
+  "cota_aco": {
+   "skill": "metalurgia",
+   "level": 41,
+   "xp": 112.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 12,
+   "inputs": [
+    [
+     "barra_aco",
+     3
+    ]
+   ],
+   "output": [
+    "cota_aco",
+    1
+   ]
+  },
+  "perneiras_aco": {
+   "skill": "metalurgia",
+   "level": 44,
+   "xp": 112.5,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 10,
+   "inputs": [
+    [
+     "barra_aco",
+     3
+    ]
+   ],
+   "output": [
+    "perneiras_aco",
+    1
+   ]
+  },
+  "anel_prata": {
+   "skill": "metalurgia",
+   "level": 20,
+   "xp": 25,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 6,
+   "inputs": [
+    [
+     "barra_prata",
+     1
+    ]
+   ],
+   "output": [
+    "anel_prata",
+    1
+   ]
+  },
+  "anel_granada": {
+   "skill": "metalurgia",
+   "level": 27,
+   "xp": 45,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 8,
+   "inputs": [
+    [
+     "barra_prata",
+     1
+    ],
+    [
+     "granada_bruta",
+     1
+    ]
+   ],
+   "output": [
+    "anel_granada",
+    1
+   ]
+  },
+  "amuleto_eco": {
+   "skill": "metalurgia",
+   "level": 45,
+   "xp": 100,
+   "station": "bigorna",
+   "tool": "martelo",
+   "minutes": 12,
+   "inputs": [
+    [
+     "barra_prata",
+     1
+    ],
+    [
+     "cristal_eco",
+     1
+    ]
+   ],
+   "output": [
+    "amuleto_eco",
+    1
+   ]
+  },
+  "pao_de_viagem": {
+   "skill": "culinaria",
+   "level": 1,
+   "xp": 25,
+   "station": "fogo",
+   "minutes": 3,
+   "burn": [
+    0.4,
+    15
+   ],
+   "inputs": [
+    [
+     "farinha",
+     1
+    ]
+   ],
+   "output": [
+    "pao_de_viagem",
+    1
+   ]
+  },
+  "camarao_assado": {
+   "skill": "culinaria",
+   "level": 1,
+   "xp": 30,
+   "station": "fogo",
+   "minutes": 2,
+   "burn": [
+    0.5,
+    18
+   ],
+   "inputs": [
+    [
+     "camarao_cru",
+     1
+    ]
+   ],
+   "output": [
+    "camarao_assado",
+    1
+   ]
+  },
+  "sardinha_assada": {
+   "skill": "culinaria",
+   "level": 3,
+   "xp": 40,
+   "station": "fogo",
+   "minutes": 2,
+   "burn": [
+    0.5,
+    22
+   ],
+   "inputs": [
+    [
+     "sardinha_crua",
+     1
+    ]
+   ],
+   "output": [
+    "sardinha_assada",
+    1
+   ]
+  },
+  "bisteca_javali": {
+   "skill": "culinaria",
+   "level": 5,
+   "xp": 45,
+   "station": "fogo",
+   "minutes": 3,
+   "burn": [
+    0.5,
+    25
+   ],
+   "inputs": [
+    [
+     "carne_javali",
+     1
+    ]
+   ],
+   "output": [
+    "bisteca_javali",
+    1
+   ]
+  },
+  "truta_assada": {
+   "skill": "culinaria",
+   "level": 12,
+   "xp": 70,
+   "station": "fogo",
+   "minutes": 3,
+   "burn": [
+    0.55,
+    35
+   ],
+   "inputs": [
+    [
+     "truta_crua",
+     1
+    ]
+   ],
+   "output": [
+    "truta_assada",
+    1
+   ]
+  },
+  "espetinho_lobo": {
+   "skill": "culinaria",
+   "level": 15,
+   "xp": 75,
+   "station": "fogo",
+   "minutes": 4,
+   "burn": [
+    0.5,
+    35
+   ],
+   "inputs": [
+    [
+     "carne_lobo",
+     1
+    ],
+    [
+     "especiarias",
+     1
+    ]
+   ],
+   "output": [
+    "espetinho_lobo",
+    1
+   ]
+  },
+  "ensopado_javali": {
+   "skill": "culinaria",
+   "level": 18,
+   "xp": 90,
+   "station": "fogo",
+   "minutes": 6,
+   "burn": [
+    0.5,
+    40
+   ],
+   "inputs": [
+    [
+     "carne_javali",
+     2
+    ],
+    [
+     "cogumelo_lume",
+     1
+    ]
+   ],
+   "output": [
+    "ensopado_javali",
+    1
+   ]
+  },
+  "torta_truta": {
+   "skill": "culinaria",
+   "level": 22,
+   "xp": 100,
+   "station": "fogo",
+   "minutes": 6,
+   "burn": [
+    0.5,
+    45
+   ],
+   "inputs": [
+    [
+     "truta_crua",
+     1
+    ],
+    [
+     "farinha",
+     2
+    ]
+   ],
+   "output": [
+    "torta_truta",
+    1
+   ]
+  },
+  "salmao_assado": {
+   "skill": "culinaria",
+   "level": 25,
+   "xp": 90,
+   "station": "fogo",
+   "minutes": 3,
+   "burn": [
+    0.55,
+    50
+   ],
+   "inputs": [
+    [
+     "salmao_cru",
+     1
+    ]
+   ],
+   "output": [
+    "salmao_assado",
+    1
+   ]
+  },
+  "carpa_assada": {
+   "skill": "culinaria",
+   "level": 20,
+   "xp": 85,
+   "station": "fogo",
+   "minutes": 3,
+   "burn": [
+    0.5,
+    45
+   ],
+   "inputs": [
+    [
+     "carpa_prateada",
+     1
+    ]
+   ],
+   "output": [
+    "carpa_assada",
+    1
+   ]
+  },
+  "peixe_cego_assado": {
+   "skill": "culinaria",
+   "level": 32,
+   "xp": 120,
+   "station": "fogo",
+   "minutes": 4,
+   "burn": [
+    0.6,
+    60
+   ],
+   "inputs": [
+    [
+     "peixe_cego_cru",
+     1
+    ]
+   ],
+   "output": [
+    "peixe_cego_assado",
+    1
+   ]
+  },
+  "fio_linho": {
+   "skill": "alfaiataria",
+   "level": 1,
+   "xp": 10,
+   "station": "roca",
+   "minutes": 1,
+   "inputs": [
+    [
+     "linho",
+     1
+    ]
+   ],
+   "output": [
+    "fio_linho",
+    1
+   ]
+  },
+  "novelo_la": {
+   "skill": "alfaiataria",
+   "level": 8,
+   "xp": 20,
+   "station": "roca",
+   "minutes": 2,
+   "inputs": [
+    [
+     "la_crua",
+     1
+    ]
+   ],
+   "output": [
+    "novelo_la",
+    1
+   ]
+  },
+  "fio_seda": {
+   "skill": "alfaiataria",
+   "level": 20,
+   "xp": 35,
+   "station": "roca",
+   "minutes": 2,
+   "inputs": [
+    [
+     "teia_pegajosa",
+     2
+    ]
+   ],
+   "output": [
+    "fio_seda",
+    1
+   ]
+  },
+  "luvas_linho": {
+   "skill": "alfaiataria",
+   "level": 2,
+   "xp": 25,
+   "tool": "agulha",
+   "minutes": 8,
+   "inputs": [
+    [
+     "fio_linho",
+     2
+    ]
+   ],
+   "output": [
+    "luvas_linho",
+    1
+   ]
+  },
+  "tunica_linho": {
+   "skill": "alfaiataria",
+   "level": 4,
+   "xp": 40,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "fio_linho",
+     3
+    ]
+   ],
+   "output": [
+    "tunica_linho",
+    1
+   ]
+  },
+  "bolsa_linho": {
+   "skill": "alfaiataria",
+   "level": 6,
+   "xp": 55,
+   "tool": "agulha",
+   "minutes": 15,
+   "inputs": [
+    [
+     "fio_linho",
+     4
+    ]
+   ],
+   "output": [
+    "bolsa_linho",
+    1
+   ]
+  },
+  "remendo_lona": {
+   "skill": "alfaiataria",
+   "level": 8,
+   "xp": 45,
+   "tool": "agulha",
+   "minutes": 10,
+   "inputs": [
+    [
+     "fio_linho",
+     4
+    ]
+   ],
+   "output": [
+    "remendo_lona",
+    1
+   ]
+  },
+  "colar_presas": {
+   "skill": "alfaiataria",
+   "level": 9,
+   "xp": 50,
+   "tool": "agulha",
+   "minutes": 8,
+   "inputs": [
+    [
+     "presa_lobo",
+     3
+    ],
+    [
+     "fio_linho",
+     1
+    ]
+   ],
+   "output": [
+    "colar_presas",
+    1
+   ]
+  },
+  "capuz_la": {
+   "skill": "alfaiataria",
+   "level": 10,
+   "xp": 60,
+   "tool": "agulha",
+   "minutes": 10,
+   "inputs": [
+    [
+     "novelo_la",
+     2
+    ]
+   ],
+   "output": [
+    "capuz_la",
+    1
+   ]
+  },
+  "gibao_couro_javali": {
+   "skill": "alfaiataria",
+   "level": 12,
+   "xp": 80,
+   "tool": "agulha",
+   "minutes": 15,
+   "inputs": [
+    [
+     "couro_javali",
+     3
+    ],
+    [
+     "fio_linho",
+     2
+    ]
+   ],
+   "output": [
+    "gibao_couro_javali",
+    1
+   ]
+  },
+  "calcas_la": {
+   "skill": "alfaiataria",
+   "level": 14,
+   "xp": 75,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "novelo_la",
+     3
+    ]
+   ],
+   "output": [
+    "calcas_la",
+    1
+   ]
+  },
+  "botas_couro_javali": {
+   "skill": "alfaiataria",
+   "level": 16,
+   "xp": 85,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "couro_javali",
+     2
+    ],
+    [
+     "fio_linho",
+     1
+    ]
+   ],
+   "output": [
+    "botas_couro_javali",
+    1
+   ]
+  },
+  "manto_la": {
+   "skill": "alfaiataria",
+   "level": 17,
+   "xp": 80,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "novelo_la",
+     3
+    ]
+   ],
+   "output": [
+    "manto_la",
+    1
+   ]
+  },
+  "capuz_couro_lobo": {
+   "skill": "alfaiataria",
+   "level": 19,
+   "xp": 100,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "pele_lobo",
+     3
+    ],
+    [
+     "fio_linho",
+     1
+    ]
+   ],
+   "output": [
+    "capuz_couro_lobo",
+    1
+   ]
+  },
+  "bolsa_la": {
+   "skill": "alfaiataria",
+   "level": 21,
+   "xp": 110,
+   "tool": "agulha",
+   "minutes": 15,
+   "inputs": [
+    [
+     "novelo_la",
+     4
+    ],
+    [
+     "couro_javali",
+     1
+    ]
+   ],
+   "output": [
+    "bolsa_la",
+    1
+   ]
+  },
+  "manto_pele_lobo": {
+   "skill": "alfaiataria",
+   "level": 23,
+   "xp": 120,
+   "tool": "agulha",
+   "minutes": 15,
+   "inputs": [
+    [
+     "pele_lobo",
+     4
+    ],
+    [
+     "novelo_la",
+     1
+    ]
+   ],
+   "output": [
+    "manto_pele_lobo",
+    1
+   ]
+  },
+  "capuz_negro": {
+   "skill": "alfaiataria",
+   "level": 26,
+   "xp": 120,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "tecido_negro",
+     3
+    ],
+    [
+     "fio_linho",
+     1
+    ]
+   ],
+   "output": [
+    "capuz_negro",
+    1
+   ]
+  },
+  "vestes_acolito": {
+   "skill": "alfaiataria",
+   "level": 28,
+   "xp": 140,
+   "tool": "agulha",
+   "minutes": 18,
+   "inputs": [
+    [
+     "tecido_negro",
+     4
+    ],
+    [
+     "fio_linho",
+     2
+    ]
+   ],
+   "output": [
+    "vestes_acolito",
+    1
+   ]
+  },
+  "luvas_seda_aranha": {
+   "skill": "alfaiataria",
+   "level": 25,
+   "xp": 120,
+   "tool": "agulha",
+   "minutes": 12,
+   "inputs": [
+    [
+     "fio_seda",
+     2
+    ]
+   ],
+   "output": [
+    "luvas_seda_aranha",
+    1
+   ]
+  },
+  "vestes_seda": {
+   "skill": "alfaiataria",
+   "level": 30,
+   "xp": 160,
+   "tool": "agulha",
+   "minutes": 20,
+   "inputs": [
+    [
+     "fio_seda",
+     4
+    ]
+   ],
+   "output": [
+    "vestes_seda",
+    1
+   ]
+  },
+  "bolsa_seda": {
+   "skill": "alfaiataria",
+   "level": 35,
+   "xp": 190,
+   "tool": "agulha",
+   "minutes": 20,
+   "inputs": [
+    [
+     "fio_seda",
+     4
+    ],
+    [
+     "novelo_la",
+     2
+    ]
+   ],
+   "output": [
+    "bolsa_seda",
+    1
+   ]
+  },
+  "pocao_cura_menor": {
+   "skill": "alquimia",
+   "level": 1,
+   "xp": 25,
+   "tool": "almofariz",
+   "minutes": 4,
+   "inputs": [
+    [
+     "folha_charco",
+     2
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "pocao_cura_menor",
+    1
+   ]
+  },
+  "pocao_mana_menor": {
+   "skill": "alquimia",
+   "level": 10,
+   "xp": 35,
+   "tool": "almofariz",
+   "minutes": 4,
+   "inputs": [
+    [
+     "cogumelo_lume",
+     1
+    ],
+    [
+     "folha_charco",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "pocao_mana_menor",
+    1
+   ]
+  },
+  "elixir_javali": {
+   "skill": "alquimia",
+   "level": 12,
+   "xp": 40,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "presa_javali",
+     1
+    ],
+    [
+     "folha_charco",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "elixir_javali",
+    1
+   ]
+  },
+  "oleo_inflamavel": {
+   "skill": "alquimia",
+   "level": 15,
+   "xp": 45,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "flor_breu",
+     2
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "oleo_inflamavel",
+    1
+   ]
+  },
+  "piche": {
+   "skill": "alquimia",
+   "level": 15,
+   "xp": 40,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "flor_breu",
+     2
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "piche",
+    1
+   ]
+  },
+  "veneno_aranha": {
+   "skill": "alquimia",
+   "level": 18,
+   "xp": 50,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "glandula_veneno",
+     1
+    ],
+    [
+     "folha_charco",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "veneno_aranha",
+    1
+   ]
+  },
+  "elixir_morcego": {
+   "skill": "alquimia",
+   "level": 20,
+   "xp": 55,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "asa_morcego",
+     2
+    ],
+    [
+     "cogumelo_lume",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "elixir_morcego",
+    1
+   ]
+  },
+  "frasco_gelo": {
+   "skill": "alquimia",
+   "level": 22,
+   "xp": 60,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "fragmento_gelo_eterno",
+     1
+    ],
+    [
+     "orquidea_termal",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "frasco_gelo",
+    1
+   ]
+  },
+  "pocao_cura": {
+   "skill": "alquimia",
+   "level": 25,
+   "xp": 70,
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "musgo_prata",
+     2
+    ],
+    [
+     "folha_charco",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "pocao_cura",
+    1
+   ]
+  },
+  "elixir_lobo": {
+   "skill": "alquimia",
+   "level": 27,
+   "xp": 75,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "presa_lobo",
+     2
+    ],
+    [
+     "orquidea_termal",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "elixir_lobo",
+    1
+   ]
+  },
+  "frasco_luz": {
+   "skill": "alquimia",
+   "level": 31,
+   "xp": 90,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 6,
+   "inputs": [
+    [
+     "lirio_lua",
+     1
+    ],
+    [
+     "ectoplasma",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "frasco_luz",
+    1
+   ]
+  },
+  "elixir_sussurrante": {
+   "skill": "alquimia",
+   "level": 33,
+   "xp": 95,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 6,
+   "inputs": [
+    [
+     "essencia_sussurrante",
+     1
+    ],
+    [
+     "lirio_lua",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "elixir_sussurrante",
+    1
+   ]
+  },
+  "pocao_mana": {
+   "skill": "alquimia",
+   "level": 36,
+   "xp": 100,
+   "tool": "almofariz",
+   "minutes": 5,
+   "inputs": [
+    [
+     "cogumelo_lume",
+     2
+    ],
+    [
+     "orquidea_termal",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "pocao_mana",
+    1
+   ]
+  },
+  "pocao_cura_maior": {
+   "skill": "alquimia",
+   "level": 40,
+   "xp": 110,
+   "tool": "almofariz",
+   "minutes": 6,
+   "inputs": [
+    [
+     "musgo_prata",
+     2
+    ],
+    [
+     "poeira_lunar",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "pocao_cura_maior",
+    1
+   ]
+  },
+  "frasco_eco": {
+   "skill": "alquimia",
+   "level": 42,
+   "xp": 125,
+   "station": "caldeirao",
+   "tool": "almofariz",
+   "minutes": 8,
+   "inputs": [
+    [
+     "cristal_eco",
+     1
+    ],
+    [
+     "lirio_lua",
+     1
+    ],
+    [
+     "frasco_vazio",
+     1
+    ]
+   ],
+   "output": [
+    "frasco_eco",
+    1
+   ]
+  }
+ },
+ "stations": {
+  "fornalha": {
+   "name": "Fornalha",
+   "verb": "forjar"
+  },
+  "bigorna": {
+   "name": "Bigorna",
+   "verb": "forjar"
+  },
+  "fogo": {
+   "name": "Fogo de cozinha",
+   "verb": "cozinhar"
+  },
+  "roca": {
+   "name": "Roca de fiar",
+   "verb": "costurar"
+  },
+  "caldeirao": {
+   "name": "Caldeirão",
+   "verb": "preparar"
+  }
+ },
+ "burnt_item": "comida_queimada"
+}

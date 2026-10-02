@@ -1,0 +1,190 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_script"]
+
+[node name="Hud" type="CanvasLayer"]
+script = ExtResource("1_script")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Left" type="VBoxContainer" parent="Root"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 228.0
+offset_bottom = 200.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Place" type="PanelContainer" parent="Root/Left"]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+
+[node name="Lines" type="VBoxContainer" parent="Root/Left/Place"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PlaceTitle" type="Label" parent="Root/Left/Place/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_font_sizes/font_size = 12
+text = "Vale de Primórdia"
+
+[node name="PlaceSub" type="Label" parent="Root/Left/Place/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.63, 0.72, 1)
+theme_override_font_sizes/font_size = 9
+text = "Campina"
+
+[node name="Card" type="PanelContainer" parent="Root/Left"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardText" type="RichTextLabel" parent="Root/Left/Card"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 9
+theme_override_font_sizes/italics_font_size = 9
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="Right" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -218.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 300.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Status" type="PanelContainer" parent="Root/Right"]
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_filter = 2
+
+[node name="Lines" type="VBoxContainer" parent="Root/Right/Status"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Clock" type="Label" parent="Root/Right/Status/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Dia 1 · 08:00 · Manhã"
+horizontal_alignment = 2
+
+[node name="Moon" type="Label" parent="Root/Right/Status/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.78, 1, 1)
+theme_override_font_sizes/font_size = 9
+text = "Lua cheia"
+horizontal_alignment = 2
+
+[node name="HeroLine" type="Label" parent="Root/Right/Status/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Nv 1 · XP 0/400 · 0c"
+horizontal_alignment = 2
+
+[node name="Toasts" type="VBoxContainer" parent="Root/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Hint" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -24.0
+offset_right = 150.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 4
+horizontal_alignment = 1
+
+[node name="Help" type="Label" parent="Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -260.0
+offset_top = -18.0
+offset_right = -8.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.85, 0.82, 0.9, 0.75)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+text = "Setas/WASD andar · E interagir · T esperar · J diário · Esc menu"
+
+[node name="Banner" type="VBoxContainer" parent="Root"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -112.0
+offset_right = 180.0
+offset_bottom = -36.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 2
+alignment = 2
+
+[node name="BannerTitle" type="Label" parent="Root/Banner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.56, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "Nova área"
+
+[node name="BannerText" type="Label" parent="Root/Banner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.91, 0.86, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 1
+autowrap_mode = 3

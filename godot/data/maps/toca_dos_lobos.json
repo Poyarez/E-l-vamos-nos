@@ -1,0 +1,216 @@
+{
+ "id": "toca_dos_lobos",
+ "name": "Toca dos Lobos",
+ "outdoor": false,
+ "light": 2,
+ "start": [
+  4,
+  13
+ ],
+ "legend": {
+  "#": "parede_gruta",
+  ".": "chao_toca",
+  "%": "ossos",
+  "\"": "raizes",
+  "~": "lago_subterraneo"
+ },
+ "regions": [
+  {
+   "id": "toca_dos_lobos",
+   "name": "Toca dos Lobos",
+   "rects": [
+    [
+     0,
+     0,
+     31,
+     13
+    ]
+   ],
+   "xp": 50,
+   "intro": "Um labirinto de túneis cavados sob as raízes da Floresta Sussurrante. O cheiro de fera é sufocante, e o frio aqui embaixo não é natural.",
+   "day": [
+    "Gotas pingam das raízes do teto.",
+    "Em algum lugar à frente, algo grande respira devagar.",
+    "Uivos abafados ecoam pelos túneis, vindos de todas as direções."
+   ],
+   "encounters": {
+    "chance": 0.12,
+    "groups": [
+     {
+      "monsters": [
+       "morcego_caverna"
+      ],
+      "weight": 3
+     },
+     {
+      "monsters": [
+       "morcego_caverna",
+       "morcego_caverna"
+      ],
+      "weight": 2
+     },
+     {
+      "monsters": [
+       "lobo_cinzento"
+      ],
+      "weight": 3,
+      "levels": [
+       4,
+       5
+      ]
+     },
+     {
+      "monsters": [
+       "lobo_gelido"
+      ],
+      "weight": 2,
+      "if": {
+       "not_flag": "presa_de_gelo_derrotado"
+      }
+     }
+    ]
+   }
+  }
+ ],
+ "landmarks": [
+  {
+   "id": "boca_toca",
+   "name": "Boca da Toca",
+   "x": 4,
+   "y": 13,
+   "xp": 20,
+   "description": "A luz da floresta mal alcança este ponto. O chão de terra batida está coberto de pegadas — de lobo, muitas, e de botas, algumas — que descem para a escuridão.",
+   "examine": "Pelos brancos, longos e grossos estão presos nas raízes do teto. Algo enorme passa por aqui com frequência."
+  },
+  {
+   "id": "galeria_ossos",
+   "name": "Galeria dos Ossos",
+   "x": 5,
+   "y": 4,
+   "xp": 40,
+   "description": "Uma câmara larga onde gerações de presas vieram morrer: ossos de cervo, de javali, de ovelha — e alguns que você prefere não identificar — forram o chão em camadas.",
+   "examine": "Os ossos não contam mais nada. Mas a aljava pesa na sua mochila.",
+   "loot": {
+    "flag": "toca_aljava",
+    "items": [
+     [
+      "aljava_gravada",
+      1
+     ]
+    ],
+    "xp": 30,
+    "text": "Entre os ossos, você encontra o arco partido de um caçador e uma aljava de couro com as iniciais \"R. V.\" gravadas a fogo. Você guarda a aljava. Alguém, na vila, vai querer vê-la."
+   },
+   "encounter": {
+    "flag": "toca_galeria",
+    "radius": 2,
+    "monsters": [
+     [
+      "lobo_cinzento",
+      4
+     ],
+     [
+      "lobo_cinzento",
+      4
+     ]
+    ],
+    "intro": "Dois lobos cinzentos se erguem do meio dos ossos, de pelos eriçados, bloqueando a passagem!",
+    "victory": "Os lobos tombam sobre a ossada. Por um instante, a toca inteira fica em silêncio."
+   }
+  },
+  {
+   "id": "ninho_filhotes",
+   "name": "Ninho dos Filhotes",
+   "x": 17,
+   "y": 2,
+   "xp": 30,
+   "description": "Num nicho forrado de folhas secas e pelos, três filhotes de lobo dormem amontoados, as costelas aparecendo sob o pelo ralo. Um deles abre um olho azul — azul como gelo — e volta a dormir.",
+   "examine": "Os filhotes estão magros e tremem de frio, mesmo encostados uns nos outros. Na parede acima do ninho, alguém pintou com sangue seco uma lua cortada ao meio. Isto não é só uma toca: é um canil."
+  },
+  {
+   "id": "acampamento_domador",
+   "name": "Acampamento do Domador",
+   "x": 25,
+   "y": 7,
+   "xp": 40,
+   "description": "Um acampamento escondido no fundo da toca: um saco de dormir, caixotes de mantimentos, uma jaula de ferro vazia e um círculo de pedras com brasas que queimam num tom violeta, sem fumaça.",
+   "examine": "Na jaula, tufos de pelo branco. Nas caixas, carne seca, cordas e potes com um pó violeta que cheira a enxofre — o mesmo das velas do Altar Rachado. Quem quer que seja Varek, não age sozinho.",
+   "encounter": {
+    "flag": "varek_derrotado",
+    "radius": 2,
+    "monsters": [
+     [
+      "varek_domador",
+      6
+     ]
+    ],
+    "intro": "Junto a uma fogueira de brasas violetas, um homem de capa negra se levanta devagar, enrolando um chicote na mão. \"Então é você a peste que anda matando os meus cachorros.\"",
+    "victory": "Varek cai de joelhos, apertando um amuleto partido. \"A Senhora... vai... encontrar você...\" As brasas violetas se apagam junto com ele.",
+    "journal": {
+     "id": "diario_domador",
+     "title": "O diário do Domador",
+     "text": "Entre as coisas de Varek havia um diário: \"A Senhora da Lua Cortada exige as três luas antes da noite sem lua. A primeira dorme atrás do véu de prata. O alfa está pronto; a alcateia obedece. Quando o Vigia despertar, o vale será nosso.\""
+    }
+   }
+  },
+  {
+   "id": "covil_alfa",
+   "name": "Covil do Alfa",
+   "x": 15,
+   "y": 11,
+   "xp": 50,
+   "description": "Uma caverna ampla e fria como o inverno: geada cobre as paredes, e o chão está forrado de ossos roídos e tufos de pelo branco. No centro, um leito de pedra polida pelo peso de algo enorme.",
+   "examine": "O leito de pedra ainda guarda o frio do Alfa. Sob ele, riscada na rocha, outra lua cortada — e uma seta apontando para o norte. Para as ruínas.",
+   "encounter": {
+    "flag": "presa_de_gelo_derrotado",
+    "radius": 2,
+    "boss": true,
+    "monsters": [
+     [
+      "presa_de_gelo",
+      7
+     ]
+    ],
+    "intro": "O ar fica gelado de repente. No fundo do covil, dois olhos azuis se acendem — muito acima de onde deveriam estar os olhos de um lobo. Presa-de-Gelo se ergue, imenso e branco como a neve, e o chão estala de geada sob as patas dele.",
+    "victory": "Presa-de-Gelo solta um último uivo, longo e triste, e desaba. A geada nas paredes começa a derreter. Lá fora, em algum lugar da floresta, os lobos param de uivar.",
+    "journal": {
+     "id": "alfa_derrotado",
+     "title": "O Alfa Branco caiu",
+     "text": "Presa-de-Gelo, o Alfa Branco, foi derrotado no fundo da Toca dos Lobos. Sem ele, as alcateias da Floresta Sussurrante devem se dispersar. A Capitã Renna precisa saber."
+    }
+   }
+  }
+ ],
+ "portals": [
+  {
+   "id": "toca_saida",
+   "x": 4,
+   "y": 13,
+   "direction": "s",
+   "verb": "sair",
+   "label": "Floresta Sussurrante",
+   "target": [
+    "vale_primordia",
+    3,
+    15
+   ],
+   "travel_text": "Você sobe pela boca da toca e respira com alívio o ar fresco da floresta."
+  }
+ ],
+ "rows": [
+  "################################",
+  "###############.\"...############",
+  "##...%.%.#\"#\"\"#.....############",
+  "#..%%....................#######",
+  "#.........#\"###...\".####.#######",
+  "##.%..%%.###############.#######",
+  "##%......############......~~###",
+  "##...################.........##",
+  "####.################.........##",
+  "####.#####.%%.~~....#........###",
+  "###..#####..........##.#########",
+  "####..####.............#########",
+  "####.#####%%.....%%.############",
+  "####.###########################"
+ ]
+}

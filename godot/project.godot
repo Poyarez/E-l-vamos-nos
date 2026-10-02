@@ -1,0 +1,37 @@
+; Arquivo de configuração do Godot (abra esta pasta no Godot 4.7 ou mais novo).
+
+config_version=5
+
+[application]
+
+config/name="Crônicas de Primórdia"
+config/description="RPG de fantasia medieval: a versão gráfica das Crônicas de Primórdia."
+run/main_scene="res://scenes/title.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Data="*res://scripts/autoload/data.gd"
+Game="*res://scripts/autoload/game.gd"
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[gui]
+
+theme/custom="res://ui/theme.tres"
+
+[rendering]
+
+environment/defaults/default_clear_color=Color(0.04, 0.035, 0.07, 1)
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true

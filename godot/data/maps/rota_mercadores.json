@@ -1,0 +1,403 @@
+{
+ "id": "rota_mercadores",
+ "name": "Rota dos Mercadores",
+ "outdoor": true,
+ "start": [
+  21,
+  0
+ ],
+ "legend": {
+  "^": "montanha",
+  ".": "planicie",
+  "\"": "relva_alta",
+  "T": "floresta",
+  "n": "colinas",
+  "o": "rochas",
+  "=": "estrada",
+  "A": "barracas"
+ },
+ "regions": [
+  {
+   "id": "estrada_sul",
+   "name": "Estrada do Sul",
+   "rects": [
+    [
+     0,
+     0,
+     43,
+     7
+    ]
+   ],
+   "xp": 50,
+   "intro": "Além do Portão Sul, a Estrada Real desce por campos abertos e colinas baixas. Antes das tremuras, caravanas passavam por aqui todo dia; agora, só o vento — e quem vive de esperar por elas.",
+   "day": [
+    "Rodas de carroça quebradas apodrecem à beira da estrada.",
+    "Um corvo pousa num marco de pedra e grasna três vezes, como um aviso.",
+    "Ao longe, no alto de uma colina, alguma coisa reflete o sol — e some."
+   ],
+   "night": [
+    "Uma fogueira pisca no sudeste, escondida entre as montanhas.",
+    "Assobios curtos atravessam a escuridão, de um lado para o outro da estrada."
+   ],
+   "encounters": {
+    "chance": 0.07,
+    "night_bonus": 0.04,
+    "groups": [
+     {
+      "monsters": [
+       "batedor_corvo"
+      ],
+      "weight": 3,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "arqueiro_corvo"
+      ],
+      "weight": 2,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "batedor_corvo",
+       "arqueiro_corvo"
+      ],
+      "weight": 1,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "javali_espinhento"
+      ],
+      "weight": 2,
+      "time": "dia",
+      "levels": [
+       9,
+       10
+      ]
+     },
+     {
+      "monsters": [
+       "lobo_cinzento",
+       "lobo_cinzento"
+      ],
+      "weight": 2,
+      "time": "noite",
+      "levels": [
+       9,
+       10
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "desfiladeiro_viuvas",
+   "name": "Desfiladeiro das Viúvas",
+   "rects": [
+    [
+     0,
+     8,
+     43,
+     15
+    ]
+   ],
+   "xp": 70,
+   "intro": "A estrada se espreme entre dois paredões de pedra, tão juntos que o sol só entra ao meio-dia. Foi aqui que a caravana de Zahir caiu na emboscada — e não foi a primeira.",
+   "day": [
+    "Pedras soltas rolam do alto dos paredões, empurradas por alguém ou por nada.",
+    "Flechas quebradas e penas negras se acumulam nas frestas da rocha.",
+    "O eco repete os seus passos com um atraso estranho."
+   ],
+   "night": [
+    "Vozes roucas cantam em volta de uma fogueira, para os lados do leste.",
+    "Uma coruja pia — e outra coruja, que não é coruja, responde."
+   ],
+   "encounters": {
+    "chance": 0.09,
+    "night_bonus": 0.04,
+    "groups": [
+     {
+      "monsters": [
+       "batedor_corvo",
+       "arqueiro_corvo"
+      ],
+      "weight": 2,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "brutamontes_corvo"
+      ],
+      "weight": 2,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "arqueiro_corvo",
+       "arqueiro_corvo"
+      ],
+      "weight": 1,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "brutamontes_corvo",
+       "batedor_corvo"
+      ],
+      "weight": 1,
+      "if": {
+       "not_flag": "ulric_derrotado"
+      }
+     },
+     {
+      "monsters": [
+       "javali_espinhento"
+      ],
+      "weight": 1,
+      "time": "dia",
+      "levels": [
+       10,
+       11
+      ]
+     },
+     {
+      "monsters": [
+       "lobo_cinzento",
+       "lobo_cinzento"
+      ],
+      "weight": 1,
+      "time": "noite",
+      "levels": [
+       10,
+       11
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "landmarks": [
+  {
+   "id": "saida_portao_sul",
+   "name": "Cancela do Portão Sul",
+   "x": 21,
+   "y": 0,
+   "xp": 20,
+   "description": "Atrás de você, a barricada de carroças do Portão Sul foi afastada o suficiente para uma pessoa passar. Um guarda acena da guarita, sem muita convicção.",
+   "examine": "Do lado de fora, a cancela tem marcas de machado e flechas cravadas: o Bando do Corvo já testou o portão mais de uma vez. (Siga para o norte para voltar ao vale.)"
+  },
+  {
+   "id": "carroca_saqueada",
+   "name": "Carroça Saqueada",
+   "x": 17,
+   "y": 4,
+   "xp": 30,
+   "hint": "Um cheiro de especiarias derramadas vem de algum lugar ao {direcao}.",
+   "description": "Uma carroça de mercador tombada à beira da estrada, com as rodas para o céu. Caixotes arrombados, panos rasgados e um rastro de pimenta vermelha pelo chão.",
+   "examine": "Na lateral da carroça, pintado com tinta preta: um corvo e as palavras \"PEDÁGIO PAGO\". Os bandidos levaram tudo o que brilhava e deixaram o que pesava.",
+   "loot": {
+    "flag": "carroca_saqueada_caixote",
+    "items": [
+     [
+      "especiarias",
+      4
+     ],
+     [
+      "pocao_cura",
+      1
+     ]
+    ],
+    "copper": 250,
+    "xp": 40,
+    "text": "Debaixo da carroça, preso entre as tábuas, um caixote passou despercebido aos bandidos: especiarias do sul, uma poção e uma bolsinha de moedas costurada no forro."
+   }
+  },
+  {
+   "id": "pedreira_abandonada",
+   "name": "Pedreira Abandonada",
+   "x": 4,
+   "y": 3,
+   "xp": 30,
+   "description": "Uma pedreira de onde saíram as pedras da Estrada Real. Os cortes na rocha ainda são retos como réguas, e veios avermelhados correm pelos blocos que ficaram para trás.",
+   "examine": "Ferro, cobre... os pedreiros de antigamente não ligavam para metal: só queriam pedra boa. Para quem tem uma picareta, a pedreira ainda tem muito a dar.",
+   "resources": [
+    {
+     "node": "veio_ferro"
+    },
+    {
+     "node": "veio_cobre"
+    }
+   ]
+  },
+  {
+   "id": "mirante_rota",
+   "name": "Mirante do Corvo",
+   "x": 31,
+   "y": 2,
+   "xp": 50,
+   "reveal": 10,
+   "description": "O topo da colina mais alta da estrada, com um marco de pedra coberto de penas negras presas com cera. Daqui os batedores do Bando vigiam a estrada inteira.",
+   "night": "Do alto, você vê a fogueira do acampamento do Bando brilhar no sudeste, escondida num vale entre as montanhas.",
+   "examine": "No marco, alguém riscou um mapa tosco: a estrada, o desfiladeiro e, a leste dele, um X com um corvo. Ao lado, contas de cabeça: quantas carroças, quantos guardas, quanto ouro."
+  },
+  {
+   "id": "desfiladeiro",
+   "name": "Garganta das Viúvas",
+   "x": 21,
+   "y": 9,
+   "xp": 40,
+   "description": "O ponto mais estreito do desfiladeiro: a estrada passa entre dois paredões a poucos passos um do outro. Os nichos na rocha são perfeitos para quem quer atirar sem ser visto.",
+   "examine": "Há marcas de fogueira em vários nichos dos paredões e um monte de flechas usadas: o Bando espera aqui, dia e noite, pela próxima caravana.",
+   "encounter": {
+    "flag": "emboscada_desfiladeiro",
+    "radius": 1,
+    "monsters": [
+     [
+      "brutamontes_corvo",
+      10
+     ],
+     [
+      "arqueiro_corvo",
+      9
+     ]
+    ],
+    "intro": "Uma pedra rola do alto do paredão — é o sinal. Um brutamontes salta para a estrada à sua frente, e um arqueiro aparece num nicho da rocha. \"Pedágio\", diz o grandalhão, estalando os dedos.",
+    "victory": "O caminho pelo desfiladeiro está livre — por enquanto. Pegadas frescas sobem por uma trilha a leste, rumo a um vale escondido."
+   }
+  },
+  {
+   "id": "acampamento_corvo",
+   "name": "Acampamento do Corvo",
+   "x": 38,
+   "y": 10,
+   "xp": 60,
+   "hint": "Fumaça de fogueira sobe de algum lugar ao {direcao}.",
+   "description": "Um vale fechado entre as montanhas, cheio de barracas remendadas, fogueiras e pilhas de mercadorias roubadas. No centro, uma barraca maior, com um corvo pintado na lona.",
+   "night": "As fogueiras do acampamento iluminam as barracas por dentro, e sombras se movem atrás das lonas. Alguém afia uma lâmina, devagar, sem parar.",
+   "examine": "Na barraca do chefe, um mapa do vale preso com facas: a vila, o Portão Sul, a mina — e, nas ruínas, uma lua cortada desenhada a carvão, com a palavra \"pagamento\".",
+   "encounter": {
+    "flag": "ulric_derrotado",
+    "radius": 2,
+    "boss": true,
+    "monsters": [
+     [
+      "ulric",
+      11
+     ]
+    ],
+    "intro": "Um homem de tranças negras sai da barraca maior, girando um sabre curvo em cada mão. \"Então foi você que acabou com o meu fornecedor de flechas.\" Ele sorri. \"Gorran era um idiota. Eu não sou.\"",
+    "victory": "Ulric Corvo-Negro cai sobre a própria fogueira, espalhando brasas. Os bandidos que restam largam as armas e somem pelas montanhas. O Bando do Corvo acabou.",
+    "journal": {
+     "id": "bando_derrotado",
+     "title": "O fim do Bando do Corvo",
+     "text": "Ulric Corvo-Negro foi derrotado no acampamento do Bando, a leste do Desfiladeiro das Viúvas. A Rota dos Mercadores pode ser reaberta: a Capitã Renna precisa saber."
+    }
+   }
+  },
+  {
+   "id": "bau_corvo",
+   "name": "Baú do Corvo",
+   "x": 40,
+   "y": 11,
+   "xp": 40,
+   "description": "Atrás da barraca do chefe, um baú de carvalho reforçado com ferro, coberto por uma lona e por um monte de capas roubadas.",
+   "examine": "O baú é pesado demais para dois homens. Na tampa, entalhado a faca: \"do Corvo — quem mexer perde a mão\".",
+   "chest": {
+    "flag": "bau_corvo_aberto",
+    "key": "chave_corvo",
+    "pick": 11,
+    "locked": "O baú está trancado com um cadeado de bronze do tamanho de um punho.",
+    "items": [
+     [
+      "fardo_zahir",
+      1
+     ],
+     [
+      "fio_seda",
+      4
+     ],
+     [
+      "pocao_cura",
+      2
+     ]
+    ],
+    "copper": 2200,
+    "xp": 150,
+    "text": "O tesouro do Bando: moedas de uma dúzia de caravanas, novelos de seda, poções — e um fardo de seda ainda lacrado com o selo de Zahir ibn Kadir."
+   }
+  },
+  {
+   "id": "tumulo_mercador",
+   "name": "Túmulo do Mercador",
+   "x": 6,
+   "y": 13,
+   "xp": 25,
+   "description": "À beira de um bosque, um monte de pedras com uma roda de carroça cravada em pé, à guisa de lápide. Flores secas, amarradas com fita, enfeitam a roda.",
+   "examine": "Na roda, escrito a faca: \"Bartolomeu, mercador de Alvorada. Não pagou o pedágio.\" Alguém acrescentou embaixo, com outra letra: \"e não devia\"."
+  },
+  {
+   "id": "marco_alvorada",
+   "name": "Marco de Alvorada",
+   "x": 21,
+   "y": 15,
+   "xp": 30,
+   "description": "Um marco de pedra à beira da estrada: \"ALVORADA — 6 LÉGUAS\". Além dele, a estrada desce para o vale do Rio Largo, onde a ponte desabou nas tremuras.",
+   "examine": "Lá embaixo, os pilares da ponte do Rio Largo são tocos quebrados no meio da correnteza. Do outro lado, minúsculas, as torres de Alvorada brilham ao sol."
+  }
+ ],
+ "portals": [
+  {
+   "id": "rota_portao_sul",
+   "x": 21,
+   "y": 0,
+   "direction": "n",
+   "label": "Portão Sul do Vale",
+   "target": [
+    "vale_primordia",
+    30,
+    29
+   ],
+   "travel_text": "Você passa pela brecha da barricada, e o guarda do Portão Sul fecha a cancela atrás de você."
+  },
+  {
+   "id": "rota_alvorada",
+   "x": 21,
+   "y": 15,
+   "direction": "s",
+   "label": "Estrada para Alvorada",
+   "locked": true,
+   "locked_text": "A estrada desce até a margem do Rio Largo e termina no nada: a ponte desabou nas tremuras, e a correnteza é forte demais para atravessar. Alvorada vai ter de esperar — até alguém reconstruir a ponte."
+  }
+ ],
+ "rows": [
+  "^^^^^^^^^^^^^^^^^^^^^=^^^^^^^^^^^^^^^^^^^^^^",
+  "^^nnn.T....\"\"\"\"\".....=....nn....nnn.\"\"\"\"\"^^^",
+  "^^noooo....\"\"\"\"\".....=....nnnnnnnnn.\"\"\"T\"^^^",
+  "^^no.oo..TTT.........=....nnnnnnnnn.\"\"\"\"\".^^",
+  "^^.oooo.oTTT.........=....nnnnnnnnn.......^^",
+  "^^n\"o\"\"\"\"\"...........=.\"\"\"\"\"\".TTTTTTTTTTT.^^",
+  "^^n\"\"\"\"\"\"\"...\"\"\"\"\"...=.\"\"\"\"\"\".TTT..TTTTTT^^^",
+  "^^.\"\"\"\"\"\"\"...\"\"\"\"\"...=.\"\"\"\"\"\".TTTTTTTTTTTT^^",
+  "^^^^^^^^^^^^^^^^^^oo.=.oo^^^^^^^^^^^^^^^^^^^",
+  "^^^^^^^^^^^^^^^^^^oo.=.oo^^^^^^^^^..AAAAAT^^",
+  "^^^^^^^^^^^^^^^^^^oo.=.oo^^^^^^^^^..AAAAA.^^",
+  "^^^^^^^^^^^^^^^^^^oo.=.oo^^^^^^^^...AAAAA.^^",
+  "^^.\"\"\"\"\"\"TTT.........==============.AAAAA.^^",
+  "^^.\"\"\"\"\"\"TTT\"\"\"\".....=...\"\"\"\"\"\"...^^^^^^^^^^",
+  "^^nnn.......\"\"\"\".....=...\"\"\"\"\"\"...^^^^^^^^^^",
+  "^^^^^^^^^^^^^^^^^^^^^=^^^^^^^^^^^^^^^^^^^^^^"
+ ]
+}

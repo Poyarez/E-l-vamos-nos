@@ -20,6 +20,8 @@ Basta ter **Python 3.8 ou mais recente**. O jogo não depende de nenhuma bibliot
 
 As mesmas preferências podem ser ajustadas no menu **Opções** e ficam salvas.
 
+Há também uma **versão gráfica no Godot** (pasta `godot/`), que usa os mesmos dados do jogo de terminal: veja [Versão gráfica no Godot](#versão-gráfica-no-godot).
+
 ## O que já dá para jogar
 
 ### Etapa 1: exploração
@@ -143,6 +145,68 @@ As mesmas preferências podem ser ajustadas no menu **Opções** e ficam salvas.
 - **16 criaturas novas, entre elas 4 chefes:** Gorran, o Capataz (nível 10), Ulric Corvo-Negro (11), Morwen, a Senhora da Lua Cortada (12), e o Vigia Atormentado (13). Os números foram ajustados por simulação: cada chefe vence quem chega no nível certo com algumas poções, e castiga quem chega sem preparo.
 - **Ofícios:** aço (ferro e carvão), dez peças e uma picareta de aço, pregos de bronze, piche, remendo de lona, roupas do tecido do culto, carpa prateada e poção de cura maior.
 
+## Versão gráfica no Godot
+
+A pasta `godot/` é a versão gráfica do jogo, feita no [Godot 4](https://godotengine.org), um motor gratuito e de código aberto. Ela usa **os mesmos dados** do jogo de terminal. Mapas, NPCs, diálogos, missões e regras são exportados do Python para JSON, então nada é redigitado.
+
+**Para jogar:**
+
+1. Baixe o Godot **4.7 ou mais novo** em [godotengine.org](https://godotengine.org/download). Use a versão padrão, não a .NET.
+2. Abra o Godot, clique em **Importar** e escolha o arquivo `godot/project.godot`.
+3. Aperte **F5**.
+
+**O que já funciona (primeira etapa):**
+
+- o Vale de Primórdia e os outros sete mapas em tiles de 16×16, com as mesmas regiões, locais e passagens do terminal;
+- criação de personagem com prévia: nome, gênero, classe, cabelo, cor do cabelo, armadura e alinhamento;
+- o herói anda de tile em tile, inclusive na diagonal, pelo teclado ou pelo controle. Cada terreno tem seu tempo de caminhada: a estrada é rápida e o pântano é lento;
+- os 16 NPCs, com as agendas de dia e de noite e todos os diálogos:
+  - retrato e texto letra a letra;
+  - respostas que aparecem conforme o que você já fez;
+  - efeitos no diário, nos itens, na XP e nas missões;
+- locais a descobrir (marcados com "?"), exames, segredos, baús, tesouros e pistas de locais próximos;
+- ciclo de dia e noite com a luz do herói, fases da lua, a estalagem para dormir e a espera de uma hora;
+- o diário, com missões, anotações e mochila;
+- salvar e continuar.
+
+| Tecla                  | Ação                        |
+|------------------------|-----------------------------|
+| setas ou WASD          | andar                       |
+| E, Enter ou Espaço     | conversar, examinar, entrar |
+| T                      | esperar uma hora            |
+| J                      | diário                      |
+| Esc                    | menu (salvar, sair...)      |
+| + e − ou roda do mouse | zoom                        |
+
+Combate, comércio e ofícios ainda são só do terminal. Eles chegam ao Godot nas próximas etapas.
+
+**Para editar o jogo no Godot:**
+
+- Cada mapa é uma cena em `godot/world/maps/<mapa>.tscn`. Abra a cena, selecione o nó `Ground` e pinte com o painel *TileMap*, na parte de baixo do editor. O terreno de cada tile vale de verdade no jogo: água bloqueia e estrada é mais rápida.
+- As cenas do herói, dos NPCs e das telas ficam em `godot/scenes/`. As cores e bordas da interface ficam no tema `godot/ui/theme.tres`.
+- A arte provisória fica em `godot/art/`: PNGs com uma grade de 16×16. Dá para trocar por arte própria mantendo a mesma grade.
+
+**Quando mudar os dados no Python** (um diálogo, um NPC, um item), atualize os JSON do Godot:
+
+```
+python tools/export_godot_data.py
+python tools/make_godot_art.py      # só se mudou terrenos ou NPCs: refaz os PNGs
+```
+
+Se o desenho de um mapa mudou, gere de novo as cenas dos mapas. Isso apaga o que foi pintado à mão nessas cenas.
+
+```
+godot --headless --path godot res://tools/build_project.tscn -- --overwrite
+```
+
+Aqui, `godot` é o executável do Godot. Os testes da versão Godot fazem cerca de mil verificações. Eles cobrem dados, tiles, todos os diálogos por vários caminhos, condições, missões, save, movimento, passagens e conversas inteiras:
+
+```
+godot --headless --path godot res://tests/run_tests.tscn
+```
+
+A cena `res://tests/screenshots.tscn` tira fotos de tela de situações típicas, como o título, uma conversa, a noite e a gruta. Ela ajuda a conferir o visual depois de mudar a arte ou as telas.
+
 ## Comandos
 
 Acentos e maiúsculas não importam, e quase todo comando tem atalhos. Digite `ajuda` no jogo para ver a lista completa.
@@ -216,6 +280,19 @@ rpg/
     maps/                um módulo por mapa: vale_primordia, gruta_veu_prata, toca_dos_lobos, mina_ferro_velho,
                          ilhota_garca, santuario_profano, rota_mercadores e camara_vigia
 tests/                   testes automatizados (unittest, sem dependências)
+tools/
+  export_godot_data.py   exporta rpg/data para godot/data (JSON)
+  make_godot_art.py      gera a arte provisória em pixel art: tiles, herói em camadas, NPCs e ícones
+godot/                   a versão gráfica (projeto do Godot 4.7)
+  project.godot          tela de 640x360 ampliada, pixel art nítida, autoloads Data e Game
+  data/, art/            dados exportados do Python e os PNGs de 16x16
+  scripts/autoload/      Data (lê os JSON) e Game (estado da partida, relógio, itens, diário e save)
+  scripts/core/          condições, efeitos de diálogo, missões e texto (as regras de rpg/ em GDScript)
+  scripts/world/         o mundo (movimento, passagens, exames, agenda), herói, NPCs e mapas em tiles
+  scripts/ui/            caixa de diálogo, interface, diário, menu e tema
+  scenes/                título com criação de personagem, partida, herói, NPC e telas
+  world/                 o TileSet e uma cena por mapa, para pintar no editor
+  tools/, tests/         geração do TileSet, mapas e tema; testes sem janela e fotos de tela
 ```
 
 Os módulos de `rpg/data` contêm **apenas dados**. Os módulos de regra funcionam como fábricas que transformam esses dicionários em objetos do jogo. Para expandir o mundo, basta, na maioria das vezes, editar os dados:
@@ -244,7 +321,7 @@ Os saves ficam em `saves/<nome>-<id>.json` (a pasta pode ser trocada pela variá
 python -m unittest
 ```
 
-São 192 testes:
+São 194 testes:
 
 - curvas de XP do WoW e do OSRS;
 - atributos e equipamento de todas as classes;
@@ -260,6 +337,7 @@ São 192 testes:
 - a história principal inteira, do mural da gruta ao desfecho, e as principais missões secundárias, de ponta a ponta;
 - saves, incluindo a recuperação pela cópia de segurança, o bestiário, os pontos de coleta, os bônus ativos, as missões, o quadro e os talentos;
 - uma partida completa executando o `main.py` com entradas roteirizadas.
+- os dados exportados para a versão Godot estão em dia com o Python.
 
 ## Roteiro
 
@@ -280,7 +358,13 @@ São 192 testes:
   - missões com etapas e o quadro de avisos diário;
   - a história das três luas, a Mina de Ferro-Velho, o Bando do Corvo, a ilhota do lago e o santuário do culto;
   - baús trancados, NPCs ocultos e lojas que crescem com a história.
+- [x] **Godot, etapa 1:** versão gráfica com os mesmos dados:
+  - mapas em tiles, editáveis no Godot;
+  - herói andando e criação de personagem com prévia;
+  - NPCs com agenda e diálogos completos;
+  - descobertas, segredos, baús, dia e noite, diário e save.
 - [ ] **Próximos passos:**
+  - no Godot: combate por turnos, comércio, coleta e ofícios;
   - Pedravale, a cidade mineira além do Passo do Norte (onde outro gigante dorme sob as montanhas);
   - Alvorada, a capital, quando a ponte do Rio Largo for reconstruída;
   - o Fundo-Fundo, o lar dos kobolds sob a mina;

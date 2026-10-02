@@ -1,0 +1,261 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/title.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://art/hero.png" id="2_hero"]
+
+[node name="Title" type="Node"]
+script = ExtResource("1_script")
+
+[node name="Backdrop" type="Node2D" parent="."]
+
+[node name="Camera" type="Camera2D" parent="Backdrop"]
+position = Vector2(480, 240)
+
+[node name="Tint" type="CanvasModulate" parent="."]
+color = Color(0.62, 0.55, 0.82, 1)
+
+[node name="Ui" type="CanvasLayer" parent="."]
+
+[node name="Root" type="Control" parent="Ui"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Shade" type="ColorRect" parent="Ui/Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.02, 0.07, 0.45)
+
+[node name="Header" type="VBoxContainer" parent="Ui/Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 34.0
+offset_bottom = 90.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="GameTitle" type="Label" parent="Ui/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.05, 0.2, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+text = "Crônicas de Primórdia"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Ui/Root/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.95, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.03, 0.1, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = "O Vale de Primórdia"
+horizontal_alignment = 1
+
+[node name="Menu" type="VBoxContainer" parent="Ui/Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -10.0
+offset_right = 80.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 4
+
+[node name="NewGame" type="Button" parent="Ui/Root/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Novo jogo"
+
+[node name="Continue" type="Button" parent="Ui/Root/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Continuar"
+
+[node name="Quit" type="Button" parent="Ui/Root/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Sair"
+
+[node name="Creation" type="PanelContainer" parent="Ui/Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -74.0
+offset_right = 260.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Row" type="HBoxContainer" parent="Ui/Root/Creation"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Form" type="GridContainer" parent="Ui/Root/Creation/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="NameLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Nome"
+
+[node name="HeroName" type="LineEdit" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Aventureiro"
+max_length = 20
+
+[node name="GenderLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Gênero"
+
+[node name="Gender" type="OptionButton" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ClassLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Classe"
+
+[node name="HeroClass" type="OptionButton" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HairLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Cabelo"
+
+[node name="HairStyle" type="OptionButton" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="HairColorLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Cor do cabelo"
+
+[node name="HairColor" type="OptionButton" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ArmorLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Armadura"
+
+[node name="ArmorColor" type="OptionButton" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AlignmentLabel" type="Label" parent="Ui/Root/Creation/Row/Form"]
+layout_mode = 2
+text = "Alinhamento"
+
+[node name="Alignment" type="OptionButton" parent="Ui/Root/Creation/Row/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Side" type="VBoxContainer" parent="Ui/Root/Creation/Row"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Preview" type="Control" parent="Ui/Root/Creation/Row/Side"]
+custom_minimum_size = Vector2(170, 92)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Look" type="Node2D" parent="Ui/Root/Creation/Row/Side/Preview"]
+unique_name_in_owner = true
+position = Vector2(85, 88)
+scale = Vector2(5, 5)
+
+[node name="Body" type="Sprite2D" parent="Ui/Root/Creation/Row/Side/Preview/Look"]
+texture = ExtResource("2_hero")
+offset = Vector2(0, -8)
+hframes = 8
+vframes = 6
+
+[node name="Clothes" type="Sprite2D" parent="Ui/Root/Creation/Row/Side/Preview/Look"]
+texture = ExtResource("2_hero")
+offset = Vector2(0, -8)
+hframes = 8
+vframes = 6
+frame = 8
+
+[node name="Hair" type="Sprite2D" parent="Ui/Root/Creation/Row/Side/Preview/Look"]
+texture = ExtResource("2_hero")
+offset = Vector2(0, -8)
+hframes = 8
+vframes = 6
+frame = 16
+
+[node name="ClassInfo" type="Label" parent="Ui/Root/Creation/Row/Side"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 9
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Ui/Root/Creation/Row/Side"]
+layout_mode = 2
+alignment = 2
+
+[node name="Back" type="Button" parent="Ui/Root/Creation/Row/Side/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Voltar"
+
+[node name="Start" type="Button" parent="Ui/Root/Creation/Row/Side/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+text = "Começar a jornada"
+
+[node name="Version" type="Label" parent="Ui/Root"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -18.0
+offset_right = -8.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.66, 0.63, 0.72, 1)
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2

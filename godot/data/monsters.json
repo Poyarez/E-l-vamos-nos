@@ -1,0 +1,1993 @@
+{
+ "families": {
+  "fera": "Fera",
+  "aracnideo": "Aracnídeo",
+  "espirito": "Espírito",
+  "humanoide": "Humanoide",
+  "construto": "Construto"
+ },
+ "monsters": {
+  "corvo_ladrao": {
+   "name": "Corvo Ladrão",
+   "family": "fera",
+   "levels": [
+    1,
+    2
+   ],
+   "hp": 0.65,
+   "damage": 0.75,
+   "armor": 0.4,
+   "dodge": 0.12,
+   "attack": "bica",
+   "description": "Corvos enormes e espertos que roubam tudo o que brilha — inclusive de aventureiros distraídos.",
+   "abilities": [
+    {
+     "id": "bicada_nos_olhos",
+     "name": "Bicada nos Olhos",
+     "chance": 0.2,
+     "cooldown": 3,
+     "damage": 1.1,
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "cego",
+       "name": "Visão turva",
+       "stat": "hit",
+       "value": -0.25,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "pena_corvo",
+     "chance": 60,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "bugiganga_brilhante",
+     "chance": 25
+    }
+   ],
+   "copper": [
+    2,
+    9
+   ]
+  },
+  "javali_jovem": {
+   "name": "Javali Jovem",
+   "family": "fera",
+   "levels": [
+    1,
+    3
+   ],
+   "hp": 1.0,
+   "damage": 0.9,
+   "armor": 1.1,
+   "attack": "chifra",
+   "weaknesses": [
+    "gelo"
+   ],
+   "description": "Javalis novos, ainda sem as cerdas grossas dos adultos, mas já com muito mau humor.",
+   "abilities": [
+    {
+     "id": "investida_selvagem",
+     "name": "Investida Selvagem",
+     "chance": 0.2,
+     "cooldown": 3,
+     "damage": 1.5
+    }
+   ],
+   "loot": [
+    {
+     "item": "carne_javali",
+     "chance": 55
+    },
+    {
+     "item": "couro_javali",
+     "chance": 35
+    },
+    {
+     "item": "presa_javali",
+     "chance": 15
+    }
+   ]
+  },
+  "rato_gigante": {
+   "name": "Rato Gigante",
+   "family": "fera",
+   "levels": [
+    1,
+    3
+   ],
+   "hp": 0.8,
+   "damage": 0.9,
+   "armor": 0.6,
+   "attack": "morde",
+   "weaknesses": [
+    "fogo"
+   ],
+   "description": "Ratos do tamanho de cães, surgidos de buracos no chão depois das tremuras. Só saem à noite.",
+   "abilities": [
+    {
+     "id": "mordida_infecta",
+     "name": "Mordida Infecta",
+     "chance": 0.25,
+     "cooldown": 2,
+     "damage": 0.8,
+     "effects": [
+      {
+       "type": "dot",
+       "id": "infeccao",
+       "name": "Infecção",
+       "power": 0.3,
+       "turns": 3,
+       "element": "natureza"
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "rabo_rato",
+     "chance": 65
+    }
+   ],
+   "copper": [
+    0,
+    3
+   ]
+  },
+  "lagarto_ribeirao": {
+   "name": "Lagarto do Ribeirão",
+   "family": "fera",
+   "levels": [
+    2,
+    3
+   ],
+   "hp": 1.0,
+   "damage": 0.9,
+   "armor": 1.5,
+   "attack": "morde",
+   "weaknesses": [
+    "gelo"
+   ],
+   "resistances": [
+    "natureza"
+   ],
+   "description": "Lagartos de escamas verdes que tomam sol nas pedras do ribeirão e mordem quem chega perto.",
+   "abilities": [
+    {
+     "id": "chicotada_cauda",
+     "name": "Chicotada de Cauda",
+     "chance": 0.25,
+     "cooldown": 2,
+     "damage": 1.4
+    }
+   ],
+   "loot": [
+    {
+     "item": "escama_lagarto",
+     "chance": 50,
+     "qty": [
+      1,
+      3
+     ]
+    }
+   ]
+  },
+  "lobo_faminto": {
+   "name": "Lobo Faminto",
+   "family": "fera",
+   "levels": [
+    2,
+    3
+   ],
+   "hp": 0.9,
+   "damage": 1.0,
+   "armor": 0.9,
+   "attack": "morde",
+   "weaknesses": [
+    "fogo"
+   ],
+   "description": "Lobos magros e desesperados, expulsos das matas profundas pela própria alcateia.",
+   "loot": [
+    {
+     "item": "pele_lobo",
+     "chance": 40
+    },
+    {
+     "item": "carne_lobo",
+     "chance": 45
+    },
+    {
+     "item": "presa_lobo",
+     "chance": 20
+    }
+   ]
+  },
+  "lobo_cinzento": {
+   "name": "Lobo Cinzento",
+   "family": "fera",
+   "levels": [
+    3,
+    5
+   ],
+   "hp": 1.0,
+   "damage": 1.05,
+   "armor": 1.0,
+   "attack": "morde",
+   "weaknesses": [
+    "fogo"
+   ],
+   "description": "O lobo comum da Floresta Sussurrante. Caça em dupla e nunca recua.",
+   "abilities": [
+    {
+     "id": "mordida_dilacerante",
+     "name": "Mordida Dilacerante",
+     "chance": 0.25,
+     "cooldown": 2,
+     "damage": 1.0,
+     "effects": [
+      {
+       "type": "dot",
+       "id": "sangrando",
+       "name": "Sangrando",
+       "power": 0.3,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "pele_lobo",
+     "chance": 55
+    },
+    {
+     "item": "presa_lobo",
+     "chance": 30
+    },
+    {
+     "item": "carne_lobo",
+     "chance": 45
+    },
+    {
+     "item": "capuz_couro_lobo",
+     "chance": 4
+    },
+    {
+     "item": "amuleto_dente_lobo",
+     "chance": 3
+    }
+   ]
+  },
+  "aranha_da_mata": {
+   "name": "Aranha da Mata",
+   "family": "aracnideo",
+   "levels": [
+    3,
+    5
+   ],
+   "hp": 0.9,
+   "damage": 1.0,
+   "armor": 0.8,
+   "attack": "pica",
+   "weaknesses": [
+    "fogo"
+   ],
+   "resistances": [
+    "natureza"
+   ],
+   "description": "Aranhas do tamanho de um escudo que tecem teias entre os troncos e injetam um veneno dormente.",
+   "abilities": [
+    {
+     "id": "picada_venenosa",
+     "name": "Picada Venenosa",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 0.7,
+     "element": "natureza",
+     "effects": [
+      {
+       "type": "dot",
+       "id": "veneno",
+       "name": "Veneno",
+       "power": 0.35,
+       "turns": 3,
+       "element": "natureza"
+      }
+     ]
+    },
+    {
+     "id": "teia_pegajosa",
+     "name": "Teia Pegajosa",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "fogo",
+      "fisico"
+     ],
+     "damage": 0.6,
+     "element": "natureza",
+     "announce": "A aranha começa a tecer uma teia enorme ao seu redor!",
+     "effects": [
+      {
+       "type": "stun",
+       "turns": 1,
+       "name": "Teia"
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "teia_pegajosa",
+     "chance": 55,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "glandula_veneno",
+     "chance": 30
+    },
+    {
+     "item": "luvas_seda_aranha",
+     "chance": 4
+    }
+   ]
+  },
+  "javali_espinhento": {
+   "name": "Javali Espinhento",
+   "family": "fera",
+   "levels": [
+    3,
+    5
+   ],
+   "hp": 1.2,
+   "damage": 1.05,
+   "armor": 1.3,
+   "attack": "chifra",
+   "weaknesses": [
+    "gelo"
+   ],
+   "description": "Javalis adultos de dorso espinhento. Raspam o chão antes de investir — preste atenção.",
+   "abilities": [
+    {
+     "id": "investida_furiosa",
+     "name": "Investida Furiosa",
+     "chance": 0.3,
+     "cooldown": 3,
+     "charge": 1,
+     "locks": [
+      "gelo",
+      "fisico"
+     ],
+     "damage": 2.2,
+     "announce": "O javali raspa o chão e abaixa a cabeça, pronto para investir!"
+    }
+   ],
+   "loot": [
+    {
+     "item": "carne_javali",
+     "chance": 60
+    },
+    {
+     "item": "couro_javali",
+     "chance": 50
+    },
+    {
+     "item": "presa_javali",
+     "chance": 30
+    },
+    {
+     "item": "botas_couro_javali",
+     "chance": 4
+    }
+   ]
+  },
+  "espirito_sussurrante": {
+   "name": "Espírito Sussurrante",
+   "family": "espirito",
+   "levels": [
+    4,
+    6
+   ],
+   "hp": 0.85,
+   "damage": 0.9,
+   "armor": 0.0,
+   "attack": "encosta dedos gelados em",
+   "element": "sombra",
+   "weaknesses": [
+    "sagrado",
+    "fogo"
+   ],
+   "resistances": [
+    "fisico",
+    "sombra"
+   ],
+   "description": "Ecos de vozes antigas presos à floresta. Só aparecem à noite, e armas comuns mal os tocam.",
+   "abilities": [
+    {
+     "id": "sussurro_enlouquecedor",
+     "name": "Sussurro Enlouquecedor",
+     "chance": 0.35,
+     "cooldown": 3,
+     "charge": 2,
+     "locks": [
+      "sagrado",
+      "fisico",
+      "arcano"
+     ],
+     "damage": 1.8,
+     "element": "sombra",
+     "announce": "O espírito começa a sussurrar o seu nome, cada vez mais alto...",
+     "effects": [
+      {
+       "type": "drain_mana",
+       "value": 0.2
+      },
+      {
+       "type": "stun",
+       "turns": 1,
+       "name": "Pavor"
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "ectoplasma",
+     "chance": 45
+    },
+    {
+     "item": "essencia_sussurrante",
+     "chance": 20
+    },
+    {
+     "item": "cajado_galho_sussurrante",
+     "chance": 3
+    }
+   ]
+  },
+  "lobo_gelido": {
+   "name": "Lobo de Olhos Azuis",
+   "family": "fera",
+   "levels": [
+    5,
+    6
+   ],
+   "hp": 1.05,
+   "damage": 1.1,
+   "armor": 1.0,
+   "attack": "morde",
+   "weaknesses": [
+    "fogo"
+   ],
+   "resistances": [
+    "gelo"
+   ],
+   "description": "Lobos de pelo eriçado e olhos de um azul gelado, corrompidos por algo. O uivo deles congela o sangue — literalmente.",
+   "abilities": [
+    {
+     "id": "uivo_gelido",
+     "name": "Uivo Gélido",
+     "chance": 0.3,
+     "cooldown": 3,
+     "charge": 1,
+     "locks": [
+      "fogo",
+      "fisico"
+     ],
+     "damage": 1.9,
+     "element": "gelo",
+     "announce": "O lobo ergue o focinho e o ar ao redor dele começa a congelar!",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "lento",
+       "name": "Lentidão",
+       "stat": "damage_dealt",
+       "value": -0.25,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "pele_lobo",
+     "chance": 50
+    },
+    {
+     "item": "presa_lobo",
+     "chance": 35
+    },
+    {
+     "item": "fragmento_gelo_eterno",
+     "chance": 25
+    },
+    {
+     "item": "manto_pele_lobo",
+     "chance": 4
+    }
+   ]
+  },
+  "morcego_caverna": {
+   "name": "Morcego das Cavernas",
+   "family": "fera",
+   "levels": [
+    4,
+    5
+   ],
+   "hp": 0.6,
+   "damage": 0.85,
+   "armor": 0.4,
+   "dodge": 0.15,
+   "attack": "morde",
+   "weaknesses": [
+    "arcano"
+   ],
+   "description": "Morcegos de asas largas que vivem nas tocas e túneis. Rápidos e difíceis de acertar.",
+   "abilities": [
+    {
+     "id": "guincho",
+     "name": "Guincho Estridente",
+     "chance": 0.25,
+     "cooldown": 3,
+     "damage": 0.5,
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "tontura",
+       "name": "Tontura",
+       "stat": "hit",
+       "value": -0.2,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "asa_morcego",
+     "chance": 55,
+     "qty": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "varek_domador": {
+   "name": "Varek, o Domador",
+   "family": "humanoide",
+   "levels": [
+    6,
+    6
+   ],
+   "hp": 1.6,
+   "damage": 0.95,
+   "armor": 1.2,
+   "attack": "chicoteia",
+   "weaknesses": [
+    "sagrado"
+   ],
+   "resistances": [
+    "sombra"
+   ],
+   "description": "Um homem magro de capa negra, com um chicote de couro trançado e uma lua cortada no peito.",
+   "abilities": [
+    {
+     "id": "assobio_ao_lobo",
+     "name": "Assobio ao Lobo",
+     "hp_below": 0.6,
+     "once": true,
+     "summon": [
+      "lobo_faminto"
+     ],
+     "text": "Varek leva os dedos à boca e assobia — um lobo responde!"
+    },
+    {
+     "id": "flecha_sombria",
+     "name": "Flecha Sombria",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.3,
+     "element": "sombra"
+    },
+    {
+     "id": "rito_lua_cortada",
+     "name": "Rito da Lua Cortada",
+     "chance": 0.35,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "sagrado",
+      "fisico",
+      "fisico"
+     ],
+     "announce": "Varek ergue um amuleto em forma de lua partida e começa a entoar uma prece rouca...",
+     "effects": [
+      {
+       "type": "heal_self",
+       "value": 0.2
+      },
+      {
+       "type": "buff_self",
+       "id": "furia_lunar",
+       "name": "Fúria Lunar",
+       "stat": "damage_dealt",
+       "value": 0.2,
+       "turns": 3
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "one_of": [
+      "machadinha_domador",
+      "capuz_domador",
+      "cinto_couro_trancado"
+     ],
+     "chance": 100
+    },
+    {
+     "item": "coleira_lua_cortada",
+     "chance": 100
+    }
+   ],
+   "copper": [
+    80,
+    160
+   ]
+  },
+  "presa_de_gelo": {
+   "name": "Presa-de-Gelo, o Alfa Branco",
+   "family": "fera",
+   "levels": [
+    7,
+    7
+   ],
+   "hp": 1.9,
+   "damage": 1.0,
+   "armor": 1.3,
+   "attack": "morde",
+   "elite": true,
+   "boss": true,
+   "weaknesses": [
+    "fogo"
+   ],
+   "resistances": [
+    "gelo"
+   ],
+   "description": "O Alfa Branco da Floresta Sussurrante: um lobo do tamanho de um cavalo, de olhos azuis como gelo. Os lobos o seguem — e ele segue alguém.",
+   "abilities": [
+    {
+     "id": "chamado_alcateia",
+     "name": "Chamado da Alcateia",
+     "hp_below": 0.5,
+     "once": true,
+     "summon": [
+      "lobo_cinzento"
+     ],
+     "text": "Presa-de-Gelo uiva, e um lobo cinzento responde das sombras!"
+    },
+    {
+     "id": "mordida_gelida",
+     "name": "Mordida Gélida",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.3,
+     "element": "gelo",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "lento",
+       "name": "Lentidão",
+       "stat": "damage_dealt",
+       "value": -0.25,
+       "turns": 2
+      }
+     ]
+    },
+    {
+     "id": "uivo_glacial",
+     "name": "Uivo Glacial",
+     "chance": 0.35,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "fogo",
+      "fisico",
+      "fisico"
+     ],
+     "damage": 2.4,
+     "element": "gelo",
+     "announce": "Presa-de-Gelo ergue a cabeça e enche o peito de ar gelado...",
+     "effects": [
+      {
+       "type": "freeze",
+       "turns": 1,
+       "name": "Congelamento"
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "pele_presa_de_gelo",
+     "chance": 100
+    },
+    {
+     "one_of": [
+      "presa_gelida",
+      "manto_alfa_branco",
+      "anel_uivo_gelido"
+     ],
+     "chance": 100
+    },
+    {
+     "item": "fragmento_gelo_eterno",
+     "chance": 100,
+     "qty": [
+      1,
+      2
+     ]
+    }
+   ],
+   "copper": [
+    250,
+    500
+   ]
+  },
+  "kobold_escavador": {
+   "name": "Kobold Escavador",
+   "family": "humanoide",
+   "levels": [
+    8,
+    9
+   ],
+   "hp": 0.8,
+   "damage": 0.85,
+   "armor": 0.9,
+   "attack": "acerta a picareta em",
+   "weaknesses": [
+    "gelo"
+   ],
+   "description": "Criaturinhas de focinho de rato e olhos de brasa, vindas das profundezas depois das tremuras. Cavam sem parar, cantando — e defendem cada pedra com a picareta.",
+   "abilities": [
+    {
+     "id": "picaretada",
+     "name": "Picaretada",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.4
+    },
+    {
+     "id": "chuva_cascalho",
+     "name": "Chuva de Cascalho",
+     "chance": 0.2,
+     "cooldown": 3,
+     "damage": 0.7,
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "poeira_olhos",
+       "name": "Poeira nos olhos",
+       "stat": "hit",
+       "value": -0.15,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "minerio_ferro",
+     "chance": 30
+    },
+    {
+     "item": "carvao",
+     "chance": 20
+    },
+    {
+     "item": "vela_kobold",
+     "chance": 15
+    }
+   ],
+   "copper": [
+    6,
+    18
+   ]
+  },
+  "kobold_vela": {
+   "name": "Kobold Porta-Vela",
+   "family": "humanoide",
+   "levels": [
+    8,
+    9
+   ],
+   "hp": 0.75,
+   "damage": 0.75,
+   "armor": 0.7,
+   "attack": "respinga cera quente em",
+   "element": "fogo",
+   "weaknesses": [
+    "gelo"
+   ],
+   "resistances": [
+    "fogo"
+   ],
+   "description": "Kobolds com velas acesas pregadas no capacete. Iluminam as galerias para os outros — e jogam cera fervente em quem não deveria estar ali.",
+   "abilities": [
+    {
+     "id": "chuva_cera",
+     "name": "Chuva de Cera",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 0.6,
+     "element": "fogo",
+     "effects": [
+      {
+       "type": "dot",
+       "id": "cera_fervente",
+       "name": "Cera fervente",
+       "power": 0.3,
+       "turns": 3,
+       "element": "fogo"
+      }
+     ]
+    },
+    {
+     "id": "labareda_vela",
+     "name": "Labareda da Vela",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "gelo",
+      "fisico"
+     ],
+     "damage": 2.0,
+     "element": "fogo",
+     "announce": "O kobold arranca a vela do capacete e sopra a chama, que cresce como um dragão!"
+    }
+   ],
+   "loot": [
+    {
+     "item": "vela_kobold",
+     "chance": 55,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "carvao",
+     "chance": 20
+    }
+   ],
+   "copper": [
+    6,
+    18
+   ]
+  },
+  "kobold_geomante": {
+   "name": "Kobold Geomante",
+   "family": "humanoide",
+   "levels": [
+    9,
+    10
+   ],
+   "hp": 0.85,
+   "damage": 0.8,
+   "armor": 0.8,
+   "attack": "atira uma pedra em",
+   "element": "natureza",
+   "weaknesses": [
+    "arcano"
+   ],
+   "resistances": [
+    "natureza"
+   ],
+   "description": "Um kobold velho, de bigodes brancos, que conversa com as pedras. E as pedras, para o desespero de quem o enfrenta, respondem.",
+   "abilities": [
+    {
+     "id": "tremor",
+     "name": "Tremor",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "arcano",
+      "fisico",
+      "fisico"
+     ],
+     "damage": 1.9,
+     "element": "natureza",
+     "announce": "O geomante encosta as duas mãos no chão. As paredes da galeria começam a tremer...",
+     "effects": [
+      {
+       "type": "stun",
+       "turns": 1,
+       "name": "Desequilíbrio"
+      }
+     ]
+    },
+    {
+     "id": "pele_pedra",
+     "name": "Pele de Pedra",
+     "chance": 0.25,
+     "cooldown": 4,
+     "effects": [
+      {
+       "type": "buff_self",
+       "id": "pele_pedra",
+       "name": "Pele de Pedra",
+       "stat": "armor",
+       "value": 150,
+       "turns": 3
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "minerio_ferro",
+     "chance": 35,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "granada_bruta",
+     "chance": 10
+    },
+    {
+     "item": "anel_geomante",
+     "chance": 4
+    }
+   ],
+   "copper": [
+    10,
+    24
+   ]
+  },
+  "toupeira_ferro": {
+   "name": "Toupeira-de-Ferro",
+   "family": "fera",
+   "levels": [
+    8,
+    10
+   ],
+   "hp": 1.1,
+   "damage": 0.85,
+   "armor": 1.8,
+   "attack": "arranha",
+   "weaknesses": [
+    "arcano"
+   ],
+   "description": "Toupeiras do tamanho de um cão, de pelo duro como palha de aço. Comem minério — e o ferro que comem vira couraça.",
+   "abilities": [
+    {
+     "id": "investida_subterranea",
+     "name": "Investida Subterrânea",
+     "chance": 0.3,
+     "cooldown": 3,
+     "charge": 1,
+     "locks": [
+      "arcano",
+      "fisico"
+     ],
+     "damage": 2.0,
+     "announce": "A toupeira some na terra... o chão estufa e corre na sua direção!"
+    },
+    {
+     "id": "carapaca_ferro",
+     "name": "Carapaça de Ferro",
+     "chance": 0.25,
+     "cooldown": 4,
+     "effects": [
+      {
+       "type": "buff_self",
+       "id": "carapaca_ferro",
+       "name": "Carapaça de Ferro",
+       "stat": "armor",
+       "value": 200,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "garra_toupeira",
+     "chance": 50
+    },
+    {
+     "item": "minerio_ferro",
+     "chance": 25
+    },
+    {
+     "item": "luvas_toupeira",
+     "chance": 4
+    }
+   ]
+  },
+  "capataz_gorran": {
+   "name": "Gorran, o Capataz",
+   "family": "humanoide",
+   "levels": [
+    10,
+    10
+   ],
+   "hp": 1.9,
+   "damage": 0.85,
+   "armor": 1.2,
+   "attack": "desce o martelo em",
+   "elite": true,
+   "boss": true,
+   "weaknesses": [
+    "sagrado",
+    "gelo"
+   ],
+   "resistances": [
+    "fogo"
+   ],
+   "description": "Um meio-ogro de ombros largos como uma porta, com um chicote em brasa numa mão e um martelo de forja na outra. Tem uma lua cortada marcada a ferro no antebraço.",
+   "abilities": [
+    {
+     "id": "reforcos_kobolds",
+     "name": "Reforços!",
+     "hp_below": 0.6,
+     "once": true,
+     "summon": [
+      "kobold_escavador"
+     ],
+     "text": "Gorran estala o chicote: \"Ao trabalho, vermes! Peguem o intruso!\""
+    },
+    {
+     "id": "chicote_flamejante",
+     "name": "Chicote Flamejante",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.0,
+     "element": "fogo",
+     "effects": [
+      {
+       "type": "dot",
+       "id": "queimadura",
+       "name": "Queimadura",
+       "power": 0.3,
+       "turns": 3,
+       "element": "fogo"
+      }
+     ]
+    },
+    {
+     "id": "golpe_da_forja",
+     "name": "Golpe da Forja",
+     "chance": 0.35,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "gelo",
+      "sagrado",
+      "fisico"
+     ],
+     "damage": 2.2,
+     "element": "fogo",
+     "announce": "Gorran mergulha o martelo no fogo violeta da forja, que fica branco de tão quente...",
+     "effects": [
+      {
+       "type": "buff_self",
+       "id": "furia_capataz",
+       "name": "Fúria do Capataz",
+       "stat": "damage_dealt",
+       "value": 0.2,
+       "turns": 3
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "chave_capataz",
+     "chance": 100
+    },
+    {
+     "one_of": [
+      "machado_capataz",
+      "botas_capataz",
+      "cinto_capataz"
+     ],
+     "chance": 100
+    },
+    {
+     "item": "carvao",
+     "chance": 100,
+     "qty": [
+      2,
+      4
+     ]
+    }
+   ],
+   "copper": [
+    200,
+    350
+   ]
+  },
+  "sentinela_ruinas": {
+   "name": "Sentinela de Pedra",
+   "family": "construto",
+   "levels": [
+    8,
+    10
+   ],
+   "hp": 1.05,
+   "damage": 0.85,
+   "armor": 1.9,
+   "attack": "acerta o braço de pedra em",
+   "weaknesses": [
+    "arcano"
+   ],
+   "resistances": [
+    "sombra"
+   ],
+   "description": "Estátuas de pedra branca que os antigos deixaram de guarda. Ainda patrulham as ruínas, devagar, com runas apagadas no lugar dos olhos — até verem um intruso.",
+   "abilities": [
+    {
+     "id": "olhar_runico",
+     "name": "Olhar Rúnico",
+     "chance": 0.3,
+     "cooldown": 3,
+     "charge": 1,
+     "locks": [
+      "arcano",
+      "fisico"
+     ],
+     "damage": 1.9,
+     "element": "arcano",
+     "announce": "As runas no rosto da sentinela se acendem, uma a uma...",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "ofuscado",
+       "name": "Ofuscado",
+       "stat": "hit",
+       "value": -0.2,
+       "turns": 2
+      }
+     ]
+    },
+    {
+     "id": "golpe_pedra",
+     "name": "Golpe de Pedra",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.4
+    }
+   ],
+   "loot": [
+    {
+     "item": "fragmento_runico",
+     "chance": 45
+    },
+    {
+     "item": "poeira_lunar",
+     "chance": 10
+    },
+    {
+     "item": "granada_bruta",
+     "chance": 6
+    }
+   ]
+  },
+  "acolito_lua": {
+   "name": "Acólito da Lua Cortada",
+   "family": "humanoide",
+   "levels": [
+    9,
+    11
+   ],
+   "hp": 0.8,
+   "damage": 0.75,
+   "armor": 0.8,
+   "attack": "lança sombras contra",
+   "element": "sombra",
+   "weaknesses": [
+    "sagrado"
+   ],
+   "resistances": [
+    "sombra"
+   ],
+   "description": "Jovens de capa negra e rosto pintado de cinza, com uma lua cortada bordada no peito. Rezam em voz baixa enquanto lutam, como se pedissem desculpas.",
+   "abilities": [
+    {
+     "id": "prece_lua_cortada",
+     "name": "Prece da Lua Cortada",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "sagrado",
+      "fisico"
+     ],
+     "announce": "O acólito ergue as mãos e começa uma prece à lua cortada...",
+     "effects": [
+      {
+       "type": "heal_self",
+       "value": 0.25
+      },
+      {
+       "type": "buff_self",
+       "id": "fervor",
+       "name": "Fervor",
+       "stat": "damage_dealt",
+       "value": 0.2,
+       "turns": 3
+      }
+     ]
+    },
+    {
+     "id": "raio_sombrio",
+     "name": "Raio Sombrio",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.3,
+     "element": "sombra"
+    }
+   ],
+   "loot": [
+    {
+     "item": "tecido_negro",
+     "chance": 45,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "poeira_lunar",
+     "chance": 15
+    },
+    {
+     "item": "amuleto_lua_cortada",
+     "chance": 4
+    }
+   ],
+   "copper": [
+    10,
+    25
+   ]
+  },
+  "guarda_capa_negra": {
+   "name": "Guarda de Capa Negra",
+   "family": "humanoide",
+   "levels": [
+    10,
+    11
+   ],
+   "hp": 1.05,
+   "damage": 0.9,
+   "armor": 1.3,
+   "attack": "desce a espada em",
+   "weaknesses": [
+    "sagrado"
+   ],
+   "description": "Os braços armados do culto: mercenários de cota escurecida e capa negra, que lutam por dinheiro e ficaram pelo medo.",
+   "abilities": [
+    {
+     "id": "execucao",
+     "name": "Execução",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "sagrado",
+      "fisico"
+     ],
+     "damage": 2.3,
+     "announce": "O guarda ergue a espada com as duas mãos, mirando o seu pescoço..."
+    },
+    {
+     "id": "golpe_brutal",
+     "name": "Golpe Brutal",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.5
+    },
+    {
+     "id": "postura_guarda",
+     "name": "Postura de Guarda",
+     "chance": 0.2,
+     "cooldown": 4,
+     "effects": [
+      {
+       "type": "buff_self",
+       "id": "postura_guarda",
+       "name": "Postura de Guarda",
+       "stat": "armor",
+       "value": 200,
+       "turns": 3
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "tecido_negro",
+     "chance": 35
+    },
+    {
+     "item": "pocao_cura",
+     "chance": 10
+    },
+    {
+     "item": "capa_negra",
+     "chance": 4
+    }
+   ],
+   "copper": [
+    14,
+    30
+   ]
+  },
+  "eco_veltharas": {
+   "name": "Eco de Vel'Tharas",
+   "family": "espirito",
+   "levels": [
+    10,
+    12
+   ],
+   "hp": 0.85,
+   "damage": 0.8,
+   "armor": 0.0,
+   "attack": "lança luz fria contra",
+   "element": "arcano",
+   "weaknesses": [
+    "sagrado"
+   ],
+   "resistances": [
+    "fisico",
+    "arcano"
+   ],
+   "description": "Ecos do povo antigo, presos às ruínas pelos rituais do culto. Têm olhos grandes e tristes, e cantam pedaços de uma canção que não conseguem terminar.",
+   "abilities": [
+    {
+     "id": "canto_distorcido",
+     "name": "Canto Distorcido",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "sagrado",
+      "arcano",
+      "fisico"
+     ],
+     "damage": 2.0,
+     "element": "arcano",
+     "announce": "O eco começa a cantar, e a canção se retorce em algo que dói de ouvir...",
+     "effects": [
+      {
+       "type": "drain_mana",
+       "value": 0.15
+      },
+      {
+       "type": "fear",
+       "turns": 1,
+       "name": "Pavor"
+      }
+     ]
+    },
+    {
+     "id": "lamento",
+     "name": "Lamento",
+     "chance": 0.3,
+     "cooldown": 3,
+     "damage": 0.8,
+     "element": "arcano",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "lamento",
+       "name": "Lamento",
+       "stat": "damage_dealt",
+       "value": -0.2,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "poeira_lunar",
+     "chance": 45
+    },
+    {
+     "item": "ectoplasma",
+     "chance": 30
+    },
+    {
+     "item": "tiara_veltharas",
+     "chance": 3
+    }
+   ]
+  },
+  "cao_sombrio": {
+   "name": "Cão Sombrio",
+   "family": "fera",
+   "levels": [
+    11,
+    12
+   ],
+   "hp": 0.95,
+   "damage": 0.9,
+   "armor": 0.9,
+   "attack": "morde",
+   "weaknesses": [
+    "sagrado",
+    "fogo"
+   ],
+   "resistances": [
+    "sombra"
+   ],
+   "description": "Cães de caça do culto, alimentados com fogo violeta até a pelagem virar fumaça. Os olhos deles são duas luas minguantes.",
+   "abilities": [
+    {
+     "id": "uivo_lua_nova",
+     "name": "Uivo da Lua Nova",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "fogo",
+      "fisico"
+     ],
+     "damage": 1.8,
+     "element": "sombra",
+     "announce": "O cão sombrio ergue o focinho para uma lua que não está no céu...",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "presa_marcada",
+       "name": "Presa marcada",
+       "stat": "damage_taken",
+       "value": 0.15,
+       "turns": 3
+      }
+     ]
+    },
+    {
+     "id": "mordida_sombria",
+     "name": "Mordida Sombria",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.1,
+     "element": "sombra",
+     "effects": [
+      {
+       "type": "dot",
+       "id": "ferida_sombria",
+       "name": "Ferida sombria",
+       "power": 0.3,
+       "turns": 3,
+       "element": "sombra"
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "presa_sombria",
+     "chance": 50
+    },
+    {
+     "item": "pele_lobo",
+     "chance": 20
+    }
+   ]
+  },
+  "morwen": {
+   "name": "Morwen, a Senhora da Lua Cortada",
+   "family": "humanoide",
+   "levels": [
+    12,
+    12
+   ],
+   "hp": 1.9,
+   "damage": 0.75,
+   "armor": 1.0,
+   "attack": "acerta o cajado em",
+   "element": "sombra",
+   "elite": true,
+   "boss": true,
+   "weaknesses": [
+    "sagrado"
+   ],
+   "resistances": [
+    "sombra"
+   ],
+   "description": "Alta, de cabelos prateados presos numa coroa de ferro negro em forma de lua partida. Fala baixo e sorri sempre, como quem já sabe o fim da história.",
+   "abilities": [
+    {
+     "id": "filhos_da_lua",
+     "name": "Filhos da Lua Cortada",
+     "hp_below": 0.6,
+     "once": true,
+     "summon": [
+      "acolito_lua"
+     ],
+     "text": "Morwen ergue o cajado: \"Filhos da lua cortada, a mim!\""
+    },
+    {
+     "id": "eclipse",
+     "name": "Eclipse",
+     "chance": 0.35,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "sagrado",
+      "fogo",
+      "fisico"
+     ],
+     "damage": 2.2,
+     "element": "sombra",
+     "announce": "Morwen cobre o rosto com a mão espalmada, e a luz da sala começa a morrer...",
+     "effects": [
+      {
+       "type": "heal_self",
+       "value": 0.12
+      },
+      {
+       "type": "stun",
+       "turns": 1,
+       "name": "Eclipse"
+      }
+     ]
+    },
+    {
+     "id": "raio_lua_cortada",
+     "name": "Raio da Lua Cortada",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.2,
+     "element": "sombra",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "lua_cortada",
+       "name": "Lua Cortada",
+       "stat": "damage_dealt",
+       "value": -0.2,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "metades_lua_minguante",
+     "chance": 100
+    },
+    {
+     "one_of": [
+      "cajado_lua_cortada",
+      "manto_senhora",
+      "anel_lua_nova",
+      "adaga_eclipse"
+     ],
+     "chance": 100
+    },
+    {
+     "item": "poeira_lunar",
+     "chance": 100,
+     "qty": [
+      2,
+      3
+     ]
+    }
+   ],
+   "copper": [
+    300,
+    500
+   ]
+  },
+  "batedor_corvo": {
+   "name": "Batedor do Corvo",
+   "family": "humanoide",
+   "levels": [
+    9,
+    10
+   ],
+   "hp": 0.85,
+   "damage": 0.9,
+   "armor": 0.9,
+   "dodge": 0.12,
+   "attack": "crava a faca em",
+   "weaknesses": [
+    "natureza"
+   ],
+   "description": "Rapazes magros e ligeiros, de lenço preto no rosto, que vigiam a estrada do alto das pedras e somem antes que você os veja.",
+   "abilities": [
+    {
+     "id": "bomba_fumaca",
+     "name": "Bomba de Fumaça",
+     "chance": 0.25,
+     "cooldown": 4,
+     "damage": 0.4,
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "fumaca",
+       "name": "Fumaça",
+       "stat": "hit",
+       "value": -0.25,
+       "turns": 2
+      }
+     ]
+    },
+    {
+     "id": "ataque_furtivo",
+     "name": "Ataque Furtivo",
+     "chance": 0.3,
+     "cooldown": 3,
+     "damage": 1.6
+    }
+   ],
+   "loot": [
+    {
+     "item": "bolsa_roubada",
+     "chance": 25
+    },
+    {
+     "item": "ponta_flecha",
+     "chance": 20,
+     "qty": [
+      1,
+      2
+     ]
+    },
+    {
+     "item": "botas_batedor",
+     "chance": 4
+    }
+   ],
+   "copper": [
+    12,
+    28
+   ]
+  },
+  "arqueiro_corvo": {
+   "name": "Arqueiro do Corvo",
+   "family": "humanoide",
+   "levels": [
+    9,
+    11
+   ],
+   "hp": 0.8,
+   "damage": 0.9,
+   "armor": 0.8,
+   "attack": "dispara uma flecha em",
+   "weaknesses": [
+    "natureza"
+   ],
+   "description": "Atiradores do Bando, de flechas com penas negras e pontas de ferro bom demais para bandidos.",
+   "abilities": [
+    {
+     "id": "chuva_flechas",
+     "name": "Chuva de Flechas",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "fogo",
+      "fisico"
+     ],
+     "damage": 2.1,
+     "announce": "O arqueiro encaixa três flechas de uma vez e mira para o alto..."
+    },
+    {
+     "id": "flecha_envenenada",
+     "name": "Flecha Envenenada",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.0,
+     "effects": [
+      {
+       "type": "dot",
+       "id": "veneno_flecha",
+       "name": "Veneno",
+       "power": 0.3,
+       "turns": 3,
+       "element": "natureza"
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "ponta_flecha",
+     "chance": 45,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "pena_corvo",
+     "chance": 40,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "luvas_arqueiro",
+     "chance": 4
+    }
+   ],
+   "copper": [
+    12,
+    28
+   ]
+  },
+  "brutamontes_corvo": {
+   "name": "Brutamontes do Corvo",
+   "family": "humanoide",
+   "levels": [
+    10,
+    11
+   ],
+   "hp": 1.2,
+   "damage": 0.95,
+   "armor": 1.2,
+   "attack": "esmurra",
+   "description": "Montanhas de músculos com clavas cravejadas de pregos. Não falam muito. Não precisam.",
+   "abilities": [
+    {
+     "id": "esmagar",
+     "name": "Esmagar",
+     "chance": 0.3,
+     "cooldown": 4,
+     "charge": 1,
+     "locks": [
+      "fisico",
+      "fisico"
+     ],
+     "damage": 2.3,
+     "announce": "O brutamontes ergue a clava acima da cabeça, com as duas mãos...",
+     "effects": [
+      {
+       "type": "stun",
+       "turns": 1,
+       "name": "Atordoado"
+      }
+     ]
+    },
+    {
+     "id": "berro",
+     "name": "Berro de Guerra",
+     "chance": 0.2,
+     "cooldown": 4,
+     "effects": [
+      {
+       "type": "buff_self",
+       "id": "berro",
+       "name": "Berro de Guerra",
+       "stat": "damage_dealt",
+       "value": 0.25,
+       "turns": 3
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "bolsa_roubada",
+     "chance": 30
+    },
+    {
+     "item": "pocao_cura",
+     "chance": 8
+    },
+    {
+     "item": "ombreiras_brutamontes",
+     "chance": 4
+    }
+   ],
+   "copper": [
+    16,
+    34
+   ]
+  },
+  "ulric": {
+   "name": "Ulric Corvo-Negro",
+   "family": "humanoide",
+   "levels": [
+    11,
+    11
+   ],
+   "hp": 1.9,
+   "damage": 0.85,
+   "armor": 1.1,
+   "dodge": 0.08,
+   "attack": "acerta o sabre em",
+   "elite": true,
+   "boss": true,
+   "description": "O chefe do Bando do Corvo: cabelos negros trançados com penas, um sabre curvo em cada mão e um sorriso que nunca chega aos olhos.",
+   "abilities": [
+    {
+     "id": "rapazes",
+     "name": "Rapazes!",
+     "hp_below": 0.5,
+     "once": true,
+     "summon": [
+      "arqueiro_corvo"
+     ],
+     "text": "Ulric leva dois dedos à boca e assobia: \"Rapazes! Visita!\""
+    },
+    {
+     "id": "revoada",
+     "name": "Revoada de Corvos",
+     "chance": 0.35,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "fogo",
+      "fisico",
+      "fisico"
+     ],
+     "damage": 2.2,
+     "announce": "Ulric solta um grito agudo, e uma nuvem de corvos desce do céu na sua direção...",
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "bicadas",
+       "name": "Bicadas nos olhos",
+       "stat": "hit",
+       "value": -0.25,
+       "turns": 2
+      }
+     ]
+    },
+    {
+     "id": "corte_duplo",
+     "name": "Corte Duplo",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.3,
+     "effects": [
+      {
+       "type": "dot",
+       "id": "sangrando",
+       "name": "Sangrando",
+       "power": 0.3,
+       "turns": 2
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "chave_corvo",
+     "chance": 100
+    },
+    {
+     "one_of": [
+      "adaga_corvo",
+      "gibao_corvo",
+      "espada_corvo",
+      "capuz_corvo"
+     ],
+     "chance": 100
+    }
+   ],
+   "copper": [
+    250,
+    450
+   ]
+  },
+  "vigia_atormentado": {
+   "name": "O Vigia Atormentado",
+   "family": "construto",
+   "levels": [
+    13,
+    13
+   ],
+   "hp": 2.1,
+   "damage": 0.85,
+   "armor": 1.5,
+   "attack": "desce o punho de pedra em",
+   "elite": true,
+   "boss": true,
+   "weaknesses": [
+    "sagrado"
+   ],
+   "resistances": [
+    "arcano",
+    "sombra"
+   ],
+   "description": "O guardião do sono do Primordial: um gigante de pedra branca e luar, de olhos fechados, lutando dentro de um pesadelo que não é dele.",
+   "abilities": [
+    {
+     "id": "ecos_vigias",
+     "name": "Eco dos Vigias",
+     "hp_below": 0.5,
+     "once": true,
+     "summon": [
+      "eco_veltharas"
+     ],
+     "text": "O eco de um antigo Vigia se ergue do chão, preso ao mesmo pesadelo."
+    },
+    {
+     "id": "grito_sonho_ruim",
+     "name": "Grito do Sonho Ruim",
+     "chance": 0.35,
+     "cooldown": 4,
+     "charge": 2,
+     "locks": [
+      "sagrado",
+      "arcano",
+      "fisico"
+     ],
+     "damage": 2.3,
+     "element": "arcano",
+     "announce": "O Vigia abre a boca de pedra, e o pesadelo inteiro começa a subir pela garganta dele...",
+     "effects": [
+      {
+       "type": "drain_mana",
+       "value": 0.15
+      },
+      {
+       "type": "stun",
+       "turns": 1,
+       "name": "Pesadelo"
+      }
+     ]
+    },
+    {
+     "id": "punho_pedra",
+     "name": "Punho de Pedra",
+     "chance": 0.3,
+     "cooldown": 2,
+     "damage": 1.3,
+     "effects": [
+      {
+       "type": "debuff",
+       "id": "armadura_rachada",
+       "name": "Armadura rachada",
+       "stat": "armor",
+       "value": -60,
+       "turns": 3
+      }
+     ]
+    }
+   ],
+   "loot": [
+    {
+     "item": "lagrima_vigia",
+     "chance": 100
+    },
+    {
+     "item": "poeira_lunar",
+     "chance": 100,
+     "qty": [
+      2,
+      4
+     ]
+    }
+   ]
+  }
+ }
+}

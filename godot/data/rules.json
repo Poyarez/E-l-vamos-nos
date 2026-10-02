@@ -1,0 +1,187 @@
+{
+ "title": "Crônicas de Primórdia",
+ "subtitle": "Um RPG de fantasia medieval para o terminal",
+ "version": "0.4.0",
+ "minutes_per_day": 1440,
+ "start_minutes": 480,
+ "dawn_hour": 6,
+ "periods": [
+  {
+   "id": "madrugada",
+   "hour": 0,
+   "name": "Madrugada"
+  },
+  {
+   "id": "amanhecer",
+   "hour": 5,
+   "name": "Amanhecer"
+  },
+  {
+   "id": "manha",
+   "hour": 7,
+   "name": "Manhã"
+  },
+  {
+   "id": "tarde",
+   "hour": 12,
+   "name": "Tarde"
+  },
+  {
+   "id": "entardecer",
+   "hour": 18,
+   "name": "Entardecer"
+  },
+  {
+   "id": "noite",
+   "hour": 20,
+   "name": "Noite"
+  }
+ ],
+ "night_periods": [
+  "madrugada",
+  "noite"
+ ],
+ "twilight_periods": [
+  "amanhecer",
+  "entardecer"
+ ],
+ "moon_phases": [
+  "Lua nova",
+  "Lua crescente",
+  "Quarto crescente",
+  "Gibosa crescente",
+  "Lua cheia",
+  "Gibosa minguante",
+  "Quarto minguante",
+  "Lua minguante"
+ ],
+ "weather": {
+  "limpo": {
+   "name": "Céu limpo",
+   "weight": 36,
+   "vision": 0,
+   "day": [
+    "O céu está limpo e azul.",
+    "O sol brilha num céu sem nuvens."
+   ],
+   "night": [
+    "O céu está limpo e estrelado.",
+    "Milhares de estrelas cobrem o céu."
+   ]
+  },
+  "nublado": {
+   "name": "Nublado",
+   "weight": 26,
+   "vision": 0,
+   "day": [
+    "Nuvens cinzentas passam devagar, escondendo o sol.",
+    "Um céu de chumbo pesa sobre o vale."
+   ],
+   "night": [
+    "Nuvens cobrem as estrelas; a noite é mais escura que de costume."
+   ]
+  },
+  "chuva": {
+   "name": "Chuva",
+   "weight": 18,
+   "vision": 0,
+   "day": [
+    "Uma chuva fina e insistente encharca suas roupas.",
+    "Gotas grossas tamborilam ao seu redor."
+   ],
+   "night": [
+    "A chuva fria da noite escorre pela sua nuca.",
+    "A chuva apaga todos os sons, menos o dela."
+   ]
+  },
+  "neblina": {
+   "name": "Neblina",
+   "weight": 12,
+   "vision": -1,
+   "day": [
+    "Uma neblina espessa reduz o mundo a poucos passos.",
+    "A névoa engole as formas ao redor."
+   ],
+   "night": [
+    "A neblina noturna é tão densa que você mal enxerga as próprias mãos."
+   ]
+  },
+  "tempestade": {
+   "name": "Tempestade",
+   "weight": 8,
+   "vision": -1,
+   "day": [
+    "Trovões rolam sobre as montanhas, e o vento chicoteia a chuva de lado.",
+    "Relâmpagos rasgam o céu escuro do meio-dia."
+   ],
+   "night": [
+    "Relâmpagos iluminam o vale por instantes, revelando formas que somem no escuro.",
+    "A tempestade uiva; cada trovão faz o chão vibrar."
+   ]
+  }
+ },
+ "max_level": 60,
+ "xp_to_next": [
+  400,
+  900,
+  1400,
+  2100,
+  2800,
+  3600,
+  4500,
+  5400,
+  6500,
+  7600,
+  8800,
+  10100,
+  11400,
+  12900,
+  14400,
+  16000,
+  17700,
+  19400,
+  21300,
+  23200,
+  25200,
+  27300,
+  29400,
+  31700,
+  34000,
+  36400,
+  38900,
+  41400,
+  44300,
+  47400,
+  50800,
+  54500,
+  58600,
+  62800,
+  67100,
+  71600,
+  76100,
+  80800,
+  85700,
+  90700,
+  95800,
+  101000,
+  106300,
+  111800,
+  117500,
+  123200,
+  129100,
+  135100,
+  141200,
+  147500,
+  153900,
+  160400,
+  167100,
+  173900,
+  180800,
+  187900,
+  195000,
+  202300,
+  209800,
+  0
+ ],
+ "bag_slots": 16
+}
