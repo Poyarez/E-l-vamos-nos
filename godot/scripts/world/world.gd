@@ -1,7 +1,10 @@
 extends Node2D
-## O mundo jogável: o mapa atual em tiles, o herói, os NPCs e os marcadores dos locais.
-## As regras são as mesmas do terminal (rpg/world.py e rpg/session.py): terreno, passagens,
-## regiões e locais descobertos, exames, segredos, baús e a agenda dos NPCs.
+## O mundo jogável: o mapa atual em tiles, o herói, os NPCs, as criaturas e os marcadores
+## dos locais. As regras são as mesmas do terminal (rpg/world.py e rpg/session.py): terreno,
+## passagens, regiões e locais descobertos, exames, segredos, baús e a agenda dos NPCs.
+## O combate em tempo real fica no nó Combat; as criaturas, no Spawner. Clicar no chão anda
+## até lá (caminho calculado com A*), clicar numa criatura mira nela e clicar num NPC vai
+## até ele e puxa conversa, como no RuneScape.
 
 signal location_changed                              # o herói chegou a um tile novo
 signal area_discovered(title: String, text: String)  # primeira visita a uma região
@@ -44,12 +47,25 @@ const INDOOR_COLOR := Color(0.5, 0.48, 0.64)
 
 const NPC_SCENE := preload("res://scenes/world/npc.tscn")
 const ICONS := preload("res://art/icons.png")
+const RESPAWN := ["vale_primordia", Vector2i(31, 12)]   # a Capela da Aurora
+const RESPAWN_MINUTES := 240
 
 var dialogue: Node                   # a caixa de diálogo (ligada pelo main.gd)
 var map: Dictionary = {}             # dados do mapa atual (Data.map_data)
 var ground: TileMapLayer
-var busy := false                    # conversa, viagem ou menu em andamento
+var busy := false                    # conversa ou viagem em andamento
+var overlay_open := false            # diário ou menu de pausa abertos (main.gd)
 var region_id := ""
+var astar := AStarGrid2D.new()       # caminhos no mapa (cliques, criaturas)
+## Tudo para (combate, criaturas) enquanto há uma conversa, uma viagem ou um menu aberto.
+var paused: bool:
+	get:
+		return busy or overlay_open
+
+var _walk_path: Array = []           # caminho de um clique no chão
+var _approach: Node = null           # alguém até quem andar (criatura ou NPC)
+var _on_arrive: Callable             # o que fazer ao chegar (falar com o NPC)
+var _announcements: Array = []       # textos de chefes e vitórias esperando a caixa de diálogo
 
 var _landmarks: Dictionary = {}      # Vector2i -> local
 var _npc_nodes: Dictionary = {}      # npc_id -> nó do NPC
@@ -61,15 +77,20 @@ var _light_tween: Tween
 @onready var map_holder: Node2D = $Map
 @onready var markers: Node2D = $Markers
 @onready var actors: Node2D = $Actors
-@onready var hero: Node2D = $Actors/Hero
+@onready var hero: Unit = $Actors/Hero
 @onready var tint: CanvasModulate = $Tint
 @onready var fade: ColorRect = $Fade/Black
+@onready var combat: Node = $Combat
+@onready var spawner: Node = $Spawner
 
 
 func _ready() -> void:
 	hero.step_finished.connect(arrive)
 	Game.period_changed.connect(_on_period_changed)
 	get_viewport().size_changed.connect(_update_camera_limits)
+	combat.setup(self)
+	spawner.setup(self, combat)
+	combat.hero_died.connect(_on_hero_died)
 
 
 ## Começa (ou retoma) a partida no mapa e no tile salvos no Game.
@@ -100,10 +121,15 @@ func load_map(map_id: String, cell: Vector2i, facing: String = "") -> void:
 	hero.place(cell, facing)
 	Game.facing = hero.facing
 	_last_bump = Vector2i(-9999, -9999)
+	stop_walking()
+	combat.reset()
 	_update_camera_limits()
+	_build_astar()
 	refresh_npcs()
 	refresh_markers()
 	update_lighting(false)
+	spawner.populate()
+	location_changed.emit()
 
 
 func outdoor() -> bool:
@@ -213,6 +239,8 @@ func stable_choice(options: Array, salt: String = "") -> String:
 func try_move(delta: Vector2i) -> bool:
 	if busy or hero.moving or delta == Vector2i.ZERO:
 		return false
+	if not combat.hero_can_move():
+		return false
 	if delta.x and delta.y and not _move_possible(delta):
 		for part: Vector2i in [Vector2i(delta.x, 0), Vector2i(0, delta.y)]:
 			if _move_possible(part):
@@ -236,6 +264,7 @@ func try_move(delta: Vector2i) -> bool:
 		return false
 	var cost := int(terrain_at(target).get("cost", 10))
 	_last_bump = Vector2i(-9999, -9999)
+	combat.on_hero_moved()
 	Game.cell = target
 	hero.walk_to(target, STEP_TIME * clampf(cost / 10.0, 0.75, 1.8))
 	Game.advance_time(cost)
@@ -340,6 +369,9 @@ func _fade_to(alpha: float) -> void:
 func interact() -> void:
 	if busy or hero.moving:
 		return
+	if combat.in_combat():
+		combat.error.emit("Você está em combate!")
+		return
 	busy = true
 	var npc_id := npc_to_talk()
 	var verb_portal := _verb_portal(hero.cell)
@@ -358,6 +390,8 @@ func interact() -> void:
 
 ## O que o botão de interagir faria agora (para a dica na tela).
 func interaction_hint() -> String:
+	if combat.in_combat():
+		return "Em combate · Tab: alvo · F: atacar · 1-0: habilidades"
 	var npc_id := npc_to_talk()
 	if npc_id:
 		return "E: conversar com %s" % Data.npcs[npc_id].short
@@ -415,6 +449,23 @@ func talk(npc_id: String) -> void:
 ## Uma caixa de narração com o texto e, se houver, opções. Devolve a opção escolhida.
 func say(title: String, paragraphs: Array, options: Array = []) -> int:
 	return await dialogue.show_message(title, paragraphs, options)
+
+
+## Textos que chegam no meio da ação (chefes, vitórias): esperam a vez na caixa de diálogo,
+## e o combate fica parado enquanto o jogador lê.
+func announce(title: String, paragraphs: Array) -> void:
+	_announcements.append([title, paragraphs])
+	if _announcements.size() > 1 or dialogue.is_open:
+		return
+	var was_busy := busy
+	busy = true
+	while not _announcements.is_empty():
+		while dialogue.is_open:
+			await get_tree().process_frame
+		var next: Array = _announcements[0]
+		await say(next[0], next[1])
+		_announcements.pop_front()
+	busy = was_busy
 
 
 ## Examina o local: pode revelar segredos, abrir baús ou achar tesouros (rpg/session.py).
@@ -539,6 +590,9 @@ func rest() -> String:
 
 
 func wait_hours(hours: int) -> void:
+	if combat.in_combat():
+		combat.error.emit("Você está em combate!")
+		return
 	Game.advance_time(hours * 60)
 	Game.notify("Você espera %d %s. Agora são %s (%s)." % [hours, "hora" if hours == 1 else "horas",
 			Game.time_text(), Game.period_name()], "time")
@@ -547,6 +601,7 @@ func wait_hours(hours: int) -> void:
 func _on_period_changed(_period: String) -> void:
 	update_lighting(true)
 	refresh_npcs()
+	spawner.on_period_changed()
 
 
 func update_lighting(animate: bool = true) -> void:
@@ -647,6 +702,180 @@ func _add_marker(cell: Vector2i, frame: int, alpha: float, bobbing: bool) -> voi
 		var tween := sprite.create_tween().set_loops()
 		tween.tween_property(sprite, "position:y", sprite.position.y - 3, 0.6).set_trans(Tween.TRANS_SINE)
 		tween.tween_property(sprite, "position:y", sprite.position.y, 0.6).set_trans(Tween.TRANS_SINE)
+
+
+# --------------------------------------------------------------------------- caminhos e cliques
+
+func _build_astar() -> void:
+	astar = AStarGrid2D.new()
+	var rect := Rect2i(0, 0, map.rows[0].length(), map.rows.size())
+	if ground:
+		rect = ground.get_used_rect()
+	astar.region = rect
+	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	astar.update()
+	for y in range(rect.position.y, rect.end.y):
+		for x in range(rect.position.x, rect.end.x):
+			var cell := Vector2i(x, y)
+			if passable(cell):
+				astar.set_point_weight_scale(cell, clampf(float(terrain_at(cell).get("cost", 10)) / 10.0, 0.5, 2.5))
+			else:
+				astar.set_point_solid(cell, true)
+
+
+## Caminho de tiles (com o de partida); `partial` aceita chegar o mais perto possível.
+func find_path(from: Vector2i, to: Vector2i, partial: bool = false) -> Array:
+	if not astar.is_in_boundsv(from) or not astar.is_in_boundsv(to):
+		return []
+	return Array(astar.get_id_path(from, to, partial))
+
+
+func monster_at(cell: Vector2i, except: Node = null) -> Node:
+	return spawner.monster_at(cell, except)
+
+
+func npc_cells() -> Dictionary:
+	var cells := {}
+	for npc_id: String in _npc_nodes:
+		cells[npc_id] = _npc_nodes[npc_id].cell
+	return cells
+
+
+func walk_to(cell: Vector2i) -> void:
+	stop_walking()
+	var path := find_path(hero.cell, cell, true)
+	if path.size() >= 2:
+		_walk_path = path.slice(1)
+
+
+## Anda até alguém (criatura para lutar corpo a corpo, NPC para conversar).
+func approach(unit: Node, on_arrive: Callable = Callable()) -> void:
+	stop_walking()
+	_approach = unit
+	_on_arrive = on_arrive
+
+
+func stop_walking() -> void:
+	_walk_path.clear()
+	_approach = null
+	_on_arrive = Callable()
+
+
+func is_walking() -> bool:
+	return not _walk_path.is_empty() or _approach != null
+
+
+## Um passo do caminho do clique ou da aproximação (chamado pelo main.gd quando o herói
+## está parado e nenhuma tecla de direção está apertada).
+func follow() -> void:
+	if busy or hero.moving:
+		return
+	if _approach != null:
+		if not is_instance_valid(_approach) or (_approach is Unit and not _approach.alive()):
+			stop_walking()
+			return
+		if CombatRules.tile_distance(hero.cell, _approach.cell) <= 1 and hero.cell != _approach.cell:
+			var arrived := _on_arrive
+			hero.face(facing_for(_approach.cell - hero.cell))
+			stop_walking()
+			if arrived.is_valid():
+				arrived.call()
+			return
+		var path := find_path(hero.cell, _approach.cell, true)
+		if path.size() < 2 or not try_move(path[1] - hero.cell):
+			stop_walking()
+		return
+	if not _walk_path.is_empty():
+		var next: Vector2i = _walk_path.pop_front()
+		if not try_move(next - hero.cell):
+			stop_walking()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+	if event.button_index != MOUSE_BUTTON_LEFT and event.button_index != MOUSE_BUTTON_RIGHT:
+		return
+	if paused or not hero.alive():
+		return
+	get_viewport().set_input_as_handled()
+	var point := get_global_mouse_position()
+	var monster := monster_under(point)
+	if monster != null:
+		# clique esquerdo mira (de novo: ataca); clique direito ataca, como no WoW
+		if event.button_index == MOUSE_BUTTON_RIGHT or monster == combat.target:
+			combat.attack(monster)
+		else:
+			combat.set_target(monster)
+		return
+	var npc_id := npc_under(point)
+	if npc_id:
+		approach(_npc_nodes[npc_id], interact)
+		return
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		var cell := Vector2i(floori(point.x / TILE), floori(point.y / TILE))
+		if passable(cell):
+			walk_to(cell)
+
+
+## A criatura sob o cursor (pelo desenho dela, que pode ser maior que um tile).
+func monster_under(point: Vector2) -> Node:
+	var found: Node = null
+	for monster: Node in spawner.alive_monsters():
+		var size: float = 8.0 * monster.sprite.scale.x + 2.0
+		var center: Vector2 = monster.position - Vector2(0, 8.0 * monster.sprite.scale.y)
+		if absf(point.x - center.x) <= size and absf(point.y - center.y) <= size:
+			if found == null or monster.position.y > found.position.y:
+				found = monster
+	return found
+
+
+func npc_under(point: Vector2) -> String:
+	for npc_id: String in _npc_nodes:
+		var node: Node2D = _npc_nodes[npc_id]
+		var center := node.position - Vector2(0, 8)
+		if absf(point.x - center.x) <= 8 and absf(point.y - center.y) <= 9:
+			return npc_id
+	return ""
+
+
+## Investida: o herói avança até ficar colado no alvo.
+func charge_to(unit: Node) -> void:
+	var best := Vector2i(-1, -1)
+	for delta: Vector2i in DIRECTIONS.values():
+		var cell: Vector2i = unit.cell + delta
+		if passable(cell) and monster_at(cell) == null and npc_at(cell) == "":
+			if best == Vector2i(-1, -1) or CombatRules.tile_distance(cell, hero.cell) \
+					< CombatRules.tile_distance(best, hero.cell):
+				best = cell
+	if best == Vector2i(-1, -1):
+		return
+	stop_walking()
+	Game.cell = best
+	hero.face(facing_for(unit.cell - best))
+	hero.dash_to(best)
+
+
+# --------------------------------------------------------------------------- derrota
+
+## O herói caiu: tudo escurece e ele desperta na Capela da Aurora, horas depois.
+func _on_hero_died() -> void:
+	stop_walking()
+	busy = true
+	await get_tree().create_timer(0.6).timeout
+	await say("Você caiu", ["*Tudo escurece. Vozes distantes, mãos que carregam você, o cheiro de incenso...*"],
+			["Despertar na Capela da Aurora"])
+	var lost: int = combat.revive()
+	await _fade_to(1.0)
+	load_map(RESPAWN[0], RESPAWN[1], "down")
+	Game.advance_time(RESPAWN_MINUTES)
+	await _fade_to(0.0)
+	busy = false
+	arrive()
+	if lost:
+		Game.notify("Você perdeu %s enquanto estava desacordado." % Game.money_text(lost), "warn")
 
 
 # --------------------------------------------------------------------------- câmera

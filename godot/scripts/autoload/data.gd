@@ -12,6 +12,7 @@ var classes: Dictionary = {}        # classes, resources, stats, talent_start_le
 var appearance: Dictionary = {}     # genders, hair_styles, hair_colors, armor_colors, alignments
 var quests: Dictionary = {}
 var crafting: Dictionary = {}       # perícias, pontos de coleta, receitas
+var monsters: Dictionary = {}       # criaturas (modelos, saque, habilidades com selos)
 var rules: Dictionary = {}          # relógio, períodos, fases da lua, curva de XP...
 var art: Dictionary = {}            # onde está cada coisa nas imagens de res://art
 var map_ids: Array = []
@@ -31,6 +32,7 @@ func load_all() -> void:
 	appearance = _read("appearance.json")
 	quests = _read("quests.json")
 	crafting = _read("crafting.json")
+	monsters = _read("monsters.json").get("monsters", {})
 	rules = _read("rules.json")
 	art = _read("art.json")
 	map_ids = _read("maps/index.json")
@@ -49,6 +51,10 @@ func item(item_id: String) -> Dictionary:
 
 func item_name(item_id: String) -> String:
 	return item(item_id).get("name", item_id)
+
+
+func monster(template_id: String) -> Dictionary:
+	return monsters.get(template_id, {})
 
 
 func class_data(class_id: String) -> Dictionary:

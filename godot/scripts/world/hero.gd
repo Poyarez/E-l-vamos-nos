@@ -1,13 +1,13 @@
-extends Node2D
+extends Unit
 ## O herói no mapa: três camadas de sprite (corpo, roupa e cabelo) tingidas com as cores
-## escolhidas na criação, andando de tile em tile como num JRPG.
+## escolhidas na criação, andando de tile em tile. Também é quem luta: a vida e o recurso
+## ficam no Game (vão para o save) e os números vêm de HeroStats.
 
 signal step_finished
 
 ## Primeira coluna de cada direção em hero.png (a seguinte é o passo).
 const COLUMNS := {"down": 0, "up": 2, "left": 4, "right": 6}
 
-var cell := Vector2i.ZERO
 var facing := "down"
 var moving := false
 
@@ -23,6 +23,43 @@ var _tween: Tween
 
 func _ready() -> void:
 	refresh_look()
+
+
+# --------------------------------------------------------------------------- Unit
+
+func unit_name() -> String:
+	return Game.hero.name
+
+
+func is_hero() -> bool:
+	return true
+
+
+func current_hp() -> int:
+	return Game.hp
+
+
+func set_current_hp(value: int) -> void:
+	Game.hp = clampi(value, 0, maximum_hp())
+
+
+func maximum_hp() -> int:
+	return HeroStats.max_hp() + int(modifier("max_hp"))
+
+
+func unit_level() -> int:
+	return Game.level
+
+
+func unit_armor() -> float:
+	return HeroStats.armor() + modifier("armor")
+
+
+func head_position() -> Vector2:
+	return global_position - Vector2(0, 22)
+
+
+# --------------------------------------------------------------------------- aparência e passos
 
 
 ## Aplica a aparência do herói atual (roupa e cabelo).
@@ -68,6 +105,11 @@ func walk_to(target: Vector2i, duration: float) -> void:
 	_tween.tween_property(self, "position", MapBuilder.cell_position(target), duration)
 	_tween.parallel().tween_callback(_set_pose.bind(false)).set_delay(duration * 0.5)
 	_tween.tween_callback(_finish_step)
+
+
+## Avanço rápido até um tile (a Investida do guerreiro).
+func dash_to(target: Vector2i) -> void:
+	walk_to(target, 0.12)
 
 
 func _finish_step() -> void:

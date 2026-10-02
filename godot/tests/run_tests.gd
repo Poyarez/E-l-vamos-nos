@@ -3,9 +3,11 @@ extends Node
 ##     godot --headless --path godot res://tests/run_tests.tscn
 ## Conferem os dados exportados, o TileSet e as cenas de mapa, os diálogos de todos os NPCs,
 ## as condições, as missões, o save e o mundo de verdade: andar, bater em água, passagens
-## trancadas e abertas, e conversas inteiras pela caixa de diálogo.
+## trancadas e abertas, conversas inteiras pela caixa de diálogo e o combate em tempo real
+## (as contas iguais às do terminal, selos, interrupção, derrota, chefes e lutas simuladas).
 
 const MAIN_SCENE := preload("res://scenes/main.tscn")
+const Sim := preload("res://tests/sim.gd")
 
 var checks := 0
 var failures := 0
@@ -21,6 +23,8 @@ func _ready() -> void:
 	test_save_roundtrip()
 	await test_world()
 	await test_conversations()
+	test_combat_rules()
+	await test_combat()
 	for warning in warnings:
 		print("aviso: ", warning)
 	print("%d verificações, %d falha(s)" % [checks, failures])
@@ -322,5 +326,154 @@ func test_conversations() -> void:
 			main.dialogue.run_npc(npc_id)
 			await drive_dialogue(main.dialogue, [route, route, route, route])
 			check(not main.dialogue.is_open, "conversa com %s (caminho %d) termina" % [npc_id, route])
+	main.queue_free()
+	await frames(2)
+
+
+# --------------------------------------------------------------------------- combate
+
+## Os números do herói e das criaturas batem com os do terminal (rpg/player.py, rpg/monsters.py).
+func test_combat_rules() -> void:
+	var expected := {
+		"guerreiro": {1: [104, 100, 93, 46.0, 0.0], 5: [176, 100, 101, 62.0, 0.0]},
+		"mago": {1: [76, 138, 45, 17.0, 15.8], 5: [114, 234, 47, 17.0, 26.2]},
+		"sacerdote": {1: [81, 126, 45, 17.0, 15.5], 5: [125, 215, 47, 18.0, 25.9]},
+		"ladino": {1: [90, 100, 79, 45.0, 0.0], 5: [144, 100, 97, 58.0, 0.0]},
+	}
+	for class_id: String in expected:
+		for level: int in expected[class_id]:
+			Sim.prepare_hero(class_id, level)
+			var numbers: Array = expected[class_id][level]
+			var got := [HeroStats.max_hp(), HeroStats.max_resource(), HeroStats.armor(), HeroStats.attack_power(),
+					HeroStats.spell_power()]
+			var same := true
+			for index in numbers.size():
+				same = same and absf(float(got[index]) - float(numbers[index])) < 0.01
+			check(same, "%s nv %d: vida, recurso, armadura e poderes iguais ao terminal (%s)" % [class_id, level, got])
+	check(CombatRules.kill_xp(1, 1) == 100 and CombatRules.kill_xp(5, 7) == 154, "XP por abate como no terminal")
+	check(CombatRules.kill_xp(10, 3) == 0 and CombatRules.kill_xp(7, 7, true) == 320, "criaturas cinzentas e elites")
+	check(CombatRules.armor_mitigation(0, 5) == 0.0 and CombatRules.armor_mitigation(1e9, 1) == 0.75, "armadura")
+	check(CombatRules.element_multiplier("fogo", ["fogo"], []) == 1.5, "fraqueza")
+	check(CombatRules.element_multiplier("fogo", [], ["fogo"]) == 0.5, "resistência")
+	check(CombatRules.element_multiplier("fogo", ["fogo"], ["fogo"]) == 1.0, "fraqueza e resistência se cancelam")
+	check(CombatRules.element_multiplier("fogo", [], [], ["fogo"]) == 0.0, "imunidade anula")
+	check(CombatRules.monster_curve(2) == [53, 5.5, 59], "curva das criaturas")
+	check(CombatRules.effect_seconds(2, "stun", false) == 4.0 and CombatRules.effect_seconds(3, "dot", false) == 9.0,
+			"turnos viram segundos")
+	var stab := HeroStats.ability("golpe_sinistro")
+	check(CombatRules.ability_range(stab) == CombatRules.MELEE_RANGE, "golpe é corpo a corpo")
+	Sim.prepare_hero("mago", 1)
+	check(CombatRules.ability_range(HeroStats.ability("bola_de_fogo")) == CombatRules.SPELL_RANGE, "magia é à distância")
+	check(CombatRules.cast_time("bola_de_fogo") > 0, "a Bola de Fogo leva tempo para conjurar")
+	check(CombatRules.cast_time("armadura_de_gelo") == 0.0, "a Armadura de Gelo é instantânea")
+	check(Game.action_bar[0] == "attack" and "ability:bola_de_fogo" in Game.action_bar, "barra de ações da classe")
+	check(Game.action_bar[9] == "item:pocao_mana_menor", "poção de mana no último atalho de quem usa Mana")
+
+
+func test_combat() -> void:
+	seed(4242)
+	Game.new_game({"name": "Teste"})
+	var main: Node = MAIN_SCENE.instantiate()
+	add_child(main)
+	await frames(3)
+	var world: Node = main.world
+	var combat: Node = world.combat
+	combat.rng.seed = 4242
+	# criaturas no vale, longe da vila
+	check(world.spawner.camps.size() >= 8, "o vale tem acampamentos de criaturas")
+	var village: Array = world.map.regions[0].rects[0]
+	for monster: Node in world.spawner.alive_monsters():
+		check(world.passable(monster.cell), "%s nasceu num tile livre" % monster.unit_name())
+		var inside: bool = monster.cell.x >= village[0] and monster.cell.x <= village[2] \
+				and monster.cell.y >= village[1] and monster.cell.y <= village[3]
+		check(not inside, "nada nasce dentro da vila")
+	# clicar mira; Tab mira o mais perto
+	var some: Node = world.spawner.alive_monsters()[0]
+	check(world.monster_under(some.position - Vector2(0, 8)) == some, "clique acerta a criatura")
+	# lutas simuladas (determinísticas): cada classe vence uma criatura do próprio nível
+	world.overlay_open = true
+	combat.hero_died.disconnect(world._on_hero_died)
+	var spot := Sim.open_spot(world)
+	for class_id: String in ["guerreiro", "mago", "sacerdote", "ladino"]:
+		Sim.prepare_hero(class_id, 4)
+		world.load_map("vale_primordia", spot, "down")
+		var xp_before := Game.xp
+		var result := Sim.fight(world, [["lobo_faminto", 4]], class_id)
+		check(result.won, "%s nv 4 vence um lobo faminto nv 4" % class_id)
+		check(result.seconds > 3.0 and result.seconds < 40.0,
+				"%s: a luta dura alguns segundos (%.1fs)" % [class_id, result.seconds])
+		check(Game.xp > xp_before and Game.kills.get("lobo_faminto", 0) == 1, "%s: XP e abate contados" % class_id)
+	# selos: acertar os elementos certos enfraquece e depois cancela o golpe concentrado
+	Sim.prepare_hero("mago", 5)
+	world.load_map("vale_primordia", spot, "down")
+	world.spawner.clear()
+	var spider: Node = world.spawner.create("aranha_da_mata", 5, world.hero.cell + Vector2i(1, 0))
+	spider.animate = false
+	var web: Dictionary = Data.monster("aranha_da_mata").abilities[1]
+	spider.charging = {"ability": web, "left": 3.0, "total": 3.0, "locks": ["fogo", "fisico"], "broken": [false, false]}
+	spider.dodge = 0.0
+	combat._break_lock(spider, "fogo")
+	check(spider.charging.broken == [true, false], "um selo rompido")
+	combat._break_lock(spider, "fisico")
+	check(spider.charging.is_empty() and spider.incapacitated() == "stun", "todos os selos: golpe cancelado e atordoado")
+	# interrupção (o Chute do ladino)
+	spider.remove_effect("stun")
+	spider.charging = {"ability": web, "left": 3.0, "total": 3.0, "locks": ["fogo"], "broken": [false]}
+	combat._hits = {spider: true}
+	combat._apply_spec({"type": "interrupt"}, {"id": "chute", "name": "Chute", "element": "fisico"}, [spider])
+	check(spider.charging.is_empty(), "o Chute interrompe o golpe concentrado")
+	# conjuração: andar cancela
+	combat.set_target(spider)
+	Game.resource = HeroStats.max_resource()
+	combat.gcd_left = 0.0
+	check(combat.use_ability("bola_de_fogo") and not combat.cast.is_empty(), "a Bola de Fogo começa a ser conjurada")
+	combat.on_hero_moved()
+	check(combat.cast.is_empty(), "andar interrompe a conjuração")
+	# poção pela barra de ações
+	Game.hp = 10
+	Game.give_item("pocao_cura_menor", 1, false)
+	combat.item_left = 0.0
+	combat.use_slot(8)
+	check(Game.hp > 10, "a poção da barra cura")
+	# derrota: o herói cai e acorda na capela, sem 10% do cobre
+	var fell := [false]
+	var on_fall := func() -> void: fell[0] = true
+	combat.hero_died.connect(on_fall)
+	Game.copper = 1000
+	Game.hp = 1
+	combat.damage(world.hero, 50.0)
+	check(fell[0] and not world.hero.alive(), "o herói cai")
+	var lost: int = combat.revive()
+	check(lost == 100 and Game.copper == 900, "perde 10% do cobre")
+	check(Game.hp == world.hero.maximum_hp() / 2, "acorda com metade da vida")
+	combat.hero_died.disconnect(on_fall)
+	world.spawner.clear()
+	# caçadas das missões
+	Game.quests.clear()
+	Story.start_quest("ratos")
+	for kill in 6:
+		Game.record_kill("rato_gigante")
+	Story.update_quests()
+	check(Game.quest_stage("ratos") == 1, "seis ratos derrotados avançam a missão")
+	# encontro fixo: o Alfa Branco na Toca dos Lobos
+	combat.hero_died.connect(world._on_hero_died)
+	world.overlay_open = false
+	Sim.prepare_hero("guerreiro", 7)
+	var den: Array = Data.map_data("toca_dos_lobos").start
+	world.load_map("toca_dos_lobos", Vector2i(int(den[0]), int(den[1])), "up")
+	await frames(2)
+	var alpha: Array = []
+	for monster: Node in world.spawner.alive_monsters():
+		if monster.template_id == "presa_de_gelo":
+			alpha.append(monster)
+	check(alpha.size() == 1, "o Alfa Branco espera no covil")
+	if alpha.size() == 1:
+		for member: Node in alpha[0].camp.members.duplicate():
+			if member.state != "dead":
+				member.hp = 0
+				combat._on_monster_death(member)
+		await drive_dialogue(main.dialogue)
+		check(Game.has_flag("presa_de_gelo_derrotado"), "vencer o chefe marca a vitória")
+		check(Game.has_journal("alfa_derrotado"), "e anota o diário")
 	main.queue_free()
 	await frames(2)

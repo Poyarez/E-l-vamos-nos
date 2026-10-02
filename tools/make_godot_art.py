@@ -13,7 +13,8 @@ Saída em ``godot/art/``:
 * ``tiles.png``     — uma linha por terreno, até 3 variações por linha (16x16 cada);
 * ``hero.png``      — camadas do herói (corpo, roupa e cabelos), 4 direções x 2 passos;
 * ``npcs.png``      — os moradores do vale, já coloridos, 4 direções x 2 passos;
-* ``icons.png``     — marcadores: local novo, local conhecido, passagem e "!".
+* ``icons.png``     — marcadores: local novo, local conhecido, passagem e "!";
+* ``monsters.png``  — as criaturas de perfil (olhando para a esquerda), parado e passo.
 
 E ``godot/data/art.json``, que diz ao Godot onde está cada coisa nas imagens.
 """
@@ -735,6 +736,460 @@ def npc_sheet() -> Tuple[Canvas, Dict[str, int]]:
     return sheet, rows
 
 
+# --------------------------------------------------------------------------- monstros
+
+# Moldes 16x16 das criaturas, de perfil, olhando para a esquerda (o Godot espelha para a
+# direita). Dois quadros: parado e passo. Letras: o contorno, a cor principal, b sombra,
+# c clara (barriga, brilho), e olhos, n focinho, w dentes/garras/bico, t cauda, s espinhos.
+def _shape(rows: List[str]) -> List[str]:
+    assert len(rows) == TILE and all(len(row) == TILE for row in rows), rows
+    return rows
+
+
+MONSTER_SHAPES: Dict[str, Tuple[List[str], List[str]]] = {
+    "lobo": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "..o.o...........",
+        ".oaoao..........",
+        ".oaaaao.......o.",
+        "oeaaaaaoooooooao",
+        "onaaaaaaaaaaaaao",
+        ".owaaaaaaaaaaao.",
+        "..oobaaaaaaabbo.",
+        "....obacccccabo.",
+        "....oao.ooo.oao.",
+        "....oao.....oao.",
+        "....oao.....oao.",
+        "....ooo.....ooo.",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "..o.o...........",
+        ".oaoao..........",
+        ".oaaaao.......o.",
+        "oeaaaaaoooooooao",
+        "onaaaaaaaaaaaaao",
+        ".owaaaaaaaaaaao.",
+        "..oobaaaaaaabbo.",
+        "....obacccccabo.",
+        "...oao..ooo..oao",
+        "...oao.......oao",
+        "..oao.......oao.",
+        "..ooo.......ooo.",
+    ])),
+    "javali": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....oosoosoo...",
+        "...ooaaaaaaaaoo.",
+        "..oeaaaaaaaaaaao",
+        ".onaaaaaaaaaaaao",
+        "ownaaaaaaaaaaaao",
+        ".owaabbbbbbbbaao",
+        "..ooaaccccccaao.",
+        "...oaao...oaao..",
+        "...oaao...oaao..",
+        "...oooo...oooo..",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....oosoosoo...",
+        "...ooaaaaaaaaoo.",
+        "..oeaaaaaaaaaaao",
+        ".onaaaaaaaaaaaao",
+        "ownaaaaaaaaaaaao",
+        ".owaabbbbbbbbaao",
+        "..ooaaccccccaao.",
+        "..oaao.....oaao.",
+        "..oaao.....oaao.",
+        "..oooo.....oooo.",
+        "................",
+    ])),
+    "rato": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "...oo...........",
+        "..oaao..........",
+        ".oeaaaoooooo....",
+        "onaaaaaaaaaaoo..",
+        ".oaaaaaaaaaaaao.",
+        "..ocaaaaaaaaaott",
+        "...oao...oaoo..t",
+        "...oo....oo...t.",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "...oo...........",
+        "..oaao..........",
+        ".oeaaaoooooo....",
+        "onaaaaaaaaaaoo..",
+        ".oaaaaaaaaaaaao.",
+        "..ocaaaaaaaaaott",
+        "..oao.....oao.t.",
+        "..oo......oo...t",
+        "................",
+    ])),
+    "toupeira": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....oooooooo...",
+        "...ooaaaaaaaaoo.",
+        "..oeaacaaaaaaaao",
+        ".onaaaaaaaaaaaao",
+        "onnaaaaaaaaaaaao",
+        ".oaabbbbbbbbbaao",
+        "..owwo.....owwo.",
+        "..oww.......oww.",
+        "..ooo.......ooo.",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".....oooooooo...",
+        "...ooaaaaaaaaoo.",
+        "..oeaacaaaaaaaao",
+        ".onaaaaaaaaaaaao",
+        "onnaaaaaaaaaaaao",
+        ".oaabbbbbbbbbaao",
+        ".owwo.......owwo",
+        ".oww.........oww",
+        ".ooo.........ooo",
+        "................",
+    ])),
+    "corvo": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "....ooo.........",
+        "...oaaao........",
+        ".wwoaeaao.......",
+        "...oaaaaaoo.....",
+        "....oaaaaaaoo...",
+        "....oaaaaaaaaoo.",
+        ".....oaabbbaaao.",
+        "......oabbbbaao.",
+        ".......oaaaaoaao",
+        "........ow.w..oo",
+        "........w..w....",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "...........ooo..",
+        "..........oaao..",
+        "....ooo..oaao...",
+        "...oaaao.oaao...",
+        ".wwoaeaaoaao....",
+        "...oaaaaaaoo....",
+        "....oaaaaaaoo...",
+        "....oaaaaaaaaoo.",
+        ".....oaabbbaaao.",
+        "......oabbbbaao.",
+        ".......oaaaaoaao",
+        "........ow.w..oo",
+        ".......w....w...",
+        "................",
+    ])),
+    "morcego": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "..o.........o...",
+        ".oao.......oao..",
+        "oaaao.o.o.oaaao.",
+        "oaaaaoaoaoaaaaao",
+        "oaaaaoeaeoaaaaao",
+        ".oaaaaaaaaaaaao.",
+        "..oaa.oaao.aao..",
+        "...o..owwo..o...",
+        "........o.......",
+        "................",
+        "................",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "......o.o.......",
+        "....ooaoaoo.....",
+        "..ooaoeaeoaoo...",
+        ".oaaaaaaaaaaao..",
+        "oaaaaaoaaoaaaaao",
+        "oaao..owwo..oaao",
+        ".oo.....o....oo.",
+        "................",
+        "................",
+        "................",
+    ])),
+    "lagarto": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..oo............",
+        ".oeaooooooo.....",
+        "onaaaaaaaaaooo..",
+        ".ocaaaaaaaaaaaoo",
+        "..oao..oao...ooa",
+        "..oo...oo.......",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..oo............",
+        ".oeaooooooo.....",
+        "onaaaaaaaaaooo..",
+        ".ocaaaaaaaaaaaoo",
+        ".oao....oao..oa.",
+        ".oo.....oo......",
+        "................",
+    ])),
+    "aranha": (_shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".o..o......o..o.",
+        "..o..o....o..o..",
+        "...o.oaaaao.o...",
+        "o...oaaccaao...o",
+        ".ooooaacaaaoooo.",
+        "....oaeaeaao....",
+        "..ooo.owwo.ooo..",
+        ".o...o....o...o.",
+        "o...o......o...o",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "..o..o....o..o..",
+        ".o..o......o..o.",
+        "o..o.oaaaao.o..o",
+        "....oaaccaao....",
+        "oooooaacaaaooooo",
+        "....oaeaeaao....",
+        ".ooo..owwo..ooo.",
+        "o...o......o...o",
+        "...o........o...",
+        "................",
+    ])),
+    "espirito": (_shape([
+        "................",
+        "................",
+        "......oooo......",
+        ".....oaaaao.....",
+        "....oaaaaaao....",
+        "...oaaccaaaao...",
+        "...oaeaaeaaao...",
+        "...oaaaaaaaao...",
+        "..oaaaaoaaaaao..",
+        "..oaaaaaaaaaao..",
+        ".oaaaaaaaaaaaao.",
+        ".oaaaaaaaaaaaao.",
+        ".oaabaaabaaabao.",
+        "..oo.oao.oao.oo.",
+        "......o...o.....",
+        "................",
+    ]), _shape([
+        "................",
+        "................",
+        "......oooo......",
+        ".....oaaaao.....",
+        "....oaaaaaao....",
+        "...oaaccaaaao...",
+        "...oaeaaeaaao...",
+        "...oaaaaaaaao...",
+        "..oaaaaoaaaaao..",
+        "..oaaaaaaaaaao..",
+        ".oaaaaaaaaaaaao.",
+        ".oaaaaaaaaaaaao.",
+        ".obaaabaaabaaao.",
+        ".oo.oao.oao.oo..",
+        ".....o...o......",
+        "................",
+    ])),
+    "golem": (_shape([
+        "................",
+        "................",
+        ".....oooooo.....",
+        "....oaaaaaao....",
+        "....oaeaaeao....",
+        "....oaaaaaao....",
+        "..ooobbbbbbooo..",
+        ".oaaaaaaaaaaaao.",
+        "oaaaocaaaacoaaao",
+        "oaao.oaaaao.oaao",
+        "oaao.oacaao.oaao",
+        "obbo.oaaaao.obbo",
+        ".oo..oaooao..oo.",
+        ".....oao.oao....",
+        "....oaao.oaao...",
+        "....ooo...ooo...",
+    ]), _shape([
+        "................",
+        "................",
+        ".....oooooo.....",
+        "....oaaaaaao....",
+        "....oaeaaeao....",
+        "....oaaaaaao....",
+        "..ooobbbbbbooo..",
+        ".oaaaaaaaaaaaao.",
+        "oaaaocaaaacoaaao",
+        "oaao.oaaaao.oaao",
+        "oaao.oacaao.oaao",
+        "obbo.oaaaao.obbo",
+        ".oo..oaooao..oo.",
+        "....oao...oao...",
+        "...oaao...oaao..",
+        "...ooo.....ooo..",
+    ])),
+}
+
+# Criatura -> (molde, cores {letra: hex}, escala). Kobolds e humanoides usam os moldes do
+# herói e do Pip, com roupa, pele e cabelo próprios.
+MONSTER_LOOKS: Dict[str, Tuple[str, Dict[str, str], float]] = {
+    "corvo_ladrao": ("corvo", {"a": "#2b2b38", "b": "#1b1b24", "c": "#4a4a66", "e": "#ffd84a", "w": "#d9a92e"}, 0.9),
+    "javali_jovem": ("javali", {"a": "#8a5a3a", "b": "#5a3a22", "c": "#b08060", "e": "#1d1d1d", "n": "#d9a0a0",
+                                "w": "#f2e6c8", "s": "#5a3a22"}, 0.9),
+    "rato_gigante": ("rato", {"a": "#7a6a5a", "b": "#4a3e33", "c": "#a89a8a", "e": "#ff4a4a", "n": "#d99a9a",
+                              "t": "#d99a9a"}, 0.85),
+    "lagarto_ribeirao": ("lagarto", {"a": "#4f8f4a", "b": "#2f5f2a", "c": "#9fcf6a", "e": "#ffd84a",
+                                     "n": "#2f5f2a"}, 1.0),
+    "lobo_faminto": ("lobo", {"a": "#7a6a5a", "b": "#4a3e33", "c": "#a89a8a", "e": "#ffcf4a", "n": "#1d1d1d",
+                              "w": "#f2f2f2"}, 0.95),
+    "lobo_cinzento": ("lobo", {"a": "#8a8a8a", "b": "#5a5a5a", "c": "#c8c8c8", "e": "#ffcf4a", "n": "#1d1d1d",
+                               "w": "#f2f2f2"}, 1.0),
+    "aranha_da_mata": ("aranha", {"a": "#3a3a2a", "b": "#22221a", "c": "#7a8a3a", "e": "#ff3a3a",
+                                  "w": "#d9d2c0"}, 1.0),
+    "javali_espinhento": ("javali", {"a": "#5a4a3a", "b": "#3a2a1e", "c": "#7a6a5a", "e": "#ff6a3a",
+                                     "n": "#a07070", "w": "#f2e6c8", "s": "#e0d8c0"}, 1.1),
+    "espirito_sussurrante": ("espirito", {"a": "#8fd8c8", "b": "#5fa898", "c": "#d8fff4", "e": "#1d4a44"}, 1.0),
+    "lobo_gelido": ("lobo", {"a": "#cfe8ff", "b": "#8fb8d8", "c": "#ffffff", "e": "#2fa0ff", "n": "#2a3a4a",
+                             "w": "#ffffff"}, 1.05),
+    "morcego_caverna": ("morcego", {"a": "#4a3a4a", "b": "#2e222e", "c": "#6a5a6a", "e": "#ff5a5a",
+                                    "w": "#f2f2f2"}, 0.8),
+    "varek_domador": ("humano", {"cloth": "#5a4a2a", "hair": "#3a2a22", "shape": "curto", "skin": "media"}, 1.1),
+    "presa_de_gelo": ("lobo", {"a": "#f2f8ff", "b": "#a8c8e8", "c": "#ffffff", "e": "#2f80ff", "n": "#2a3a4a",
+                               "w": "#ffffff"}, 1.6),
+    "kobold_escavador": ("kobold", {"cloth": "#6b5a3a", "skin": "#c9a05a"}, 0.85),
+    "kobold_vela": ("kobold", {"cloth": "#8a3a2a", "skin": "#c9a05a", "candle": "sim"}, 0.85),
+    "kobold_geomante": ("kobold", {"cloth": "#3a5a8a", "skin": "#9a8a5a"}, 0.9),
+    "toupeira_ferro": ("toupeira", {"a": "#5a5a66", "b": "#3a3a44", "c": "#9a9aaa", "e": "#ffcf4a",
+                                    "n": "#d99a9a", "w": "#e0e0e0"}, 1.0),
+    "capataz_gorran": ("humano", {"cloth": "#5a3a22", "hair": "#2b2421", "shape": "careca", "skin": "ogro"}, 1.5),
+    "sentinela_ruinas": ("golem", {"a": "#9a9488", "b": "#6a665c", "c": "#c8c2b0", "e": "#6fe0f0"}, 1.15),
+    "acolito_lua": ("humano", {"cloth": "#3a2a5a", "hair": "#2a2040", "shape": "longo", "skin": "clara"}, 1.0),
+    "guarda_capa_negra": ("humano", {"cloth": "#26262e", "hair": "#1d1d1d", "shape": "curto", "skin": "media"}, 1.05),
+    "eco_veltharas": ("espirito", {"a": "#b08fe0", "b": "#7a5fa8", "c": "#efe4ff", "e": "#3a1a5a"}, 1.05),
+    "cao_sombrio": ("lobo", {"a": "#3a2a4a", "b": "#22182e", "c": "#5a4a6a", "e": "#d84aff", "n": "#100c14",
+                             "w": "#e8d8ff"}, 1.05),
+    "morwen": ("humano", {"cloth": "#4a1a6a", "hair": "#d8d8f0", "shape": "longo", "skin": "clara"}, 1.3),
+    "batedor_corvo": ("humano", {"cloth": "#2a2a2a", "hair": "#4a3a2a", "shape": "curto", "skin": "clara"}, 1.0),
+    "arqueiro_corvo": ("humano", {"cloth": "#3a4a2a", "hair": "#2b2421", "shape": "longo", "skin": "media"}, 1.0),
+    "brutamontes_corvo": ("humano", {"cloth": "#4a3a2a", "hair": "#1d1d1d", "shape": "careca", "skin": "escura"},
+                          1.25),
+    "ulric": ("humano", {"cloth": "#1d1d26", "hair": "#1d1d1d", "shape": "moicano", "skin": "clara"}, 1.35),
+    "vigia_atormentado": ("golem", {"a": "#6a6478", "b": "#46405a", "c": "#9a94b0", "e": "#d84aff"}, 2.0),
+}
+GHOSTLY_MONSTERS = ["espirito_sussurrante", "eco_veltharas"]
+
+
+def monster_frame(template_id: str, step: int) -> Canvas:
+    """Um quadro 16x16 da criatura, olhando para a esquerda."""
+    shape, colors, _scale = MONSTER_LOOKS[template_id]
+    frame = Canvas(TILE, TILE)
+    if shape == "humano":
+        skin = {"ogro": ("#8a9a6a", "#6a7a4a")}.get(colors["skin"]) or SKIN_TONES[colors["skin"]]
+        cloth = hex_color(colors["cloth"])
+        palette = {"o": OUTLINE, "s": hex_color(skin[0]), "S": hex_color(skin[1]), "e": OUTLINE,
+                   "b": hex_color("#3a2e22"), "p": shade(cloth, 0.6), "c": cloth, "C": shade(cloth, 0.72)}
+        frame.stamp(body_frame("left", step), palette)
+        hair = hex_color(colors["hair"])
+        frame.stamp(HAIR[colors["shape"]]["left"], {"h": hair, "H": shade(hair, 0.75)}, 0, HAIR_OFFSET)
+        return frame
+    if shape == "kobold":
+        rows = list(KOBOLD["left"])
+        if step:
+            rows[12:15] = [".....oy..yo.....", ".....oy..yo.....", "....oo....oo...."]
+        palette = {"o": OUTLINE, "y": hex_color(colors["skin"]), "e": hex_color("#ff7a2a"),
+                   "r": shade(hex_color(colors["skin"]), 0.7), "c": hex_color(colors["cloth"])}
+        frame.stamp(rows, palette)
+        if colors.get("candle"):
+            frame.stamp(CANDLE, {"F": hex_color("#ffd36b"), "f": hex_color("#ff9a3a"), "w": hex_color("#f2e6c8")},
+                        2, -1)
+        return frame
+    palette = {"o": OUTLINE}
+    palette.update({letter: hex_color(code) for letter, code in colors.items()})
+    frame.stamp(MONSTER_SHAPES[shape][step], palette)
+    return frame
+
+
+def monster_sheet() -> Tuple[Canvas, Dict[str, int]]:
+    """Folha das criaturas: uma linha por modelo, 2 colunas (parado e passo)."""
+    ids = list(MONSTER_LOOKS)
+    sheet = Canvas(TILE * 2, TILE * len(ids))
+    rows = {}
+    for row, template_id in enumerate(ids):
+        rows[template_id] = row
+        for step in (0, 1):
+            sheet.paste(monster_frame(template_id, step), step * TILE, row * TILE)
+    return sheet, rows
+
+
 ICON_ROWS = {
     "new": [
         "................",
@@ -833,10 +1288,12 @@ def main(preview: Optional[Path] = None) -> None:
     hero, hero_info = hero_layers()
     npcs, npc_rows = npc_sheet()
     icons, icon_columns = icon_sheet()
+    monsters, monster_rows = monster_sheet()
     tiles.save(ART_DIR / "tiles.png")
     hero.save(ART_DIR / "hero.png")
     npcs.save(ART_DIR / "npcs.png")
     icons.save(ART_DIR / "icons.png")
+    monsters.save(ART_DIR / "monsters.png")
     info = {
         "tile_size": TILE,
         "tiles": tile_atlas,                     # terreno -> [linha, número de variações]
@@ -845,6 +1302,9 @@ def main(preview: Optional[Path] = None) -> None:
                  "scale": {"vigia": 2.5, "tome": 0.9, "pip": 0.85},
                  "ghosts": ["kael"]},
         "icons": icon_columns,
+        "monsters": {"rows": monster_rows, "frames": 2,
+                     "scale": {template_id: look[2] for template_id, look in MONSTER_LOOKS.items() if look[2] != 1.0},
+                     "ghosts": GHOSTLY_MONSTERS},
         "hair_colors": {"negro": "#2b2421", "castanho": "#6b4226", "ruivo": "#b5482c", "loiro": "#e3c565",
                         "grisalho": "#a8a8a8", "branco": "#eeeeee", "azul_noite": "#2e3f7a"},
         "armor_colors": {"carmesim": "#a32d2d", "azul_real": "#2f4fa3", "verde_floresta": "#2f7a3a",
@@ -853,7 +1313,8 @@ def main(preview: Optional[Path] = None) -> None:
     }
     (DATA_DIR / "art.json").write_text(json.dumps(info, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if preview:
-        for name, canvas in (("tiles", tiles), ("hero", hero), ("npcs", npcs), ("icons", icons)):
+        for name, canvas in (("tiles", tiles), ("hero", hero), ("npcs", npcs), ("icons", icons),
+                             ("monsters", monsters)):
             canvas.scaled(4).save(preview / f"preview_{name}.png")
 
 

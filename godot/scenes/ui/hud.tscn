@@ -16,35 +16,100 @@ mouse_filter = 2
 
 [node name="Left" type="VBoxContainer" parent="Root"]
 layout_mode = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 228.0
-offset_bottom = 200.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = 166.0
+offset_bottom = 220.0
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Place" type="PanelContainer" parent="Root/Left"]
+[node name="PlayerFrame" type="PanelContainer" parent="Root/Left"]
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_filter = 2
 
-[node name="Lines" type="VBoxContainer" parent="Root/Left/Place"]
+[node name="Lines" type="VBoxContainer" parent="Root/Left/PlayerFrame"]
 layout_mode = 2
-theme_override_constants/separation = 0
+theme_override_constants/separation = 2
 
-[node name="PlaceTitle" type="Label" parent="Root/Left/Place/Lines"]
+[node name="NameRow" type="HBoxContainer" parent="Root/Left/PlayerFrame/Lines"]
+layout_mode = 2
+
+[node name="PlayerName" type="Label" parent="Root/Left/PlayerFrame/Lines/NameRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
-theme_override_font_sizes/font_size = 12
-text = "Vale de Primórdia"
+theme_override_font_sizes/font_size = 10
+text = "Aventureiro"
+size_flags_horizontal = 3
+clip_text = true
 
-[node name="PlaceSub" type="Label" parent="Root/Left/Place/Lines"]
+[node name="PlayerLevel" type="Label" parent="Root/Left/PlayerFrame/Lines/NameRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.66, 0.63, 0.72, 1)
-theme_override_font_sizes/font_size = 9
-text = "Campina"
+theme_override_font_sizes/font_size = 8
+text = "Nv 1"
+horizontal_alignment = 2
+
+[node name="HpBar" type="ProgressBar" parent="Root/Left/PlayerFrame/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(146, 9)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="HpText" type="Label" parent="Root/Left/PlayerFrame/Lines/HpBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ResourceBar" type="ProgressBar" parent="Root/Left/PlayerFrame/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(146, 7)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="ResourceText" type="Label" parent="Root/Left/PlayerFrame/Lines/ResourceBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Combo" type="Label" parent="Root/Left/PlayerFrame/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_font_sizes/font_size = 8
 
 [node name="Card" type="PanelContainer" parent="Root/Left"]
 unique_name_in_owner = true
@@ -55,53 +120,175 @@ mouse_filter = 2
 [node name="CardText" type="RichTextLabel" parent="Root/Left/Card"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/normal_font_size = 9
-theme_override_font_sizes/italics_font_size = 9
+theme_override_font_sizes/normal_font_size = 8
+theme_override_font_sizes/italics_font_size = 8
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
+
+[node name="TargetFrame" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 172.0
+offset_top = 6.0
+offset_right = 332.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="Lines" type="VBoxContainer" parent="Root/TargetFrame"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="NameRow" type="HBoxContainer" parent="Root/TargetFrame/Lines"]
+layout_mode = 2
+
+[node name="TargetName" type="Label" parent="Root/TargetFrame/Lines/NameRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Criatura"
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="TargetLevel" type="Label" parent="Root/TargetFrame/Lines/NameRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "Nv 1"
+horizontal_alignment = 2
+
+[node name="TargetHpBar" type="ProgressBar" parent="Root/TargetFrame/Lines"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(146, 9)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="TargetHpText" type="Label" parent="Root/TargetFrame/Lines/TargetHpBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TargetCast" type="VBoxContainer" parent="Root/TargetFrame/Lines"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="TargetCastBar" type="ProgressBar" parent="Root/TargetFrame/Lines/TargetCast"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(146, 8)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="TargetCastText" type="Label" parent="Root/TargetFrame/Lines/TargetCast/TargetCastBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Seals" type="HBoxContainer" parent="Root/TargetFrame/Lines/TargetCast"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="TargetEffects" type="Label" parent="Root/TargetFrame/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.77, 0.88, 1)
+theme_override_font_sizes/font_size = 7
+autowrap_mode = 3
 
 [node name="Right" type="VBoxContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -218.0
-offset_top = 8.0
-offset_right = -8.0
+offset_left = -212.0
+offset_top = 6.0
+offset_right = -6.0
 offset_bottom = 300.0
 grow_horizontal = 0
 mouse_filter = 2
 theme_override_constants/separation = 3
 
-[node name="Status" type="PanelContainer" parent="Root/Right"]
+[node name="Zone" type="PanelContainer" parent="Root/Right"]
 layout_mode = 2
 size_flags_horizontal = 8
 mouse_filter = 2
 
-[node name="Lines" type="VBoxContainer" parent="Root/Right/Status"]
+[node name="Lines" type="VBoxContainer" parent="Root/Right/Zone"]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Clock" type="Label" parent="Root/Right/Status/Lines"]
+[node name="PlaceTitle" type="Label" parent="Root/Right/Zone/Lines"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_font_sizes/font_size = 11
+text = "Vale de Primórdia"
+horizontal_alignment = 2
+
+[node name="PlaceSub" type="Label" parent="Root/Right/Zone/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.63, 0.72, 1)
+theme_override_font_sizes/font_size = 8
+text = "Campina"
+horizontal_alignment = 2
+
+[node name="Clock" type="Label" parent="Root/Right/Zone/Lines"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
 text = "Dia 1 · 08:00 · Manhã"
 horizontal_alignment = 2
 
-[node name="Moon" type="Label" parent="Root/Right/Status/Lines"]
+[node name="Moon" type="Label" parent="Root/Right/Zone/Lines"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.72, 0.78, 1, 1)
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 8
 text = "Lua cheia"
 horizontal_alignment = 2
 
-[node name="HeroLine" type="Label" parent="Root/Right/Status/Lines"]
+[node name="Money" type="Label" parent="Root/Right/Zone/Lines"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 9
-text = "Nv 1 · XP 0/400 · 0c"
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_font_sizes/font_size = 8
+text = "0c"
 horizontal_alignment = 2
 
 [node name="Toasts" type="VBoxContainer" parent="Root/Right"]
@@ -110,49 +297,25 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 3
 
-[node name="Hint" type="Label" parent="Root"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -150.0
-offset_top = -24.0
-offset_right = 150.0
-offset_bottom = -8.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
-theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
-theme_override_constants/outline_size = 4
-horizontal_alignment = 1
-
-[node name="Help" type="Label" parent="Root"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -260.0
-offset_top = -18.0
-offset_right = -8.0
-offset_bottom = -4.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_colors/font_color = Color(0.85, 0.82, 0.9, 0.75)
-theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 8
-horizontal_alignment = 2
-text = "Setas/WASD andar · E interagir · T esperar · J diário · Esc menu"
-
-[node name="Banner" type="VBoxContainer" parent="Root"]
+[node name="ErrorLabel" type="Label" parent="Root"]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -160.0
+offset_top = 50.0
+offset_right = 160.0
+offset_bottom = 64.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.42, 0.36, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Bottom" type="VBoxContainer" parent="Root"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -160,31 +323,118 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -180.0
-offset_top = -112.0
+offset_top = -4.0
 offset_right = 180.0
-offset_bottom = -36.0
+offset_bottom = -4.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 theme_override_constants/separation = 2
 alignment = 2
 
-[node name="BannerTitle" type="Label" parent="Root/Banner"]
+[node name="Banner" type="VBoxContainer" parent="Root/Bottom"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="BannerTitle" type="Label" parent="Root/Bottom/Banner"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.88, 0.56, 1, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
-text = "Nova área"
 
-[node name="BannerText" type="Label" parent="Root/Banner"]
+[node name="BannerText" type="Label" parent="Root/Bottom/Banner"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.93, 0.91, 0.86, 1)
 theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 9
+theme_override_font_sizes/font_size = 8
 horizontal_alignment = 1
 autowrap_mode = 3
+
+[node name="Hint" type="Label" parent="Root/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 1
+
+[node name="CastBox" type="CenterContainer" parent="Root/Bottom"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CastBar" type="ProgressBar" parent="Root/Bottom/CastBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 10)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="CastText" type="Label" parent="Root/Bottom/CastBox/CastBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ActionBar" type="HBoxContainer" parent="Root/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="XpRow" type="CenterContainer" parent="Root/Bottom"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="XpBar" type="ProgressBar" parent="Root/Bottom/XpRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(346, 6)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.0
+value = 1.0
+show_percentage = false
+
+[node name="XpText" type="Label" parent="Root/Bottom/XpRow/XpBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.04, 0.08, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 1
+vertical_alignment = 1
+

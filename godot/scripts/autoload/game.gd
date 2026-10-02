@@ -25,6 +25,10 @@ var items: Dictionary = {}       # item -> quantidade
 var equipment: Dictionary = {}   # espaço -> item (por enquanto, o equipamento inicial da classe)
 var skills: Dictionary = {}      # perícia -> nível (as perícias chegam numa próxima etapa)
 var talents: Dictionary = {}     # talento -> pontos
+var hp := 1                      # vida atual (o máximo vem de HeroStats)
+var resource := 0                # Mana, Raiva ou Energia atual
+var action_bar: Array = []       # 10 atalhos: "attack", "ability:<id>", "item:<id>" ou ""
+var kills: Dictionary = {}       # criatura -> quantas já foram derrotadas
 var map_id := "vale_primordia"
 var cell := Vector2i(30, 18)
 var facing := "down"
@@ -58,6 +62,11 @@ func new_game(choices: Dictionary = {}) -> void:
 	equipment = Data.class_data(hero.class_id).get("starting_equipment", {}).duplicate()
 	skills.clear()
 	talents.clear()
+	kills.clear()
+	HeroStats.invalidate()
+	restore()
+	action_bar.clear()
+	refresh_action_bar()
 	var start_map: Dictionary = Data.map_data("vale_primordia")
 	map_id = "vale_primordia"
 	cell = Vector2i(int(start_map.start[0]), int(start_map.start[1]))
@@ -160,9 +169,53 @@ func gain_xp(amount: int) -> void:
 	while xp_needed() > 0 and xp >= xp_needed():
 		xp -= xp_needed()
 		level += 1
+		HeroStats.invalidate()
 		notify("NÍVEL %d! Você se sente mais forte." % level, "level")
+		for ability: Dictionary in HeroStats.class_data().get("abilities", []):
+			if int(ability.level) == level and not ability.get("talent"):
+				notify("Nova habilidade: %s" % ability.name, "level")
+		restore()
+		refresh_action_bar()
 		leveled_up.emit(level)
 	changed.emit()
+
+
+## Vida cheia; recurso no estado de descanso (a Raiva zera, Mana e Energia enchem).
+func restore() -> void:
+	hp = HeroStats.max_hp()
+	resource = HeroStats.max_resource() if HeroStats.starts_full() else 0
+
+
+## Põe na barra de ações as habilidades novas e, no fim, poções (como um jogador faria no WoW).
+func refresh_action_bar() -> void:
+	while action_bar.size() < 10:
+		action_bar.append("")
+	if action_bar[0].is_empty():
+		action_bar[0] = "attack"
+	for ability: Dictionary in HeroStats.abilities():
+		var entry := "ability:%s" % ability.id
+		if entry in action_bar:
+			continue
+		for index in range(1, 8):
+			if action_bar[index].is_empty():
+				action_bar[index] = entry
+				break
+	if action_bar[8].is_empty():
+		action_bar[8] = "item:pocao_cura_menor"
+	if action_bar[9].is_empty():
+		action_bar[9] = "item:pocao_mana_menor" if HeroStats.resource_id() == "mana" else "item:pao_de_viagem"
+
+
+## Conta uma criatura derrotada (para as missões de caçada).
+func record_kill(template_id: String) -> void:
+	kills[template_id] = int(kills.get(template_id, 0)) + 1
+	for quest_id: String in quests:
+		var entry: Dictionary = quests[quest_id]
+		if entry.get("done", false):
+			continue
+		var hunt: Variant = Story.current_stage(quest_id).get("goal", {}).get("kill")
+		if hunt is Dictionary and template_id in hunt.get("monsters", []):
+			entry["kills"] = int(entry.get("kills", 0)) + 1
 
 
 func skill_level(skill_id: String) -> int:
@@ -276,7 +329,7 @@ func quest_stage(quest_id: String) -> int:
 func to_dict() -> Dictionary:
 	return {
 		"version": SAVE_VERSION, "hero": hero, "level": level, "xp": xp, "copper": copper, "items": items,
-		"equipment": equipment,
+		"equipment": equipment, "hp": hp, "resource": resource, "action_bar": action_bar, "kills": kills,
 		"skills": skills, "talents": talents, "map": map_id, "x": cell.x, "y": cell.y, "facing": facing,
 		"minutes": minutes, "seed": world_seed, "flags": flags, "journal": journal,
 		"discovered": discovered.keys(), "regions": regions.keys(), "met": met.keys(), "quests": quests,
@@ -293,6 +346,7 @@ func from_dict(data: Dictionary) -> void:
 	for item_id in data.get("items", {}):
 		items[item_id] = int(data.items[item_id])
 	equipment = data.get("equipment", {})
+	kills = data.get("kills", {})
 	skills = data.get("skills", {})
 	talents = data.get("talents", {})
 	map_id = data.get("map", "vale_primordia")
@@ -308,6 +362,11 @@ func from_dict(data: Dictionary) -> void:
 	regions = _as_set(data.get("regions", []))
 	met = _as_set(data.get("met", []))
 	quests = data.get("quests", {})
+	HeroStats.invalidate()
+	hp = clampi(int(data.get("hp", HeroStats.max_hp())), 1, HeroStats.max_hp())
+	resource = clampi(int(data.get("resource", 0)), 0, HeroStats.max_resource())
+	action_bar = data.get("action_bar", [])
+	refresh_action_bar()
 	started = true
 	changed.emit()
 
@@ -349,10 +408,11 @@ static func _as_set(values: Array) -> Dictionary:
 	return result
 
 
-## Controles: setas ou WASD para andar, E/Enter/Espaço para interagir, T para esperar uma hora,
-## J para o diário, Esc para o menu e +/- (ou a roda do mouse) para o zoom. Também funciona
-## com controle (direcional ou analógico, A, Y e Start). Ficam aqui, e não no project.godot,
-## para ser fácil de ler e mudar.
+## Controles: setas ou WASD para andar, E/Enter/Espaço para interagir, Tab para mirar, F para
+## atacar, 1 a 0 para a barra de ações, T para esperar uma hora, J para o diário, Esc para o
+## menu e +/- (ou a roda do mouse) para o zoom. Também funciona com controle (direcional ou
+## analógico, A, X, B, Y, LB, RB e Start). Ficam aqui, e não no project.godot, para ser fácil
+## de ler e mudar.
 func _setup_input() -> void:
 	var keys := {
 		"move_up": [KEY_W, KEY_UP], "move_down": [KEY_S, KEY_DOWN],
@@ -360,11 +420,18 @@ func _setup_input() -> void:
 		"interact": [KEY_E, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE],
 		"wait": [KEY_T], "journal": [KEY_J], "menu": [KEY_ESCAPE],
 		"zoom_in": [KEY_EQUAL, KEY_KP_ADD], "zoom_out": [KEY_MINUS, KEY_KP_SUBTRACT],
+		"target_next": [KEY_TAB], "attack": [KEY_F],
+		"slot_1": [KEY_1, KEY_KP_1], "slot_2": [KEY_2, KEY_KP_2], "slot_3": [KEY_3, KEY_KP_3],
+		"slot_4": [KEY_4, KEY_KP_4], "slot_5": [KEY_5, KEY_KP_5], "slot_6": [KEY_6, KEY_KP_6],
+		"slot_7": [KEY_7, KEY_KP_7], "slot_8": [KEY_8, KEY_KP_8], "slot_9": [KEY_9, KEY_KP_9],
+		"slot_10": [KEY_0, KEY_KP_0],
 	}
 	var buttons := {
 		"move_up": JOY_BUTTON_DPAD_UP, "move_down": JOY_BUTTON_DPAD_DOWN,
 		"move_left": JOY_BUTTON_DPAD_LEFT, "move_right": JOY_BUTTON_DPAD_RIGHT,
 		"interact": JOY_BUTTON_A, "journal": JOY_BUTTON_Y, "menu": JOY_BUTTON_START,
+		"target_next": JOY_BUTTON_RIGHT_SHOULDER, "attack": JOY_BUTTON_X,
+		"slot_2": JOY_BUTTON_B, "slot_3": JOY_BUTTON_LEFT_SHOULDER,
 	}
 	var sticks := {
 		"move_up": [JOY_AXIS_LEFT_Y, -1.0], "move_down": [JOY_AXIS_LEFT_Y, 1.0],

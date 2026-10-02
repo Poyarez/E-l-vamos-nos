@@ -155,9 +155,10 @@ A pasta `godot/` é a versão gráfica do jogo, feita no [Godot 4](https://godot
 2. Abra o Godot, clique em **Importar** e escolha o arquivo `godot/project.godot`.
 3. Aperte **F5**.
 
-**O que já funciona (primeira etapa):**
+**O que já funciona:**
 
 - o Vale de Primórdia e os outros sete mapas em tiles de 16×16, com as mesmas regiões, locais e passagens do terminal;
+- **combate em tempo real**, no estilo do WoW Classic e do RuneScape (veja abaixo);
 - criação de personagem com prévia: nome, gênero, classe, cabelo, cor do cabelo, armadura e alinhamento;
 - o herói anda de tile em tile, inclusive na diagonal, pelo teclado ou pelo controle. Cada terreno tem seu tempo de caminhada: a estrada é rápida e o pântano é lento;
 - os 16 NPCs, com as agendas de dia e de noite e todos os diálogos:
@@ -169,22 +170,45 @@ A pasta `godot/` é a versão gráfica do jogo, feita no [Godot 4](https://godot
 - o diário, com missões, anotações e mochila;
 - salvar e continuar.
 
-| Tecla                  | Ação                        |
-|------------------------|-----------------------------|
-| setas ou WASD          | andar                       |
-| E, Enter ou Espaço     | conversar, examinar, entrar |
-| T                      | esperar uma hora            |
-| J                      | diário                      |
-| Esc                    | menu (salvar, sair...)      |
-| + e − ou roda do mouse | zoom                        |
+| Tecla ou mouse                | Ação                                                   |
+|-------------------------------|--------------------------------------------------------|
+| setas ou WASD                 | andar                                                  |
+| clique no chão                | andar até lá (o caminho é calculado sozinho)           |
+| clique numa criatura          | mirar; clique de novo (ou clique direito) para atacar  |
+| clique num morador            | ir até ele e conversar                                 |
+| Tab                           | mirar a criatura mais perto (de novo: a próxima)       |
+| F                             | ligar ou desligar o ataque automático                  |
+| 1 a 0                         | barra de ações: ataque, habilidades e poções           |
+| E, Enter ou Espaço            | conversar, examinar, entrar                            |
+| T                             | esperar uma hora (fora de combate)                     |
+| J                             | diário                                                 |
+| Esc                           | tirar o alvo; sem alvo, o menu (salvar, sair...)       |
+| + e − ou roda do mouse        | zoom                                                   |
 
-Combate, comércio e ofícios ainda são só do terminal. Eles chegam ao Godot nas próximas etapas.
+Comércio, ofícios e a escolha de talentos ainda são só do terminal. Eles chegam ao Godot nas próximas etapas.
+
+**Combate em tempo real.** No Godot, o combate não é por turnos: é como no WoW Classic, com um toque de RuneScape.
+
+- As criaturas ficam no mapa, em "acampamentos" sorteados das tabelas de encontros de cada região. As da noite aparecem à noite. Quem chega perto é atacado: o raio é maior à noite e menor para quem já é bem mais forte, e criaturas "cinzentas" nem ligam. Chamam o bando junto e desistem ("evadem", recuperando a vida) se forem levadas longe demais de casa. Um grupo derrotado renasce depois de 45 segundos, com o herói longe.
+- O herói ataca sozinho, no ritmo da arma: adagas são rápidas, cajados lentos. As habilidades da barra têm recarga global (1,5 s; 1 s para ladinos), recarga própria e custo de Mana, Raiva ou Energia. A Raiva nasce dos golpes, a Energia volta 10 por segundo e a Mana volta com o Espírito. Magias levam tempo para conjurar, e andar interrompe. Mísseis Arcanos e Açoite Mental são canalizados.
+- Atacado sem alvo, o herói revida sozinho, como no RuneScape. Guerreiros e ladinos vão atrás do alvo, e a Investida avança até ele.
+- As contas são as do terminal: armadura, acerto, esquiva, crítico, fraquezas e resistências, Raiva do WoW, XP por abate e saque. Cada "turno" dos dados vale 3 segundos. Por isso as recargas, os sangramentos e as curas contínuas mantêm as proporções.
+- Os golpes especiais das criaturas aparecem numa barra de conjuração com os **selos** (Sea of Stars). Acertar o elemento de cada selo enfraquece o golpe; romper todos o cancela. O Chute do ladino interrompe.
+- Os chefes e as emboscadas dos locais (Presa-de-Gelo, Gorran, Ulric, Morwen, o Vigia...) aparecem no lugar certo, com o texto de abertura do terminal. Vencê-los marca a vitória, entrega os itens e anota o diário.
+- Caindo em combate, o herói acorda na Capela da Aurora com metade da vida, horas depois e com 10% a menos de cobre. Fora de combate, vida e mana voltam depressa.
+
+O equilíbrio foi conferido com lutas simuladas de cada classe contra as criaturas e os chefes do jogo. Elas usam o mesmo equipamento, talentos e poções da simulação do terminal. Para ver a tabela:
+
+```
+godot --headless --path godot res://tests/combat_sim.tscn
+```
 
 **Para editar o jogo no Godot:**
 
 - Cada mapa é uma cena em `godot/world/maps/<mapa>.tscn`. Abra a cena, selecione o nó `Ground` e pinte com o painel *TileMap*, na parte de baixo do editor. O terreno de cada tile vale de verdade no jogo: água bloqueia e estrada é mais rápida.
 - As cenas do herói, dos NPCs e das telas ficam em `godot/scenes/`. As cores e bordas da interface ficam no tema `godot/ui/theme.tres`.
-- A arte provisória fica em `godot/art/`: PNGs com uma grade de 16×16. Dá para trocar por arte própria mantendo a mesma grade.
+- A arte provisória fica em `godot/art/`: PNGs com uma grade de 16×16, incluindo `monsters.png`, com as criaturas de perfil. Dá para trocar por arte própria mantendo a mesma grade.
+- Os números do combate em tempo real (segundos por turno, recarga global, ritmo das criaturas, vida e dano extras, alcance) ficam juntos em `godot/scripts/combat/rules.gd`.
 
 **Quando mudar os dados no Python** (um diálogo, um NPC, um item), atualize os JSON do Godot:
 
@@ -199,7 +223,11 @@ Se o desenho de um mapa mudou, gere de novo as cenas dos mapas. Isso apaga o que
 godot --headless --path godot res://tools/build_project.tscn -- --overwrite
 ```
 
-Aqui, `godot` é o executável do Godot. Os testes da versão Godot fazem cerca de mil verificações. Eles cobrem dados, tiles, todos os diálogos por vários caminhos, condições, missões, save, movimento, passagens e conversas inteiras:
+Aqui, `godot` é o executável do Godot. Os testes da versão Godot fazem cerca de mil e cem verificações. Eles cobrem:
+
+- dados, tiles, todos os diálogos por vários caminhos, condições, missões e save;
+- movimento, passagens e conversas inteiras;
+- o combate: contas iguais às do terminal, selos, interrupção, derrota, chefes e lutas simuladas de cada classe.
 
 ```
 godot --headless --path godot res://tests/run_tests.tscn
@@ -288,11 +316,14 @@ godot/                   a versão gráfica (projeto do Godot 4.7)
   data/, art/            dados exportados do Python e os PNGs de 16x16
   scripts/autoload/      Data (lê os JSON) e Game (estado da partida, relógio, itens, diário e save)
   scripts/core/          condições, efeitos de diálogo, missões e texto (as regras de rpg/ em GDScript)
-  scripts/world/         o mundo (movimento, passagens, exames, agenda), herói, NPCs e mapas em tiles
-  scripts/ui/            caixa de diálogo, interface, diário, menu e tema
+  scripts/world/         o mundo (movimento, cliques, caminhos, passagens, exames, agenda), herói, NPCs,
+                         criaturas (IA) e os acampamentos onde elas nascem
+  scripts/combat/        o combate em tempo real: regras, números do herói, efeitos e a luta em si
+  scripts/ui/            caixa de diálogo, interface (quadros, barra de ações), números que sobem, diário,
+                         menu e tema
   scenes/                título com criação de personagem, partida, herói, NPC e telas
   world/                 o TileSet e uma cena por mapa, para pintar no editor
-  tools/, tests/         geração do TileSet, mapas e tema; testes sem janela e fotos de tela
+  tools/, tests/         geração do TileSet, mapas e tema; testes sem janela, lutas simuladas e fotos de tela
 ```
 
 Os módulos de `rpg/data` contêm **apenas dados**. Os módulos de regra funcionam como fábricas que transformam esses dicionários em objetos do jogo. Para expandir o mundo, basta, na maioria das vezes, editar os dados:
@@ -363,8 +394,12 @@ São 194 testes:
   - herói andando e criação de personagem com prévia;
   - NPCs com agenda e diálogos completos;
   - descobertas, segredos, baús, dia e noite, diário e save.
+- [x] **Godot, etapa 2:** combate em tempo real no estilo WoW/RuneScape:
+  - criaturas no mapa, com acampamentos, bandos, perseguição e renascimento;
+  - alvo, ataque automático, barra de ações, recargas e conjurações;
+  - selos e interrupções, chefes com reforços, saque, XP e derrota.
 - [ ] **Próximos passos:**
-  - no Godot: combate por turnos, comércio, coleta e ofícios;
+  - no Godot: comércio, equipamento, talentos, coleta e ofícios;
   - Pedravale, a cidade mineira além do Passo do Norte (onde outro gigante dorme sob as montanhas);
   - Alvorada, a capital, quando a ponte do Rio Largo for reconstruída;
   - o Fundo-Fundo, o lar dos kobolds sob a mina;

@@ -30,6 +30,7 @@ static func apply_effects(effects: Variant) -> void:
 	if effects.get("reset_talents", false):
 		var refunded := Game.talent_points_spent()
 		Game.talents.clear()
+		HeroStats.invalidate()
 		Game.notify("Seus talentos foram esquecidos: %s para você gastar de novo."
 				% ("1 ponto volta" if refunded == 1 else "%d pontos voltam" % refunded), "level")
 	if effects.has("start_quest"):

@@ -71,7 +71,48 @@ func _ready() -> void:
 	world.arrive()
 	await _frames(30)
 	await _shot("08_gruta")
+	# 7. combate em tempo real na floresta: alvo, ataque automático, números subindo
+	Game.level = 5
+	HeroStats.invalidate()
+	Game.restore()
+	Game.refresh_action_bar()
+	Game.minutes = 10 * 60
+	Game.period_changed.emit(Game.period())
+	world.load_map("vale_primordia", Vector2i(13, 9), "left")
+	world.update_lighting(false)
+	world.spawner.clear()
+	var wolf: Node = world.spawner.create("lobo_cinzento", 5, Vector2i(12, 9))
+	world.spawner.create("lobo_faminto", 4, Vector2i(11, 11))
+	world.combat.attack(wolf)
+	await _frames(20)
+	world.combat.use_slot(1)
+	await _seconds(2.6)
+	world.combat.use_slot(2)
+	await _seconds(0.5)
+	await _shot("09_combate")
+	# 8. chefe concentrando um golpe com selos (Sea of Stars) no quadro do alvo
+	Game.level = 7
+	HeroStats.invalidate()
+	Game.restore()
+	world.load_map("toca_dos_lobos", Vector2i(13, 11), "right")
+	await _frames(5)
+	var alpha: Node = null
+	for monster: Node in world.spawner.alive_monsters():
+		if monster.template_id == "presa_de_gelo":
+			alpha = monster
+	if alpha != null:
+		alpha.place(Vector2i(14, 11))
+		world.combat.attack(alpha)
+		await _seconds(1.2)
+		var howl: Dictionary = alpha.abilities[2]
+		alpha.charging = {"ability": howl, "left": 4.0, "total": 6.0, "locks": howl.locks, "broken": [false, true, false]}
+		await _seconds(0.6)
+	await _shot("10_chefe")
 	get_tree().quit()
+
+
+func _seconds(duration: float) -> void:
+	await get_tree().create_timer(duration).timeout
 
 
 func _frames(count: int) -> void:

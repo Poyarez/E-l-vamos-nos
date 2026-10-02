@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/world/hero.tscn" id="2_hero"]
+[ext_resource type="Script" path="res://scripts/combat/combat.gd" id="3_combat"]
+[ext_resource type="Script" path="res://scripts/world/spawner.gd" id="4_spawner"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("1_script")
@@ -14,6 +16,12 @@ script = ExtResource("1_script")
 y_sort_enabled = true
 
 [node name="Hero" parent="Actors" instance=ExtResource("2_hero")]
+
+[node name="Combat" type="Node" parent="."]
+script = ExtResource("3_combat")
+
+[node name="Spawner" type="Node" parent="."]
+script = ExtResource("4_spawner")
 
 [node name="Tint" type="CanvasModulate" parent="."]
 
